@@ -21,11 +21,12 @@ pip install mujoco-py 'gym[mujoco]'
 ```
 
 3. (optional) change configuration `nano Configuration.json`
+3. `. ~/.venv/neuro/bin/activate`
 3. run training
 	- this will take some time
-	- `LD_LIBRARY_PATH=$HOME/.mujoco/mujoco200/bin python -m scoop CTRNN_ReinforcementLearning_CMA-ES.py`
+	- `python -m scoop neuro_evolution_ctrnn/train.py`
 4. show results:
-	- `LD_LIBRARY_PATH=$HOME/.mujoco/mujoco200/bin python CTRNN_Visualisierung.py`
+	- `python neuro_evolution_ctrnn/visualize.py`
 
 ## troubleshooting
 
