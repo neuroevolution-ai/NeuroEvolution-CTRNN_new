@@ -1,0 +1,77 @@
+import os
+import json
+import pickle
+
+from collections import namedtuple
+from neuro_evolution_ctrnn.tools.helper import walk_dict
+
+class ResultHandler(object):
+
+    def __init__(self, result_path, neural_network_type, config_raw):
+        self.result_path = result_path
+        self.nn_type = neural_network_type
+        self.config_raw = config_raw
+
+    def check_path(self):
+        # checking before hand is not pythonic, but problems would a lot of processing time go to waste
+        if not os.path.isdir(self.result_path):
+            raise RuntimeError("result path '" + self.result_path + "' is not a directory")
+
+        if len(os.listdir(self.result_path)) != 0:
+            raise RuntimeError("result path '" + self.result_path + "' is not empty")
+
+        if not os.access(self.result_path, os.W_OK):
+            raise RuntimeError("result path '" + self.result_path + "' is not writable")
+
+    def write_result(self, hof, log, time_elapsed, individual_size, input_size, output_size):
+        # Create new directory to store data of current simulation run
+
+        print("output directory: " + str(self.result_path))
+        # Save Configuration file as json
+        with open(os.path.join(self.result_path, 'Configuration.json'), 'w') as outfile:
+            json.dump(self.config_raw, outfile)
+
+        # Save hall of fame individuals
+        with open(os.path.join(self.result_path, 'HallOfFame.pickle'), "wb") as fp:
+            pickle.dump(hof, fp)
+
+        # Save Log
+        with open(os.path.join(self.result_path, 'Log.json'), 'w') as outfile:
+            json.dump(log, outfile)
+
+        # Write Log to text file
+        with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
+
+            def write(key, value, depth, is_leaf):
+                pad = ""
+                for x in range(depth):
+                    pad = pad + "\t"
+                if is_leaf:
+                    write_file.write(pad + key + ": " + str(value))
+                else:
+                    write_file.write(pad + key)
+                write_file.write('\n')
+
+
+            walk_dict(self.config_raw, write)
+
+            write_file.write('\n')
+            write_file.write('Genome Size: {:d}\n'.format(individual_size))
+            write_file.write('Inputs: {:d}\n'.format(input_size))
+            write_file.write('Outputs: {:d}\n'.format(output_size))
+            write_file.write('\n')
+            dash = '-' * 80
+            write_file.write(dash + '\n')
+            write_file.write(
+                '{:<8s}{:<12s}{:<16s}{:<16s}{:<16s}{:<16s}\n'.format('gen', 'nevals', 'avg', 'std', 'min', 'max'))
+            write_file.write(dash + '\n')
+
+            # Write data for each episode
+            for line in log:
+                write_file.write(
+                    '{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n'.format(line['gen'], line['nevals'],
+                                                                                 line['avg'], line['std'], line['min'],
+                                                                                 line['max']))
+
+            # Write elapsed time
+            write_file.write("\nTime elapsed: %.4f seconds" % (time_elapsed))
