@@ -13,6 +13,7 @@ from neuro_evolution_ctrnn.tools.episode_runner import EpisodeRunner, EpisodeRun
 from neuro_evolution_ctrnn.tools.result_handler import ResultHandler
 from neuro_evolution_ctrnn.tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
 from neuro_evolution_ctrnn.tools.helper import set_random_seeds
+
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 
 ExperimentCfg = namedtuple("ExperimentCfg", [
@@ -63,7 +64,7 @@ class Experiment(object):
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
-        self.env_template=env
+        self.env_template = env
         set_random_seeds(self.config.random_seed, env)
 
         # Get individual size
@@ -116,3 +117,26 @@ class Experiment(object):
             input_size=self.input_size,
             individual_size=self.individual_size)
         print("done")
+
+    def visualize(self, individual):
+        env = gym.make(self.config.environment)
+
+        # Get individual size
+        input_size = env.observation_space.shape[0]
+        output_size = env.action_space.shape[0]
+
+        env.render()
+
+        for i in range(1):
+            fitness_current = 0
+            set_random_seeds(self.config.random_seed, env)
+            ob = env.reset()
+            done = False
+            brain = self.brain_class(input_size=input_size, output_size=output_size, individual=individual,
+                                     config=self.config.brain)
+            while not done:
+                action = brain.step(ob)
+                ob, rew, done, info = env.step(action)
+                fitness_current += rew
+                env.render()
+            print(fitness_current)
