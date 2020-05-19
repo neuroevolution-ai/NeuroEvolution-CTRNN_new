@@ -7,7 +7,7 @@ from deap import tools
 from scoop import futures
 from collections import namedtuple
 
-from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContrinuousTimeRNN, ContrinuousTimeRNNCfg
+from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContinuousTimeRNN, ContrinuousTimeRNNCfg
 # import brains.layered_nn as lnn
 from neuro_evolution_ctrnn.tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
 from neuro_evolution_ctrnn.tools.result_handler import ResultHandler
@@ -36,7 +36,7 @@ class Experiment(object):
             self._config_dict_raw = json.load(read_file)
         config_dict = self._config_dict_raw.copy()
         if config_dict["neural_network_type"] == 'CTRNN':
-            self.brain_class = ContrinuousTimeRNN
+            self.brain_class = ContinuousTimeRNN
             brain_cfg_class = ContrinuousTimeRNNCfg
         else:
             raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))

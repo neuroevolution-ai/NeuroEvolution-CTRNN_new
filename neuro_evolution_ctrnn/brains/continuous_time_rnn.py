@@ -13,7 +13,7 @@ ContrinuousTimeRNNCfg = namedtuple("ContrinuousTimeRNNCfg", [
 ])
 
 
-class ContrinuousTimeRNN:
+class ContinuousTimeRNN:
 
     def __init__(self, input_size: int, output_size: int, individual: List[float], config: ContrinuousTimeRNNCfg):
 
