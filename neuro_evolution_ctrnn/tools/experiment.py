@@ -12,11 +12,11 @@ from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContrinuousTimeRNN,
 from neuro_evolution_ctrnn.tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
 from neuro_evolution_ctrnn.tools.result_handler import ResultHandler
 from neuro_evolution_ctrnn.tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
-
+from neuro_evolution_ctrnn.tools.helper import set_random_seeds
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 
 ExperimentCfg = namedtuple("ExperimentCfg", [
-    "neural_network_type", "environment", "random_seed", "random_seed_for_environment",
+    "neural_network_type", "environment", "random_seed",
     "trainer_type", "number_generations", "brain", "episode_runner", "trainer"
 ])
 
@@ -47,6 +47,10 @@ class Experiment(object):
         else:
             raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))
 
+        if not config_dict["random_seed"]:
+            config_dict["random_seed"] = random.getstate()
+            print("setting random seed to: " + str(config_dict["random_seed"]))
+
         # turned json into nested named tuples so python's type-hinting can do its magic
         # bonus: config becomes immutable
         config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
@@ -55,16 +59,12 @@ class Experiment(object):
         return ExperimentCfg(**config_dict)
 
     def _setup(self):
-
         env = gym.make(self.config.environment)
-
-        # Set random seeds
-        if self.config.random_seed:
-            random.seed(self.config.random_seed)
-            np.random.seed(self.config.random_seed)
-
-        if self.config.random_seed_for_environment:
-            env.seed(self.config.random_seed_for_environment)
+        # note: the environment defined here is only used to initialize other classes, but the
+        # actual simulation will happen on freshly created local  environments on the episode runners
+        # to avoid concurrency problems that would arise from a shared global state
+        self.env_template=env
+        set_random_seeds(self.config.random_seed, env)
 
         # Get individual size
         self.input_size = env.observation_space.shape[0]
@@ -83,11 +83,11 @@ class Experiment(object):
         ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                   brain_conf=self.config.brain,
                                   discrete_actions=self.discrete_actions, brain_class=self.brain_class,
-                                  input_size=self.input_size, output_size=self.output_size, env=env)
+                                  input_size=self.input_size, output_size=self.output_size, env_template=env)
 
         if self.config.trainer_type == "CMA_ES":
             self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
-                                              eval_fitness=ep_runner.evalFitness, conf=self.config.trainer, )
+                                              eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer, )
         else:
             raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
 

@@ -4,7 +4,9 @@ from deap import tools
 import pickle
 from pathlib import Path
 import os
+import numpy as np
 from deap.algorithms import varOr
+from neuro_evolution_ctrnn.tools.helper import set_random_seeds
 
 
 def eaGenerateUpdate(toolbox, ngen, halloffame=None, stats=None):
@@ -16,15 +18,22 @@ def eaGenerateUpdate(toolbox, ngen, halloffame=None, stats=None):
     for gen in range(start_gen, ngen + 1):
         if toolbox.cb_before_each_generation:
             toolbox.cb_before_each_generation()
+
         population = toolbox.generate()
-        fitnesses = toolbox.map(toolbox.evaluate, population)
-        for ind, fit in zip(population, fitnesses):
+        seed_after_map = random.randint(1, 10000)
+        seeds_for_evaluation = np.random.randint(1, 10000, size=len(population))
+        finesses = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
+        for ind, fit in zip(population, finesses):
             ind.fitness.values = fit
+        # reseed because workers seem to affect the global state
+        # also this must happen AFTER fitness-values have been processes, because futures
+        set_random_seeds(seed_after_map, env=None)
         if halloffame is not None:
             halloffame.update(population)
         toolbox.update(population)
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(population), **record)
+        print(logbook.stream)
 
     return population, logbook
 
