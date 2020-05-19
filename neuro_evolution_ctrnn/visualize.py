@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 from deap import base
 from deap import creator
 import argparse
+import threading
 
 from neuro_evolution_ctrnn.tools.experiment import Experiment
+from neuro_evolution_ctrnn.brain_visualizer import BrainVisualizerHandler
 
 
 def parse_args(args=None):
@@ -31,9 +33,10 @@ with open(os.path.join(directory, 'Log.json'), 'r') as read_file:
 
 experiment = Experiment(configuration_path=os.path.join(directory, 'Configuration.json'), result_path="asdasd",
                         from_checkpoint=None)
-experiment.visualize(hall_of_fame[0])
 
-# Get statistics from log
+t = threading.Thread(target=experiment.visualize, args=[hall_of_fame[0:2], BrainVisualizerHandler()])
+t.start()
+
 generations = [i for i in range(len(log))]
 avg = [generation["avg"] for generation in log]
 maximum = [generation["max"] for generation in log]

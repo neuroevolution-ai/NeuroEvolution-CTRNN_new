@@ -118,7 +118,7 @@ class Experiment(object):
             individual_size=self.individual_size)
         print("done")
 
-    def visualize(self, individual):
+    def visualize(self, individuals, brain_vis_handler):
         env = gym.make(self.config.environment)
 
         # Get individual size
@@ -127,7 +127,8 @@ class Experiment(object):
 
         env.render()
 
-        for i in range(1):
+        for individual in individuals:
+            brain_vis = brain_vis_handler.launch_new_visualization(individual)
             fitness_current = 0
             set_random_seeds(self.config.random_seed, env)
             ob = env.reset()
@@ -136,6 +137,7 @@ class Experiment(object):
                                      config=self.config.brain)
             while not done:
                 action = brain.step(ob)
+                brain_vis.process_update(brain.y)
                 ob, rew, done, info = env.step(action)
                 fitness_current += rew
                 env.render()
