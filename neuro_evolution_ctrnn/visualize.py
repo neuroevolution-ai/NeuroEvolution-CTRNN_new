@@ -8,8 +8,8 @@ from deap import creator
 import argparse
 import threading
 
-from neuro_evolution_ctrnn.tools.experiment import Experiment
-from neuro_evolution_ctrnn.brain_visualizer import BrainVisualizerHandler
+from tools.experiment import Experiment
+from brain_visualizer import BrainVisualizerHandler
 
 
 def parse_args(args=None):
@@ -17,6 +17,10 @@ def parse_args(args=None):
     parser.add_argument('--configuration', metavar='dir', type=str,
                         help='use an alternative configuration file',
                         default=os.path.join('results', '2020-05-19_10-10-31'))
+
+    parser.add_argument('--plot', metavar='dir', type=bool,
+                        help='show plot?',
+                        default=False)
     return parser.parse_args(args)
 
 
@@ -42,9 +46,10 @@ avg = [generation["avg"] for generation in log]
 maximum = [generation["max"] for generation in log]
 
 # Plot results
-plt.plot(generations, avg, 'r-')
-plt.plot(generations, maximum, 'y--')
-plt.xlabel('Generations')
-plt.legend(['avg', 'std high', 'std low'])
-plt.grid()
-plt.show()
+if args.plot:
+    plt.plot(generations, avg, 'r-')
+    plt.plot(generations, maximum, 'y--')
+    plt.xlabel('Generations')
+    plt.legend(['avg', 'std high', 'std low'])
+    plt.grid()
+    plt.show()

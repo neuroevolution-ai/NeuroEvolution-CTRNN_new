@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import numpy as np
 from deap.algorithms import varOr
-from neuro_evolution_ctrnn.tools.helper import set_random_seeds
+from tools.helper import set_random_seeds
 
 
 def eaGenerateUpdate(toolbox, ngen, halloffame=None, stats=None):

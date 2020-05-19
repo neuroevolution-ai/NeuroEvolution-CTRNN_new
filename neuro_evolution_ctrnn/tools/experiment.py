@@ -7,12 +7,12 @@ from deap import tools
 from scoop import futures
 from collections import namedtuple
 
-from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContinuousTimeRNN, ContrinuousTimeRNNCfg
+from brains.continuous_time_rnn import ContinuousTimeRNN, ContrinuousTimeRNNCfg
 # import brains.layered_nn as lnn
-from neuro_evolution_ctrnn.tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
-from neuro_evolution_ctrnn.tools.result_handler import ResultHandler
-from neuro_evolution_ctrnn.tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
-from neuro_evolution_ctrnn.tools.helper import set_random_seeds
+from tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
+from tools.result_handler import ResultHandler
+from tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
+from tools.helper import set_random_seeds
 
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 

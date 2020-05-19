@@ -1,7 +1,8 @@
-from neuro_evolution_ctrnn.tools.experiment import Experiment
 import argparse
 import os
 from datetime import datetime
+
+from tools.experiment import Experiment
 
 
 def parse_args(args=None):

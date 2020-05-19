@@ -2,7 +2,7 @@ from deap import base
 from deap import creator
 from deap import tools
 from deap import cma
-from neuro_evolution_ctrnn.tools import algorithms
+from tools import algorithms
 
 from collections import namedtuple
 from typing import Callable

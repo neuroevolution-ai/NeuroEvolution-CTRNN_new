@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from collections import namedtuple
-from neuro_evolution_ctrnn.tools.helper import set_random_seeds
+from tools.helper import set_random_seeds
 import gym
 
 EpisodeRunnerCfg = namedtuple("EpisodeRunnerCfg", [

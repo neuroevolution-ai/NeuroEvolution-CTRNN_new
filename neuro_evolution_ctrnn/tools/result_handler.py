@@ -3,7 +3,7 @@ import json
 import pickle
 
 from collections import namedtuple
-from neuro_evolution_ctrnn.tools.helper import walk_dict
+from tools.helper import walk_dict
 
 class ResultHandler(object):
 

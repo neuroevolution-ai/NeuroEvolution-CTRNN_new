@@ -33,8 +33,8 @@ class Window(tk.Frame):
         self.master = master
         self.pack(fill=tk.BOTH, expand=1)
         self.text = tk.StringVar()
+        self.set_text("waiting for update...")
         tk.Label(self, textvariable=self.text).pack()
-        self.text.set("waiting for update...")
 
     def set_text(self, text):
         self.text.set(text)
