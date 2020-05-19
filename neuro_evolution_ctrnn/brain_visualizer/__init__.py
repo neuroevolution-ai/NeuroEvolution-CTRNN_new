@@ -6,7 +6,6 @@ class BrainVisualizerHandler(object):
         self.current_visualizer = None
 
     def launch_new_visualization(self, individual):
-        print("launching new visualization", self)
         self.current_visualizer = BrainVisualizer(individual)
         return self.current_visualizer
 
@@ -21,7 +20,6 @@ class BrainVisualizer(object):
         self.app = Window(root)
         root.wm_title("Tkinter window")
         root.geometry("200x200")
-        print("initializing new brain visualizer for individual", self.individual)
 
     def process_update(self, y):
         self.app.set_text("new states: \n" + str(y))
