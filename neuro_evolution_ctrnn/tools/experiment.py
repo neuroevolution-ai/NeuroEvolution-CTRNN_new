@@ -128,16 +128,19 @@ class Experiment(object):
         env.render()
 
         for individual in individuals:
-            brain_vis = brain_vis_handler.launch_new_visualization(individual)
             fitness_current = 0
             set_random_seeds(self.config.random_seed, env)
             ob = env.reset()
             done = False
-            brain = self.brain_class(input_size=input_size, output_size=output_size, individual=individual,
+            brain = self.brain_class(input_size=input_size,
+                                     output_size=output_size,
+                                     individual=individual,
                                      config=self.config.brain)
+            brain_vis = brain_vis_handler.launch_new_visualization(brain)
+
             while not done:
                 action = brain.step(ob)
-                brain_vis.process_update(brain.y)
+                brain_vis.process_update()
                 ob, rew, done, info = env.step(action)
                 fitness_current += rew
                 env.render()

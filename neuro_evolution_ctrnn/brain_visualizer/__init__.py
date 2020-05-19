@@ -5,15 +5,15 @@ class BrainVisualizerHandler(object):
     def __init__(self):
         self.current_visualizer = None
 
-    def launch_new_visualization(self, individual):
-        self.current_visualizer = BrainVisualizer(individual)
+    def launch_new_visualization(self, brain):
+        self.current_visualizer = BrainVisualizer(brain)
         return self.current_visualizer
 
 
 class BrainVisualizer(object):
 
-    def __init__(self, individual):
-        self.individual = individual
+    def __init__(self, brain):
+        self.brain = brain
 
         root = tk.Tk()
         self.root = root
@@ -21,8 +21,8 @@ class BrainVisualizer(object):
         root.wm_title("Tkinter window")
         root.geometry("200x200")
 
-    def process_update(self, y):
-        self.app.set_text("new states: \n" + str(y))
+    def process_update(self):
+        self.app.set_text("new states: \n" + str(self.brain.y))
         self.root.update_idletasks()
         self.root.update()
 
