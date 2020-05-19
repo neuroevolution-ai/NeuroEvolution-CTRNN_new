@@ -24,7 +24,7 @@ class BrainVisualizer(object):
         print("initializing new brain visualizer for individual", self.individual)
 
     def process_update(self, y):
-        self.app.set_test("new states: \n" + str(y))
+        self.app.set_text("new states: \n" + str(y))
         self.root.update_idletasks()
         self.root.update()
 
@@ -38,5 +38,5 @@ class Window(tk.Frame):
         tk.Label(self, textvariable=self.text).pack()
         self.text.set("waiting for update...")
 
-    def set_test(self, text):
+    def set_text(self, text):
         self.text.set(text)
