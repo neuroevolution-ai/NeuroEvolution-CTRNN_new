@@ -2,10 +2,10 @@
   "environment": "BipedalWalker-v3",
   "neural_network_type": "CTRNN",
   "random_seed": 123,
-  "number_generations": 15,
+  "number_generations": 5,
   "trainer_type": "CMA_ES",
   "trainer": {
-    "population_size": 10,
+    "population_size": 5,
     "sigma": 1.0
   },
   "brain": {

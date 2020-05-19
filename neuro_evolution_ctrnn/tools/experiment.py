@@ -68,7 +68,7 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
 
         # Get individual size
-        self.input_size = env.observation_space.shape[0]
+        self.input_space = env.observation_space.shape
         if env.action_space.shape:
             # e.g. box2d, mujoco
             self.output_size = env.action_space.shape[0]
@@ -78,13 +78,13 @@ class Experiment(object):
             self.output_size = env.action_space.n
             self.discrete_actions = True
 
-        self.individual_size = self.brain_class.get_individual_size(self.input_size, self.output_size,
+        self.individual_size = self.brain_class.get_individual_size(self.input_space, self.output_size,
                                                                     self.config.brain)
 
         ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                   brain_conf=self.config.brain,
                                   discrete_actions=self.discrete_actions, brain_class=self.brain_class,
-                                  input_size=self.input_size, output_size=self.output_size, env_template=env)
+                                  input_space=self.input_space, output_size=self.output_size, env_template=env)
 
         if self.config.trainer_type == "CMA_ES":
             self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
@@ -114,7 +114,7 @@ class Experiment(object):
             log=log,
             time_elapsed=(time.time() - start_time),
             output_size=self.output_size,
-            input_size=self.input_size,
+            input_space=self.input_space,
             individual_size=self.individual_size)
         print("done")
 
@@ -122,7 +122,7 @@ class Experiment(object):
         env = gym.make(self.config.environment)
 
         # Get individual size
-        input_size = env.observation_space.shape[0]
+        input_space = env.observation_space.shape[0]
         output_size = env.action_space.shape[0]
 
         env.render()
@@ -132,7 +132,7 @@ class Experiment(object):
             set_random_seeds(self.config.random_seed, env)
             ob = env.reset()
             done = False
-            brain = self.brain_class(input_size=input_size,
+            brain = self.brain_class(input_space=input_space,
                                      output_size=output_size,
                                      individual=individual,
                                      config=self.config.brain)

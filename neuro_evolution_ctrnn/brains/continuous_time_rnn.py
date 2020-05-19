@@ -15,13 +15,17 @@ ContrinuousTimeRNNCfg = namedtuple("ContrinuousTimeRNNCfg", [
 
 class ContinuousTimeRNN:
 
-    def __init__(self, input_size: int, output_size: int, individual: List[float], config: ContrinuousTimeRNNCfg):
+    def __init__(self, input_space: np.shape, output_size: int, individual: List[float], config: ContrinuousTimeRNNCfg):
 
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
         optimize_state_boundaries = config.optimize_state_boundaries
         set_principle_diagonal_elements_of_W_negative = config.set_principle_diagonal_elements_of_W_negative
         N_n = config.number_neurons
+
+        input_size = ContinuousTimeRNN._get_size_from_shape(input_space)
+        # todo: do the same transformation for output-shapes, too
+        # todo: the shape-object contains sometimes min/max values, which should be used to normalize inputs/outputs
 
         V_size = input_size * N_n
         W_size = N_n * N_n
@@ -85,8 +89,17 @@ class ContinuousTimeRNN:
         return o[0]
 
     @staticmethod
-    def get_individual_size(input_size, output_size, config: ContrinuousTimeRNNCfg):
+    def _get_size_from_shape(shape:np.shape):
+        size = 1
+        for val in shape:
+            size = size * val
+        return size
+
+    @staticmethod
+    def get_individual_size(input_space, output_size, config: ContrinuousTimeRNNCfg):
         N_n = config.number_neurons
+
+        input_size = ContinuousTimeRNN._get_size_from_shape(input_space)
 
         individual_size = input_size * N_n + N_n * N_n + N_n * output_size
 

@@ -23,7 +23,7 @@ class ResultHandler(object):
         if not os.access(self.result_path, os.W_OK):
             raise RuntimeError("result path '" + self.result_path + "' is not writable")
 
-    def write_result(self, hof, log, time_elapsed, individual_size, input_size, output_size):
+    def write_result(self, hof, log, time_elapsed, individual_size, input_space, output_size):
         # Create new directory to store data of current simulation run
 
         print("output directory: " + str(self.result_path))
@@ -57,7 +57,7 @@ class ResultHandler(object):
 
             write_file.write('\n')
             write_file.write('Genome Size: {:d}\n'.format(individual_size))
-            write_file.write('Inputs: {:d}\n'.format(input_size))
+            write_file.write('Inputs: {:s}\n'.format(str(input_space)))
             write_file.write('Outputs: {:d}\n'.format(output_size))
             write_file.write('\n')
             dash = '-' * 80
