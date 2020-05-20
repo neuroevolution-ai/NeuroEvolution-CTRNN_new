@@ -1,7 +1,6 @@
 import random
 import numpy as np
-from brains.continuous_time_rnn import ContinuousTimeRNNCfg
-from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg
+from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 import json
 import copy
 

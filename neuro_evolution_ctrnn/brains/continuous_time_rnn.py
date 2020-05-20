@@ -1,18 +1,5 @@
 import numpy as np
-from typing import Iterable
-
-
-class ContinuousTimeRNNCfg:
-    optimize_y0: bool
-    delta_t: float
-    optimize_state_boundaries: str
-    set_principle_diagonal_elements_of_W_negative: bool
-    number_neurons: int
-    clipping_range_min: Iterable[float]
-    clipping_range_max: Iterable[float]
-
-    def __init__(self, **attr):
-        self.__dict__ = attr
+from tools.configurations import ContinuousTimeRNNCfg
 
 
 class ContinuousTimeRNN:
