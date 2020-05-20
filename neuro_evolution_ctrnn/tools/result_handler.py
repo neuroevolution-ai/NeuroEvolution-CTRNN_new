@@ -11,6 +11,9 @@ class ResultHandler(object):
         self.result_path = result_path
         self.nn_type = neural_network_type
         self.config_raw = config_raw
+        self.result_hof = None
+        self.result_log = None
+        self.result_time_elapsed = None
 
     def check_path(self):
         # checking before hand is not pythonic, but problems would a lot of processing time go to waste
@@ -24,24 +27,20 @@ class ResultHandler(object):
             raise RuntimeError("result path '" + self.result_path + "' is not writable")
 
     def write_result(self, hof, log, time_elapsed, individual_size, input_space, output_size):
-        # Create new directory to store data of current simulation run
+        # store results in object, so it can be accept directly by other modules
+        self.result_hof = hof
+        self.result_log = log
+        self.result_time_elapsed = time_elapsed
 
         print("output directory: " + str(self.result_path))
-        # Save Configuration file as json
         with open(os.path.join(self.result_path, 'Configuration.json'), 'w') as outfile:
             json.dump(self.config_raw, outfile)
-
-        # Save hall of fame individuals
         with open(os.path.join(self.result_path, 'HallOfFame.pickle'), "wb") as fp:
             pickle.dump(hof, fp)
-
-        # Save Log
         with open(os.path.join(self.result_path, 'Log.json'), 'w') as outfile:
             json.dump(log, outfile)
 
-        # Write Log to text file
         with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
-
             def write(key, value, depth, is_leaf):
                 pad = ""
                 for x in range(depth):

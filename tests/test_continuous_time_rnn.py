@@ -1,6 +1,6 @@
 # import neu
 
-from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContinuousTimeRNNCfg, ContinuousTimeRNN
+from brains.continuous_time_rnn import ContinuousTimeRNNCfg, ContinuousTimeRNN
 import numpy as np
 from collections import namedtuple
 
