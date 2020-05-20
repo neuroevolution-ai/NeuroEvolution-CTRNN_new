@@ -1,18 +1,18 @@
 # import neu
 
-from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContrinuousTimeRNNCfg, ContinuousTimeRNN
+from neuro_evolution_ctrnn.brains.continuous_time_rnn import ContinuousTimeRNNCfg, ContinuousTimeRNN
 import numpy as np
 from collections import namedtuple
 
 
 class TestCTRNN:
-    c = ContrinuousTimeRNNCfg(optimize_y0=True,
-                              delta_t=0.05,
-                              optimize_state_boundaries="legacy",
-                              set_principle_diagonal_elements_of_W_negative=False,
-                              number_neurons=2,
-                              clipping_range_min=1.0,
-                              clipping_range_max=1.0)
+    c = ContinuousTimeRNNCfg(optimize_y0=True,
+                             delta_t=0.05,
+                             optimize_state_boundaries="legacy",
+                             set_principle_diagonal_elements_of_W_negative=False,
+                             number_neurons=2,
+                             clipping_range_min=1.0,
+                             clipping_range_max=1.0)
     brain_param = namedtuple("brain_param", ["V", "W", "T", "y0", "clip_min", "clip_max"])
     brain_param_simple = brain_param(
         V=np.array([[0, 1],
@@ -77,9 +77,9 @@ class TestCTRNN:
         assert np.allclose(brain.y, np.ones([2, 2]) * 10)
 
     def test_clipping_per_neuron(self):
-        x = self.c._asdict()
+        x = self.c.__dict__
         x["optimize_state_boundaries"] = "per_neuron"
-        config = ContrinuousTimeRNNCfg(**x)
+        config = ContinuousTimeRNNCfg(**x)
         y = self.brain_param_identity._asdict()
         y["clip_max"] = np.array([2,3])
         y["clip_min"] = np.array([-4, -5])

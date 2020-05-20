@@ -1,11 +1,14 @@
 import numpy as np
-import random
-from collections import namedtuple
 from tools.helper import set_random_seeds
 import gym
 
-EpisodeRunnerCfg = namedtuple("EpisodeRunnerCfg", [
-    "number_fitness_runs", "keep_env_seed_fixed_during_generation", ])
+
+class EpisodeRunnerCfg:
+    number_fitness_runs: int
+    keep_env_seed_fixed_during_generation: bool
+
+    def __init__(self, **attr):
+        self.__dict__ = attr
 
 
 class EpisodeRunner(object):

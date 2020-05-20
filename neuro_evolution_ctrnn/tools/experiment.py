@@ -7,19 +7,29 @@ from deap import tools
 from scoop import futures
 from collections import namedtuple
 
-from brains.continuous_time_rnn import ContinuousTimeRNN, ContrinuousTimeRNNCfg
+from brains.continuous_time_rnn import ContinuousTimeRNN, ContinuousTimeRNNCfg
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
 from tools.result_handler import ResultHandler
 from tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
 from tools.helper import set_random_seeds
 
+
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 
-ExperimentCfg = namedtuple("ExperimentCfg", [
-    "neural_network_type", "environment", "random_seed",
-    "trainer_type", "number_generations", "brain", "episode_runner", "trainer"
-])
+
+class ExperimentCfg:
+    neural_network_type: str
+    environment: str
+    random_seed: int
+    trainer_type: str
+    number_generations: int
+    brain: object
+    episode_runner: EpisodeRunnerCfg
+    trainer: TrainerCmaEsCfg
+
+    def __init__(self, **attr):
+        self.__dict__ = attr
 
 
 class Experiment(object):
@@ -38,7 +48,7 @@ class Experiment(object):
         config_dict = self._config_dict_raw.copy()
         if config_dict["neural_network_type"] == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
-            brain_cfg_class = ContrinuousTimeRNNCfg
+            brain_cfg_class = ContinuousTimeRNNCfg
         else:
             raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
 
