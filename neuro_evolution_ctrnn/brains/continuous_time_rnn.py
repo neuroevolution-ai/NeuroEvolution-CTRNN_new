@@ -56,14 +56,19 @@ class ContinuousTimeRNN:
 
         # Clipping ranges for state boundaries
         if optimize_state_boundaries:
-            self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
-            self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
+            # self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
+            # self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
+
+            # todo remove hack
+            self.clipping_range_min = [-abs(element) for element in individual[index:index+N_n]]
+            self.clipping_range_max = [abs(element) for element in individual[index+N_n:]]
         else:
             self.clipping_range_min = np.asarray([-config.clipping_range] * N_n)
             self.clipping_range_max = np.asarray([config.clipping_range] * N_n)
 
-        self.clipping_range_min = self.clipping_range_min[:, np.newaxis]
-        self.clipping_range_max = self.clipping_range_max[:, np.newaxis]
+        # todo remove hack
+        # self.clipping_range_min = self.clipping_range_min[:, np.newaxis]
+        # self.clipping_range_max = self.clipping_range_max[:, np.newaxis]
 
         # Set elements of main diagonal to less than 0
         if set_principle_diagonal_elements_of_W_negative:
@@ -81,7 +86,10 @@ class ContinuousTimeRNN:
         self.y = self.y + self.delta_t * dydt
 
         # Clip y to state boundaries
-        self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+        # self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+        # todo remove hack
+        for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
+            self.y = np.clip(self.y, y_min, y_max)
 
         # Calculate outputs
         o = np.tanh(np.dot(self.y.T, self.T))
