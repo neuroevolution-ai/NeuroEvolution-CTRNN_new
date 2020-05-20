@@ -122,7 +122,7 @@ class Experiment(object):
         env = gym.make(self.config.environment)
 
         # Get individual size
-        input_space = env.observation_space.shape[0]
+        input_space = env.observation_space.shape
         output_size = env.action_space.shape[0]
 
         env.render()
@@ -140,7 +140,7 @@ class Experiment(object):
 
             while not done:
                 action = brain.step(ob)
-                brain_vis.process_update()
+                brain_vis.process_update(input=ob, output=action)
                 ob, rew, done, info = env.step(action)
                 fitness_current += rew
                 env.render()

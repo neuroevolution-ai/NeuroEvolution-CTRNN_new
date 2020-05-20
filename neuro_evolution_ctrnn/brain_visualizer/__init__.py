@@ -21,7 +21,7 @@ class BrainVisualizer(object):
         root.wm_title("Tkinter window")
         root.geometry("200x200")
 
-    def process_update(self):
+    def process_update(self, in_values, out_values):
         self.app.set_text("new states: \n" + str(self.brain.y))
         self.root.update_idletasks()
         self.root.update()
