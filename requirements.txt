@@ -1,0 +1,16 @@
+pytest
+scoop
+pybullet
+gym[atari]
+# gym[box2d]
+deap
+matplotlib
+pytest-mypy
+mypy
+numpy
+nptyping
+
+# torch
+
+# optional, if needed install manually
+# gym[mujoco]
