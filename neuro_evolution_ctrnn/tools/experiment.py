@@ -24,7 +24,7 @@ class ExperimentCfg:
     random_seed: int
     trainer_type: str
     number_generations: int
-    brain: object
+    brain: any
     episode_runner: EpisodeRunnerCfg
     trainer: TrainerCmaEsCfg
 
