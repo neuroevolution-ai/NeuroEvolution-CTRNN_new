@@ -4,6 +4,8 @@ import pickle
 
 from collections import namedtuple
 from tools.helper import walk_dict
+import numpy as np
+
 
 class ResultHandler(object):
 
@@ -26,7 +28,7 @@ class ResultHandler(object):
         if not os.access(self.result_path, os.W_OK):
             raise RuntimeError("result path '" + self.result_path + "' is not writable")
 
-    def write_result(self, hof, log, time_elapsed, individual_size, input_space, output_size):
+    def write_result(self, hof, log, time_elapsed: float, individual_size: int, input_space: np.shape, output_size):
         # store results in object, so it can be accept directly by other modules
         self.result_hof = hof
         self.result_log = log
@@ -50,7 +52,6 @@ class ResultHandler(object):
                 else:
                     write_file.write(pad + key)
                 write_file.write('\n')
-
 
             walk_dict(self.config_raw, write)
 

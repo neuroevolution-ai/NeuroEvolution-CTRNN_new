@@ -82,7 +82,7 @@ class Experiment(object):
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-        pop, log = self.trainer.train(self.stats, number_generations=self.config.number_generations)
+        log = self.trainer.train(self.stats, number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
             hof=self.trainer.hof,

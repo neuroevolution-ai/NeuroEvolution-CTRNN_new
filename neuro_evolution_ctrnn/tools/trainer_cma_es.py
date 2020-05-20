@@ -13,9 +13,8 @@ class TrainerCmaEs(object):
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: TrainerCmaEsCfg, map_func=map,
                  hof: tools.HallOfFame = tools.HallOfFame(5)):
         self.toolbox = toolbox = base.Toolbox()
-        self.conf = conf
+        self.conf: TrainerCmaEsCfg = conf
         self.hof = hof
-        self.toolbox.cb_before_each_generation = None
 
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)

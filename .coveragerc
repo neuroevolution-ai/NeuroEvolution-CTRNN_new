@@ -1,0 +1,2 @@
+[run]
+omit = neuro_evolution_ctrnn/conftest.py,neuro_evolution_ctrnn/train.py,neuro_evolution_ctrnn/visualize.py,

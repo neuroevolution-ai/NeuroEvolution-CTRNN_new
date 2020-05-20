@@ -9,6 +9,7 @@ pytest-mypy
 mypy
 numpy
 nptyping
+pytest-mock
 
 # torch
 
