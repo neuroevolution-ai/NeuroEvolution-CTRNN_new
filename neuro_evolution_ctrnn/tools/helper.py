@@ -1,15 +1,48 @@
-
 import random
 import numpy as np
+from brains.continuous_time_rnn import ContinuousTimeRNNCfg
+from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg
+import json
+import copy
 
 
 def walk_dict(node, callback_node, depth=0):
     for key, item in node.items():
-        if isinstance(item,dict):
+        if isinstance(item, dict):
             callback_node(key, item, depth, False)
             walk_dict(item, callback_node, depth + 1)
         else:
             callback_node(key, item, depth, True)
+
+
+def config_from_file(json_path):
+    # Load configuration file
+    with open(json_path, "r") as read_file:
+        config_dict = json.load(read_file)
+
+    # store the serializable version of the config so it can be later be serialized again
+    config_dict["raw_dict"] = copy.deepcopy(config_dict)
+
+    if config_dict["neural_network_type"] == 'CTRNN':
+        brain_cfg_class = ContinuousTimeRNNCfg
+    else:
+        raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
+
+    if config_dict["trainer_type"] == 'CMA_ES':
+        trainer_cfg_class = TrainerCmaEsCfg
+    else:
+        raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))
+
+    if not config_dict["random_seed"]:
+        config_dict["random_seed"] = random.getstate()
+        print("setting random seed to: " + str(config_dict["random_seed"]))
+
+    # turned json into nested named tuples so python's type-hinting can do its magic
+    # bonus: config becomes immutable
+    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
+    config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
+    config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
+    return ExperimentCfg(**config_dict)
 
 
 def set_random_seeds(seed, env):
@@ -23,5 +56,3 @@ def set_random_seeds(seed, env):
     if env:
         env.seed(seed)
         env.action_space.seed(seed)
-
-

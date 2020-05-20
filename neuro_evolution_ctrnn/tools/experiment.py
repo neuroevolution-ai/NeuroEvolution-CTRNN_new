@@ -7,67 +7,36 @@ from deap import tools
 from scoop import futures
 from collections import namedtuple
 
-from brains.continuous_time_rnn import ContinuousTimeRNN, ContinuousTimeRNNCfg
+from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
-from tools.episode_runner import EpisodeRunner, EpisodeRunnerCfg
+from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
-from tools.trainer_cma_es import TrainerCmaEs, TrainerCmaEsCfg
+from tools.trainer_cma_es import TrainerCmaEs
 from tools.helper import set_random_seeds
+from tools.configurations import ExperimentCfg
 
 
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 
 
-class ExperimentCfg:
-    neural_network_type: str
-    environment: str
-    random_seed: int
-    trainer_type: str
-    number_generations: int
-    brain: any
-    episode_runner: EpisodeRunnerCfg
-    trainer: TrainerCmaEsCfg
-
-    def __init__(self, **attr):
-        self.__dict__ = attr
-
-
 class Experiment(object):
 
-    def __init__(self, configuration_path, result_path, from_checkpoint=None):
-        self.configuration_path = configuration_path
+    def __init__(self, configuration: ExperimentCfg, result_path, from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
-        self.config = self._parse_config(self.configuration_path)
-        self._setup()
+        self.config = configuration
 
-    def _parse_config(self, json_path):
-        # Load configuration file
-        with open(json_path, "r") as read_file:
-            self._config_dict_raw = json.load(read_file)
-        config_dict = self._config_dict_raw.copy()
-        if config_dict["neural_network_type"] == 'CTRNN':
+        if self.config.neural_network_type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
-            brain_cfg_class = ContinuousTimeRNNCfg
         else:
-            raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
+            raise RuntimeError("unknown neural_network_type: " + str(self.config.neural_network_type))
 
-        if config_dict["trainer_type"] == 'CMA_ES':
+        if self.config.trainer_type == 'CMA_ES':
             self.trainer_class = TrainerCmaEs
-            trainer_cfg_class = TrainerCmaEsCfg
         else:
-            raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))
+            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
 
-        if not config_dict["random_seed"]:
-            config_dict["random_seed"] = random.getstate()
-            print("setting random seed to: " + str(config_dict["random_seed"]))
-
-        # turned json into nested named tuples so python's type-hinting can do its magic
-        # bonus: config becomes immutable
-        config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
-        config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
-        config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
-        return ExperimentCfg(**config_dict)
+        self._setup()
 
     def _setup(self):
         env = gym.make(self.config.environment)
@@ -104,7 +73,7 @@ class Experiment(object):
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.neural_network_type,
-                                            config_raw=self._config_dict_raw)
+                                            config_raw=self.config.raw_dict)
 
         self.stats = tools.Statistics(lambda ind: ind.fitness.values)
         self.stats.register("avg", np.mean)

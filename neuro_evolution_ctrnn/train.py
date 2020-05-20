@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from tools.experiment import Experiment
+from tools.helper import config_from_file
 
 
 def parse_args(args=None):
@@ -19,7 +20,7 @@ def parse_args(args=None):
 
 
 args = parse_args()
-experiment = Experiment(configuration_path=args.configuration, result_path=args.result_path,
+experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
                         from_checkpoint=args.from_checkpoint)
 
 if __name__ == "__main__":

@@ -1,14 +1,7 @@
 import numpy as np
 from tools.helper import set_random_seeds
 import gym
-
-
-class EpisodeRunnerCfg:
-    number_fitness_runs: int
-    keep_env_seed_fixed_during_generation: bool
-
-    def __init__(self, **attr):
-        self.__dict__ = attr
+from tools.configurations import EpisodeRunnerCfg
 
 
 class EpisodeRunner(object):

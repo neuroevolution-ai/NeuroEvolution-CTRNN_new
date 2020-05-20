@@ -6,10 +6,7 @@ from tools import algorithms
 
 from collections import namedtuple
 from typing import Callable
-
-TrainerCmaEsCfg = namedtuple("TrainerCmaEsCfg", [
-    "population_size", "sigma"
-])
+from tools.configurations import TrainerCmaEsCfg
 
 
 class TrainerCmaEs(object):
