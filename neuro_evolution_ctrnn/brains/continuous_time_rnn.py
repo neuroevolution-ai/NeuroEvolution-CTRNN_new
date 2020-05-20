@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from collections import namedtuple
 
@@ -15,11 +13,12 @@ ContrinuousTimeRNNCfg = namedtuple("ContrinuousTimeRNNCfg", [
 
 class ContinuousTimeRNN:
 
-    def __init__(self, input_space: np.shape, output_size: int, individual: List[float], config: ContrinuousTimeRNNCfg):
+    def __init__(self, input_space: np.shape, output_size: int, individual: np.ndarray, config: ContrinuousTimeRNNCfg):
 
+        assert len(individual) == self.get_individual_size(input_space, output_size, config)
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
-        optimize_state_boundaries = config.optimize_state_boundaries
+        self.optimize_state_boundaries = config.optimize_state_boundaries
         set_principle_diagonal_elements_of_W_negative = config.set_principle_diagonal_elements_of_W_negative
         N_n = config.number_neurons
 
@@ -34,7 +33,7 @@ class ContinuousTimeRNN:
         self.delta_t = delta_t
         self.set_principle_diagonal_elements_of_W_negative = set_principle_diagonal_elements_of_W_negative
 
-        # Get weight matrizes of current individual
+        # Get weight matrices of current individual
         self.V = np.array([[element] for element in individual[0:V_size]])
         self.W = np.array([[element] for element in individual[V_size:V_size + W_size]])
         self.T = np.array([[element] for element in individual[V_size + W_size:V_size + W_size + T_size]])
@@ -55,20 +54,21 @@ class ContinuousTimeRNN:
         self.y = self.y0[:, np.newaxis]
 
         # Clipping ranges for state boundaries
-        if optimize_state_boundaries:
-            # self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
-            # self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
-
-            # todo remove hack
-            self.clipping_range_min = [-abs(element) for element in individual[index:index+N_n]]
-            self.clipping_range_max = [abs(element) for element in individual[index+N_n:]]
-        else:
+        if self.optimize_state_boundaries == "per_neuron":
+            self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
+            self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
+            # self.clipping_range_min = self.clipping_range_min[:, np.newaxis]
+            # self.clipping_range_max = self.clipping_range_max[:, np.newaxis]
+        elif self.optimize_state_boundaries == "global":
+            raise RuntimeError("not yet implemented")
+        elif self.optimize_state_boundaries == "legacy":
+            # todo: remove this
+            self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
+            self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
+        elif self.optimize_state_boundaries == "fixed":
             self.clipping_range_min = np.asarray([-config.clipping_range] * N_n)
             self.clipping_range_max = np.asarray([config.clipping_range] * N_n)
 
-        # todo remove hack
-        # self.clipping_range_min = self.clipping_range_min[:, np.newaxis]
-        # self.clipping_range_max = self.clipping_range_max[:, np.newaxis]
 
         # Set elements of main diagonal to less than 0
         if set_principle_diagonal_elements_of_W_negative:
@@ -85,19 +85,23 @@ class ContinuousTimeRNN:
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
 
-        # Clip y to state boundaries
-        # self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
         # todo remove hack
-        for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
-            self.y = np.clip(self.y, y_min, y_max)
+        if self.optimize_state_boundaries == "legacy":
+            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
+                self.y = np.clip(self.y, y_min, y_max)
+        else:
+            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+
 
         # Calculate outputs
+        # todo: the output is always between 0 and 1, but for some experiments it should be scaled up to other intervalls
+        # gym's output-shape contains all information needed for this todo
         o = np.tanh(np.dot(self.y.T, self.T))
 
         return o[0]
 
     @staticmethod
-    def _get_size_from_shape(shape:np.shape):
+    def _get_size_from_shape(shape: np.shape):
         size = 1
         for val in shape:
             size = size * val
