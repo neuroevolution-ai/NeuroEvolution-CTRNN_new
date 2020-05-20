@@ -45,8 +45,6 @@ class Experiment(object):
         # to avoid concurrency problems that would arise from a shared global state
         self.env_template = env
         set_random_seeds(self.config.random_seed, env)
-
-        # Get individual size
         self.input_space = env.observation_space.shape
         if env.action_space.shape:
             # e.g. box2d, mujoco
@@ -85,8 +83,6 @@ class Experiment(object):
         self.result_handler.check_path()
         start_time = time.time()
         pop, log = self.trainer.train(self.stats, number_generations=self.config.number_generations)
-
-        # print elapsed time
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
             hof=self.trainer.hof,
@@ -99,11 +95,8 @@ class Experiment(object):
 
     def visualize(self, individuals, brain_vis_handler):
         env = gym.make(self.config.environment)
-
-        # Get individual size
         input_space = env.observation_space.shape
         output_size = env.action_space.shape[0]
-
         env.render()
 
         for individual in individuals:

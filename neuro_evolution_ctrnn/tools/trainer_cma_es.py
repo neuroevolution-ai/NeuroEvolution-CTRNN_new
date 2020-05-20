@@ -3,8 +3,6 @@ from deap import creator
 from deap import tools
 from deap import cma
 from tools import algorithms
-
-from collections import namedtuple
 from typing import Callable
 from tools.configurations import TrainerCmaEsCfg
 
