@@ -10,6 +10,7 @@ mypy
 numpy
 nptyping
 pytest-mock
+git+git://github.com/numpy/numpy-stubs.git#egg=numpy-stubs
 
 # torch
 

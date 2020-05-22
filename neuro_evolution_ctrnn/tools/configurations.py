@@ -37,7 +37,7 @@ class ExperimentCfg:
     random_seed: int
     trainer_type: str
     number_generations: int
-    brain: any
+    brain: ContinuousTimeRNNCfg
     episode_runner: EpisodeRunnerCfg
     trainer: TrainerCmaEsCfg
     _raw_dict: dict

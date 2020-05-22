@@ -1,5 +1,6 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
+from typing import Any, Collection, List, Union
 
 
 class ContinuousTimeRNN:
@@ -42,7 +43,8 @@ class ContinuousTimeRNN:
         else:
             self.y0 = np.zeros(N_n)
 
-        self.y = self.y0[:, np.newaxis]
+        # self.y = self.y0[:, np.newaxis]
+        self.y = self.y0
 
         # Clipping ranges for state boundaries
         if self.optimize_state_boundaries == "per_neuron":
@@ -56,37 +58,36 @@ class ContinuousTimeRNN:
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
         elif self.optimize_state_boundaries == "fixed":
-            self.clipping_range_min = np.asarray([-config.clipping_range] * N_n)
-            self.clipping_range_max = np.asarray([config.clipping_range] * N_n)
+            self.clipping_range_min = np.asarray([config.clipping_range_min] * N_n)
+            self.clipping_range_max = np.asarray([config.clipping_range_max] * N_n)
+        else:
+            raise RuntimeError("unkown parameter for optimize_state_boundaries")
 
         # Set elements of main diagonal to less than 0
         if set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
                 self.W[j][j] = -abs(self.W[j][j])
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
-
-        u: np.ndarray = ob[:, np.newaxis]
-
+    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         # Differential equation
-        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, u)
+        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
 
-        # todo remove hack
         if self.optimize_state_boundaries == "legacy":
             for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
                 self.y = np.clip(self.y, y_min, y_max)
-        else:
+        elif self.optimize_state_boundaries == "per_neuron":
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+        else:
+            raise NotImplementedError()
 
         # Calculate outputs
         # todo: the output is always between 0 and 1, but for some experiments it should be scaled up to other intervalls
         # gym's output-shape contains all information needed for this todo
-        o = np.tanh(np.dot(self.y.T, self.T))
-
-        return o[0]
+        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y.T, self.T))
+        return o
 
     @staticmethod
     def _get_size_from_shape(shape: np.shape):

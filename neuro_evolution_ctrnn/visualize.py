@@ -10,6 +10,7 @@ import threading
 
 from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
+from tools.helper import config_from_file
 
 
 def parse_args(args=None):
@@ -27,15 +28,16 @@ def parse_args(args=None):
 args = parse_args()
 directory = os.path.join(args.configuration)
 
-with open(os.path.join(directory, 'HallOfFame.pickle'), "rb") as read_file:
+with open(os.path.join(directory, 'HallOfFame.pickle'), "rb") as read_file_hof:
     # creator is needed to unpickle HOF
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
-    hall_of_fame = pickle.load(read_file)
-with open(os.path.join(directory, 'Log.json'), 'r') as read_file:
-    log = json.load(read_file)
+    hall_of_fame = pickle.load(read_file_hof)
+with open(os.path.join(directory, 'Log.json'), 'r') as read_file_log:
+    log = json.load(read_file_log)
 
-experiment = Experiment(configuration_path=os.path.join(directory, 'Configuration.json'), result_path="asdasd",
+experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
+                        result_path="asdasd",
                         from_checkpoint=None)
 
 t = threading.Thread(target=experiment.visualize, args=[hall_of_fame[0:2], BrainVisualizerHandler()])
