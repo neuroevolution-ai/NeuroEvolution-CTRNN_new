@@ -10,6 +10,8 @@
   },
   "brain": {
     "number_neurons": 2,
+    "normalize_input": true,
+    "normalize_input_target": 1,
     "delta_t": 0.05,
     "optimize_state_boundaries": "legacy",
     "clipping_range_max": 1.0,
