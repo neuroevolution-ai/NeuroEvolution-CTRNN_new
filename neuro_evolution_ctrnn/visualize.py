@@ -21,7 +21,7 @@ def parse_args(args=None):
 
     parser.add_argument('--plot', metavar='dir', type=bool,
                         help='show plot?',
-                        default=False)
+                        default=True)
     return parser.parse_args(args)
 
 
