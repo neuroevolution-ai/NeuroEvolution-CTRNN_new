@@ -14,7 +14,7 @@ def parse_args(args=None):
                         help='use an alternative configuration file', default='configurations/cma_es_basic.json')
     parser.add_argument('--result-path', metavar='dir', type=os.path.abspath,
                         help='use an alternative path for simulation results',
-                        default=os.path.join("results", datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
+                        default=os.path.join("results/data/", datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
     return parser.parse_args(args)
 
 
