@@ -17,7 +17,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description='visualize CTRNN')
     parser.add_argument('--configuration', metavar='dir', type=str,
                         help='use an alternative configuration file',
-                        default=os.path.join('results', '2020-05-19_14-53-45'))
+                        default=os.path.join('results', '2020-05-22_14-56-13'))
 
     parser.add_argument('--plot', metavar='dir', type=bool,
                         help='show plot?',

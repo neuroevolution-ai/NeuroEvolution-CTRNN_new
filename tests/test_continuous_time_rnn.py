@@ -3,6 +3,7 @@
 from brains.continuous_time_rnn import ContinuousTimeRNNCfg, ContinuousTimeRNN
 import numpy as np
 from collections import namedtuple
+from gym.spaces import Box
 
 
 class TestCTRNN:
@@ -25,6 +26,8 @@ class TestCTRNN:
         clip_min=np.array([14, 15]),
         clip_max=np.array([16, 17]))
 
+    box2d = Box(-1, 1, shape=[2])
+
     brain_param_identity = brain_param(
         V=np.eye(2),
         W=np.eye(2),
@@ -43,8 +46,10 @@ class TestCTRNN:
              brain_param.clip_max.flatten()])
 
     def test_individual(self):
+        #     def __init__(self, low, high, shape=None, dtype=np.float32):
+
         bp = self.brain_param_simple
-        brain = ContinuousTimeRNN(input_space=[2], output_size=2, individual=self.param_to_genom(bp), config=self.c)
+        brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp), config=self.c)
         assert np.array_equal(bp.V, brain.V)
         assert np.array_equal(bp.W, brain.W)
         assert np.array_equal(bp.T, brain.T)
@@ -54,7 +59,7 @@ class TestCTRNN:
 
     def test_step(self):
         bp = self.brain_param_identity
-        brain = ContinuousTimeRNN(input_space=[2], output_size=2, individual=self.param_to_genom(bp), config=self.c)
+        brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp), config=self.c)
         brain.delta_t = 1.0
         ob = np.array([1, 1])
         assert np.allclose(brain.y, np.zeros([2, 2]))
@@ -68,7 +73,7 @@ class TestCTRNN:
 
     def test_clipping_legacy(self):
         bp = self.brain_param_identity
-        brain = ContinuousTimeRNN(input_space=[2], output_size=2, individual=self.param_to_genom(bp), config=self.c)
+        brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp), config=self.c)
         ob = np.array([1, 1])
         res = brain.step(ob * 1000)
         # due to tanh the maximum output is 1.0
@@ -84,7 +89,7 @@ class TestCTRNN:
         y["clip_max"] = np.array([2,3])
         y["clip_min"] = np.array([-4, -5])
         bp = self.brain_param(**y)
-        brain = ContinuousTimeRNN(input_space=[2], output_size=2,
+        brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2,
                                   individual=self.param_to_genom(bp), config=config)
         ob = np.array([1, 1])
         brain.step(ob * 100000)
@@ -97,5 +102,5 @@ class TestCTRNN:
         assert size == 27
 
     def test_get_individual_size(self):
-        ind_size = ContinuousTimeRNN.get_individual_size(input_space=[3], output_size=3, config=self.c)
+        ind_size = ContinuousTimeRNN.get_individual_size(input_space=Box(-1, 1, shape=[3]), output_size=3, config=self.c)
         assert ind_size == 22

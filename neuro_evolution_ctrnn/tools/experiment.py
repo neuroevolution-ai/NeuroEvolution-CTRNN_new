@@ -45,7 +45,7 @@ class Experiment(object):
         # to avoid concurrency problems that would arise from a shared global state
         self.env_template = env
         set_random_seeds(self.config.random_seed, env)
-        self.input_space = env.observation_space.shape
+        self.input_space = env.observation_space
         if env.action_space.shape:
             # e.g. box2d, mujoco
             self.output_size = env.action_space.shape[0]
@@ -95,8 +95,6 @@ class Experiment(object):
 
     def visualize(self, individuals, brain_vis_handler):
         env = gym.make(self.config.environment)
-        input_space = env.observation_space.shape
-        output_size = env.action_space.shape[0]
         env.render()
 
         for individual in individuals:
@@ -104,15 +102,17 @@ class Experiment(object):
             set_random_seeds(self.config.random_seed, env)
             ob = env.reset()
             done = False
-            brain = self.brain_class(input_space=input_space,
-                                     output_size=output_size,
+            brain = self.brain_class(input_space=self.input_space,
+                                     output_size=self.output_size,
                                      individual=individual,
                                      config=self.config.brain)
             brain_vis = brain_vis_handler.launch_new_visualization(brain)
 
             while not done:
                 action = brain.step(ob)
-                brain_vis.process_update(input=ob, output=action)
+                brain_vis.process_update(in_values=ob, out_values=action)
+                if self.discrete_actions:
+                    action = np.argmax(action)
                 ob, rew, done, info = env.step(action)
                 fitness_current += rew
                 env.render()
