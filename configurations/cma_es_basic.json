@@ -1,5 +1,5 @@
 {
-  "environment": "BipedalWalker-v3",
+  "environment": "Robotank-ram-v4",
   "neural_network_type": "CTRNN",
   "random_seed": 123,
   "number_generations": 5,
