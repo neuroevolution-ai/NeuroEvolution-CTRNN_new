@@ -16,17 +16,20 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
 echo "checking git-repo ..."
 git fetch
-if [ -n "`git rev-list HEAD..origin`"] ; then
+if [ "$(git rev-list HEAD..origin)" ]
+then
   echo "Error: Upstream changes in git repo. Please do 'git pull --rebase' before running simulations"
   exit 1
 fi
 
-if [ -n "$(git status --porcelain |grep -v '.json')"] ; then
+if [ "$(git status --porcelain |grep -v '.json')" ]
+then
   echo "Error: Pending changes in Git Repo, that are not config-files. Please commit changes before running simulations"
   exit 1
 fi
 
-if [ -n "`git rev-list origin..HEAD`"] ; then
+if [ "$(git rev-list origin..HEAD)" ]
+then
   echo "Error: Pleaes push local changes before running simulations"
   exit 1
 fi
