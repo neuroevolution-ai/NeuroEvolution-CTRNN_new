@@ -8,7 +8,6 @@ import logging
 class ContinuousTimeRNN:
 
     def __init__(self, input_space: Space, output_size: int, individual: np.ndarray, config: ContinuousTimeRNNCfg):
-
         assert len(individual) == self.get_individual_size(config)
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
@@ -16,36 +15,21 @@ class ContinuousTimeRNN:
         self.input_space: Space = input_space
         set_principle_diagonal_elements_of_W_negative = config.set_principle_diagonal_elements_of_W_negative
         N_n = config.number_neurons
-        input_size = ContinuousTimeRNN._get_size_from_shape(input_space.shape)
-
-        # todo: do the same transformation for output-shapes, too
-        # todo: the shape-object contains sometimes min/max values, which should be used to normalize inputs/outputs
-
-        V_size = np.count_nonzero(self.v_mask)
-        W_size = np.count_nonzero(self.w_mask)
-        T_size = np.count_nonzero(self.t_mask)
 
         self.delta_t = delta_t
         self.set_principle_diagonal_elements_of_W_negative = set_principle_diagonal_elements_of_W_negative
 
-        # Get weight matrices of current individual
-        # self.V = np.array([[element] for element in individual[0:V_size]])
-        # self.W = np.array([[element] for element in individual[V_size:V_size + W_size]])
-        # self.T = np.array([[element] for element in individual[V_size + W_size:V_size + W_size + T_size]])
-
-        # self.V = self.V.reshape([N_n, input_size])
-
+        V_size = np.count_nonzero(self.v_mask)
+        W_size = np.count_nonzero(self.w_mask)
+        T_size = np.count_nonzero(self.t_mask)
         self.V = np.zeros(self.v_mask.shape, float)
         self.V[self.v_mask] = [element for element in individual[0:V_size]]
-        # self.W = self.W.reshape([N_n, N_n])
         self.W = np.zeros(self.w_mask.shape, float)
         self.W[self.w_mask] = [element for element in individual[V_size:V_size + W_size]]
-
-        # self.T = self.T.reshape([N_n, output_size])
         self.T = np.zeros(self.t_mask.shape, float)
         self.T[self.t_mask] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
-        index = V_size + W_size + T_size
+        index: int = V_size + W_size + T_size
 
         # Initial state values y0
         if optimize_y0:
@@ -54,7 +38,6 @@ class ContinuousTimeRNN:
         else:
             self.y0 = np.zeros(N_n)
 
-        # self.y = self.y0[:, np.newaxis]
         self.y = self.y0
 
         # Clipping ranges for state boundaries
@@ -65,7 +48,6 @@ class ContinuousTimeRNN:
             # apply the same learned state_boundary to all neuron
             raise RuntimeError("not yet implemented")
         elif self.config.optimize_state_boundaries == "legacy":
-            # todo: remove this after implementing and testing global boundaries
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
         elif self.config.optimize_state_boundaries == "fixed":
@@ -99,7 +81,7 @@ class ContinuousTimeRNN:
                     raise NotImplementedError("normalize_input is only defined for input-type Box")
 
         # Differential equation
-        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V.T, ob)
+        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
@@ -127,32 +109,24 @@ class ContinuousTimeRNN:
 
     @classmethod
     def get_individual_size(cls, config: ContinuousTimeRNNCfg):
-        N_n = config.number_neurons
-
         individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
-
         if config.optimize_y0:
-            individual_size += N_n
-
+            individual_size += config.number_neurons
         if config.optimize_state_boundaries:
-            individual_size += 2 * N_n
-
+            individual_size += 2 * config.number_neurons
         return individual_size
 
     @classmethod
     def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space, output_space):
-        input_size = ContinuousTimeRNN._get_size_from_shape(input_space.shape)
-        output_size = ContinuousTimeRNN._get_size_from_shape(output_space.shape)
+        input_size = cls._get_size_from_shape(input_space.shape)
+        output_size = cls._get_size_from_shape(output_space.shape)
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
 
-        cls.v_mask = ContinuousTimeRNN._generate_mask(config.v_mask, input_size, config.number_neurons,
-                                                      config.v_mask_prob)
-        cls.w_mask = ContinuousTimeRNN._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
-                                                      config.w_mask_prob)
-        cls.t_mask = ContinuousTimeRNN._generate_mask(config.t_mask, config.number_neurons, output_size,
-                                                      config.t_mask_prob)
+        cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_prob)
+        cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons, config.w_mask_prob)
+        cls.t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_prob)
 
     @staticmethod
     def _generate_mask(mask_type, n, m, mask_prob):
