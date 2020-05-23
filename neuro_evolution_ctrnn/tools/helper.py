@@ -14,6 +14,7 @@ def walk_dict(node, callback_node, depth=0):
             callback_node(key, item, depth, True)
 
 
+
 def config_from_file(json_path):
     # Load configuration file
     with open(json_path, "r") as read_file:
@@ -36,8 +37,8 @@ def config_from_file(json_path):
         config_dict["random_seed"] = random.getstate()
         print("setting random seed to: " + str(config_dict["random_seed"]))
 
-    # turned json into nested named tuples so python's type-hinting can do its magic
-    # bonus: config becomes immutable
+
+    # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
     config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))

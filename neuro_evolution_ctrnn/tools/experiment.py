@@ -5,7 +5,7 @@ import json
 import random
 from deap import tools
 from scoop import futures
-from collections import namedtuple
+import logging as l, logging
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
@@ -14,6 +14,8 @@ from tools.result_handler import ResultHandler
 from tools.trainer_cma_es import TrainerCmaEs
 from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
@@ -46,6 +48,7 @@ class Experiment(object):
         self.env_template = env
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
+        self.output_space = env.action_space
         if env.action_space.shape:
             # e.g. box2d, mujoco
             self.output_size = env.action_space.shape[0]
@@ -55,8 +58,12 @@ class Experiment(object):
             self.output_size = env.action_space.n
             self.discrete_actions = True
 
-        self.individual_size = self.brain_class.get_individual_size(self.input_space, self.output_size,
-                                                                    self.config.brain)
+        self.brain_class.set_masks_globally(config=self.config.brain,
+                                            input_space=self.input_space,
+                                            output_space=self.output_space)
+
+        self.individual_size = self.brain_class.get_individual_size(self.config.brain)
+        l.info("Infividual Size for this Experiment: " + str(self.individual_size))
 
         ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                   brain_conf=self.config.brain,

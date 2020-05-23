@@ -16,7 +16,13 @@ class TestCTRNN:
                              set_principle_diagonal_elements_of_W_negative=False,
                              number_neurons=2,
                              clipping_range_min=1.0,
-                             clipping_range_max=1.0)
+                             clipping_range_max=1.0,
+                             w_mask="dense",
+                             w_mask_prob=0.3,
+                             v_mask="dense",
+                             v_mask_prob=0.1,
+                             t_mask="dense",
+                             t_mask_prob=0.3)
     brain_param = namedtuple("brain_param", ["V", "W", "T", "y0", "clip_min", "clip_max"])
     brain_param_simple = brain_param(
         V=np.array([[0, 1],
@@ -51,6 +57,8 @@ class TestCTRNN:
     def test_individual(self):
         #     def __init__(self, low, high, shape=None, dtype=np.float32):
 
+        ContinuousTimeRNN.set_masks_globally(config=self.c, input_space=self.box2d,
+                                             output_space=Box(-1, 1, shape=[2]), )
         bp = self.brain_param_simple
         brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp),
                                   config=self.c)
@@ -63,6 +71,8 @@ class TestCTRNN:
 
     def test_step(self):
         bp = self.brain_param_identity
+        ContinuousTimeRNN.set_masks_globally(config=self.c, input_space=self.box2d,
+                                             output_space=Box(-1, 1, shape=[2]), )
         brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp),
                                   config=self.c)
         brain.delta_t = 1.0
@@ -78,6 +88,8 @@ class TestCTRNN:
 
     def test_clipping_legacy(self):
         bp = self.brain_param_identity
+        ContinuousTimeRNN.set_masks_globally(config=self.c, input_space=self.box2d,
+                                             output_space=Box(-1, 1, shape=[2]), )
         brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp),
                                   config=self.c)
         ob = np.array([1, 1])
@@ -94,6 +106,9 @@ class TestCTRNN:
         y["clip_max"] = np.array([2, 3])
         y["clip_min"] = np.array([-4, -5])
         bp = self.brain_param(**y)
+
+        ContinuousTimeRNN.set_masks_globally(config=self.c, input_space=self.box2d,
+                                             output_space=self.box2d, )
         brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2,
                                   individual=self.param_to_genom(bp), config=config)
         ob = np.array([1, 1])
@@ -107,6 +122,7 @@ class TestCTRNN:
         assert size == 27
 
     def test_get_individual_size(self):
-        ind_size = ContinuousTimeRNN.get_individual_size(input_space=Box(-1, 1, shape=[3]), output_size=3,
-                                                         config=self.c)
+        ContinuousTimeRNN.set_masks_globally(config=self.c, input_space=Box(-1, 1, shape=[3]),
+                                             output_space=Box(-1, 1, shape=[3]), )
+        ind_size = ContinuousTimeRNN.get_individual_size(config=self.c)
         assert ind_size == 22
