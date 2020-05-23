@@ -6,6 +6,9 @@ import logging
 
 
 class ContinuousTimeRNN:
+    v_mask: np.ndarray
+    w_mask: np.ndarray
+    t_mask: np.ndarray
 
     def __init__(self, input_space: Space, output_size: int, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         assert len(individual) == self.get_individual_size(config)
@@ -19,9 +22,9 @@ class ContinuousTimeRNN:
         self.delta_t = delta_t
         self.set_principle_diagonal_elements_of_W_negative = set_principle_diagonal_elements_of_W_negative
 
-        V_size = np.count_nonzero(self.v_mask)
-        W_size = np.count_nonzero(self.w_mask)
-        T_size = np.count_nonzero(self.t_mask)
+        V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
+        W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
+        T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
         self.V = np.zeros(self.v_mask.shape, float)
         self.V[self.v_mask] = [element for element in individual[0:V_size]]
         self.W = np.zeros(self.w_mask.shape, float)
@@ -85,6 +88,10 @@ class ContinuousTimeRNN:
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
+
+        if self.config.parameter_perturbations:
+            self.y = np.random.normal(self.y, self.config.parameter_perturbations)
+
 
         if self.config.optimize_state_boundaries == "legacy":
             for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):

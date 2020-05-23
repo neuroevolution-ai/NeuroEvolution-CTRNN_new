@@ -25,7 +25,7 @@ class ContinuousTimeRNNCfg(ConfigBase):
     __slots__ = ['optimize_y0', 'delta_t', 'optimize_state_boundaries',
                  'set_principle_diagonal_elements_of_W_negative', 'number_neurons',
                  'normalize_input', 'clipping_range_min', 'clipping_range_max', 'normalize_input_target', 'v_mask',
-                 'v_mask_prob', 'w_mask', 'w_mask_prob', 't_mask', 't_mask_prob']
+                 'v_mask_prob', 'w_mask', 'w_mask_prob', 't_mask', 't_mask_prob', 'parameter_perturbations']
     optimize_y0: bool
     delta_t: float
     optimize_state_boundaries: str
@@ -41,6 +41,7 @@ class ContinuousTimeRNNCfg(ConfigBase):
     w_mask_prob: float
     t_mask: str
     t_mask_prob: float
+    parameter_perturbations: float
 
 
 class TrainerCmaEsCfg(ConfigBase):
