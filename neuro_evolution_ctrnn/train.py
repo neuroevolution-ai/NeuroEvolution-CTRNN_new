@@ -13,7 +13,7 @@ def parse_args(args=None):
     parser.add_argument('--from-checkpoint', metavar='dir', type=str,
                         help='continues training from a checkpoint', default=None)
     parser.add_argument('--configuration', metavar='dir', type=str,
-                        help='use an alternative configuration file', default='configurations/cma_es_basic.json')
+                        help='use an alternative configuration file', default='configurations/default.json')
     parser.add_argument('--result-path', metavar='dir', type=os.path.abspath,
                         help='use an alternative path for simulation results',
                         default=os.path.join("results/data/", datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))

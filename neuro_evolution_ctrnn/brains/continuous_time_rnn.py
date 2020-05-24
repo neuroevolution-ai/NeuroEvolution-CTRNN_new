@@ -92,7 +92,6 @@ class ContinuousTimeRNN:
         if self.config.parameter_perturbations:
             self.y = np.random.normal(self.y, self.config.parameter_perturbations)
 
-
         if self.config.optimize_state_boundaries == "legacy":
             for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
                 self.y = np.clip(self.y, y_min, y_max)
@@ -101,10 +100,7 @@ class ContinuousTimeRNN:
         else:
             raise NotImplementedError()
 
-        # Calculate outputs
-        # todo: the output is always between 0 and 1, but for some experiments it should be scaled up to other intervalls
-        # gym's output-shape contains all information needed for this todo
-        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y.T, self.T))
+        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y , self.T))
         return o
 
     @staticmethod
