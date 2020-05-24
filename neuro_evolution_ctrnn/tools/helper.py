@@ -3,6 +3,10 @@ import numpy as np
 from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 import json
 import copy
+import pickle
+from pathlib import Path
+import os
+import logging
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -12,7 +16,6 @@ def walk_dict(node, callback_node, depth=0):
             walk_dict(item, callback_node, depth + 1)
         else:
             callback_node(key, item, depth, True)
-
 
 
 def config_from_file(json_path):
@@ -37,12 +40,27 @@ def config_from_file(json_path):
         config_dict["random_seed"] = random.getstate()
         print("setting random seed to: " + str(config_dict["random_seed"]))
 
-
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
     config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)
+
+
+def write_checkpoint(base_path, frequency, data):
+    if data["generation"] % frequency != 0:
+        return
+
+    filename = os.path.join(base_path, "checkpoint_" + str(data["generation"]) + ".pkl")
+    logging.info("writing checkpoint " + filename)
+    with open(filename, "wb") as cp_file:
+        pickle.dump(data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
+
+
+def get_checkpoint(checkpoint):
+    with open(checkpoint, "rb") as cp_file:
+        cp = pickle.load(cp_file, fix_imports=False)
+    return cp
 
 
 def set_random_seeds(seed, env):

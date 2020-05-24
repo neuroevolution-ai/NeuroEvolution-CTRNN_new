@@ -70,9 +70,16 @@ class Experiment(object):
                                   discrete_actions=self.discrete_actions, brain_class=self.brain_class,
                                   input_space=self.input_space, output_size=self.output_size, env_template=env)
 
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
+
         if self.config.trainer_type == "CMA_ES":
             self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
-                                              eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer, )
+                                              eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer,
+                                              stats=stats, from_checkoint=self.from_checkpoint)
         else:
             raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
 
@@ -80,16 +87,10 @@ class Experiment(object):
                                             neural_network_type=self.config.neural_network_type,
                                             config_raw=self.config.raw_dict)
 
-        self.stats = tools.Statistics(lambda ind: ind.fitness.values)
-        self.stats.register("avg", np.mean)
-        self.stats.register("std", np.std)
-        self.stats.register("min", np.min)
-        self.stats.register("max", np.max)
-
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-        log = self.trainer.train(self.stats, number_generations=self.config.number_generations)
+        log = self.trainer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
             hof=self.trainer.hof,

@@ -45,9 +45,10 @@ class ContinuousTimeRNNCfg(ConfigBase):
 
 
 class TrainerCmaEsCfg(ConfigBase):
-    __slots__ = ['population_size', 'sigma']
+    __slots__ = ['population_size', 'sigma', 'checkpoint_frequency']
     population_size: int
     sigma: float
+    checkpoint_frequency: int
 
 
 class ExperimentCfg(ConfigBase):
