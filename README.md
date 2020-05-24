@@ -24,13 +24,26 @@ pip install mujoco-py 'gym[mujoco]'
 3. (optional) change configuration `nano configurations/cma_es_basic.json`
 3. run training
 	- this will take some time
-	- just run training.sh
-	  - this will take care of venvs, and perform self-tests before starting the simulation
-	- alternativly you can run it manually:
-	    - `. ~/.venv/neuro/bin/activate`
-	    - `python -m scoop neuro_evolution_ctrnn/train.py --configuration configurations/cma_es_basic.json`
+    - `. ~/.venv/neuro/bin/activate`
+    - `python -m scoop neuro_evolution_ctrnn/train.py --configuration configurations/default.json`
 4. show results:
 	- `python neuro_evolution_ctrnn/visualize.py`
+5. publish results
+    - results are stored in a git submodule, so we need the change cwd before commiting
+    - `(cd results && git add . && git commit -m "new simulation results" && git pull --rebase && git push)`
+    
+
+## development
+
+checks: 
+
+```
+. $HOME/.venv/neuro/bin/activate
+python -m mypy .
+PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
+
+```
+
 
 ## troubleshooting
 

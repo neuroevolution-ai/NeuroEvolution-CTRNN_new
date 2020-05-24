@@ -48,6 +48,8 @@ def config_from_file(json_path):
 
 
 def write_checkpoint(base_path, frequency, data):
+    if not frequency:
+        return
     if data["generation"] % frequency != 0:
         return
 

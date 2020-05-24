@@ -22,7 +22,8 @@ class TestCTRNN:
                              v_mask="dense",
                              v_mask_prob=0.1,
                              t_mask="dense",
-                             t_mask_prob=0.3)
+                             t_mask_prob=0.3,
+                             parameter_perturbations=0.0)
     brain_param = namedtuple("brain_param", ["V", "W", "T", "y0", "clip_min", "clip_max"])
     brain_param_simple = brain_param(
         V=np.array([[0, 1],
