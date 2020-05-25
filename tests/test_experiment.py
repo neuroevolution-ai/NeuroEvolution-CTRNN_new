@@ -22,7 +22,10 @@ class TestExperiment:
         # sure nothing broke when you changed the underlying algorithm
 
         # note; this value depends on the machine
-        assert experiment.result_handler.result_log[-1]["max"] == -99.11361202453168
+        accepted_results = [-99.11361202453168,  # result on bjoern's notebook
+                            -98.95448135483025,  # result on bjoern's desktop
+                            ]
+        assert experiment.result_handler.result_log[-1]["max"] in accepted_results
 
     def test_run_atari(self, tmpdir, mocker):
         mocker.patch('tools.episode_runner.EpisodeRunner.eval_fitness', side_effect=mock_eval)

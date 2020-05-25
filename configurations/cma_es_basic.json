@@ -5,18 +5,18 @@
   "number_generations": 11,
   "trainer_type": "CMA_ES",
   "trainer": {
-    "population_size": 3,
+    "population_size": 150,
     "sigma": 1.0,
     "checkpoint_frequency": 20
   },
   "brain": {
-    "number_neurons": 5,
+    "number_neurons": 15,
     "delta_t": 0.05,
     "normalize_input": false,
     "normalize_input_target": 2,
-    "optimize_state_boundaries": "legacy",
-    "clipping_range_max": 1.0,
-    "clipping_range_min": -1.0,
+    "optimize_state_boundaries": "global",
+    "clipping_range_max": 0.1,
+    "clipping_range_min": -0.1,
     "optimize_y0": true,
     "set_principle_diagonal_elements_of_W_negative": true,
     "w_mask": "dense",

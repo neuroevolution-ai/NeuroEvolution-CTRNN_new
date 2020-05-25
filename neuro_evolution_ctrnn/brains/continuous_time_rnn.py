@@ -49,7 +49,8 @@ class ContinuousTimeRNN:
             self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
         elif self.config.optimize_state_boundaries == "global":
             # apply the same learned state_boundary to all neuron
-            raise RuntimeError("not yet implemented")
+            self.clipping_range_min = np.asarray([individual[index]] * N_n)
+            self.clipping_range_max = np.asarray([individual[index]] * N_n)
         elif self.config.optimize_state_boundaries == "legacy":
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
@@ -95,12 +96,10 @@ class ContinuousTimeRNN:
         if self.config.optimize_state_boundaries == "legacy":
             for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
                 self.y = np.clip(self.y, y_min, y_max)
-        elif self.config.optimize_state_boundaries == "per_neuron":
-            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
         else:
-            raise NotImplementedError()
+            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y , self.T))
+        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T))
         return o
 
     @staticmethod
@@ -115,8 +114,15 @@ class ContinuousTimeRNN:
         individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
         if config.optimize_y0:
             individual_size += config.number_neurons
-        if config.optimize_state_boundaries:
+
+        if config.optimize_state_boundaries == "legacy":
             individual_size += 2 * config.number_neurons
+        elif config.optimize_state_boundaries == "per_neuron":
+            individual_size += 2 * config.number_neurons
+        elif config.optimize_state_boundaries == "global":
+            individual_size += 1
+        elif config.optimize_state_boundaries == "fixed":
+            individual_size += 0
         return individual_size
 
     @classmethod
