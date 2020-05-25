@@ -11,10 +11,13 @@ import argparse
 import threading
 from operator import add, sub
 from scipy.ndimage.filters import gaussian_filter1d
+import logging
 
 from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_file
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 
 def parse_args(args=None):
@@ -23,9 +26,13 @@ def parse_args(args=None):
                         help='path to the simulation result',
                         default=os.path.join('results/data', '2020-05-22_16-38-09'))
 
-    parser.add_argument('--plot', metavar='bool', type=bool,
-                        help='show plot?',
-                        default=True)
+    parser.add_argument('--plot', dest='plot', action='store_true')
+    parser.add_argument('--no-plot', dest='plot', action='store_false')
+    parser.set_defaults(plot=True)
+    parser.add_argument('--plot-save', type=str,
+                        help='a filename where the plot should be saved',
+                        default=None)
+
     parser.add_argument('--neuron_vis', metavar='bool', type=bool,
                         help='show neuron visualizer?',
                         default=False)
@@ -46,7 +53,6 @@ with open(os.path.join(directory, 'HallOfFame.pickle'), "rb") as read_file_hof:
 with open(os.path.join(directory, 'Log.json'), 'r') as read_file_log:
     log = json.load(read_file_log)
 
-
 if args.neuron_vis or args.hof:
     experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
                             result_path="asdasd",
@@ -55,7 +61,7 @@ if args.neuron_vis or args.hof:
     t.start()
 
 # Plot results
-if args.plot:
+if args.plot_save or args.plot:
     generations = [i for i in range(len(log))]
     average = [generation["avg"] for generation in log]
     maximum = [generation["max"] for generation in log]
@@ -86,4 +92,10 @@ if args.plot:
     plt.ylabel('Fitness')
     plt.legend(loc='upper left')
     plt.grid()
-    plt.show()
+
+    if args.plot_save:
+        logging.info("saving plot to: " + str(args.plot_save))
+        plt.savefig(args.plot_save)
+
+    if args.plot:
+        plt.show()

@@ -15,8 +15,6 @@ from tools.trainer_cma_es import TrainerCmaEs
 from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-
 
 # from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
 
