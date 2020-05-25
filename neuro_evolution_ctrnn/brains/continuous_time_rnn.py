@@ -46,13 +46,14 @@ class ContinuousTimeRNN:
         self.y = self.y0
 
         # Clipping ranges for state boundaries
+        self.clipping_range_min: Union[int, np.ndarray]
+        self.clipping_range_max: Union[int, np.ndarray]
         if self.config.optimize_state_boundaries == "per_neuron":
             self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
             self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
         elif self.config.optimize_state_boundaries == "global":
-            # apply the same learned state_boundary to all neuron
             self.clipping_range_min = -abs(individual[index])
-            self.clipping_range_max = abs(individual[index])
+            self.clipping_range_max = abs(individual[index+1])
         elif self.config.optimize_state_boundaries == "legacy":
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
@@ -122,7 +123,7 @@ class ContinuousTimeRNN:
         elif config.optimize_state_boundaries == "per_neuron":
             individual_size += 2 * config.number_neurons
         elif config.optimize_state_boundaries == "global":
-            individual_size += 1
+            individual_size += 2
         elif config.optimize_state_boundaries == "fixed":
             individual_size += 0
         return individual_size
