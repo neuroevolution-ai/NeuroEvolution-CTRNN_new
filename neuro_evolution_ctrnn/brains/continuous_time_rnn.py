@@ -3,6 +3,7 @@ from tools.configurations import ContinuousTimeRNNCfg
 from typing import Any, Collection, List, Union
 from gym.spaces import Space, Box
 import logging
+import math
 
 
 class ContinuousTimeRNN:
@@ -53,7 +54,7 @@ class ContinuousTimeRNN:
             self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
         elif self.config.optimize_state_boundaries == "global":
             self.clipping_range_min = -abs(individual[index])
-            self.clipping_range_max = abs(individual[index+1])
+            self.clipping_range_max = abs(individual[index + 1])
         elif self.config.optimize_state_boundaries == "legacy":
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
@@ -136,14 +137,33 @@ class ContinuousTimeRNN:
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
 
-        cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_prob)
-        cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons, config.w_mask_prob)
-        cls.t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_prob)
+        cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
+        cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
+                                        config.w_mask_param)
+        cls.t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)
 
     @staticmethod
-    def _generate_mask(mask_type, n, m, mask_prob):
+    def _generate_mask(mask_type, n, m, mask_param):
         if mask_type == "random":
-            return np.random.rand(n, m) < mask_prob
+            return np.random.rand(n, m) < mask_param
+        elif mask_type == "logarithmic":
+            if mask_param < 1.05:
+                raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
+            base = mask_param
+            indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
+            indices = [0] + indices
+            result = np.zeros((n, m), dtype=bool)
+            for i in range(min(m, n)):
+                for j in indices:
+                    if i + j < m:
+                        # set value left of diagonal
+                        result[i][i + j] = True
+                    if i - j >= 0:
+                        # set value right of diagonal
+                        result[i][i - j] = True
+
+            return result
+
         elif mask_type == "dense":
             return np.ones((n, m), dtype=bool)
         else:

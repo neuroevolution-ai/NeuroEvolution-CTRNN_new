@@ -10,7 +10,7 @@
     "checkpoint_frequency": 20
   },
   "brain": {
-    "number_neurons": 15,
+    "number_neurons": 30,
     "delta_t": 0.05,
     "normalize_input": false,
     "normalize_input_target": 2,
@@ -19,12 +19,12 @@
     "clipping_range_min": -0.1,
     "optimize_y0": true,
     "set_principle_diagonal_elements_of_W_negative": true,
-    "w_mask": "dense",
-    "w_mask_prob": 0.3,
-    "v_mask": "dense",
-    "v_mask_prob": 0.1,
-    "t_mask": "dense",
-    "t_mask_prob": 0.3,
+    "w_mask": "logarithmic",
+    "w_mask_param": 4,
+    "v_mask": "logarithmic",
+    "v_mask_param": 4,
+    "t_mask": "logarithmic",
+    "t_mask_param": 4,
     "parameter_perturbations": 0.001
   },
   "episode_runner": {
