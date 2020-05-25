@@ -22,14 +22,16 @@ class ContinuousTimeRNN:
         self.delta_t = delta_t
         self.set_principle_diagonal_elements_of_W_negative = set_principle_diagonal_elements_of_W_negative
 
+        # insert weights-values into weight-masks to receive weight-matrices
+        # explanation here: https://stackoverflow.com/a/61968524/5132456
         V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
         W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
         T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
         self.V = np.zeros(self.v_mask.shape, float)
-        self.V[self.v_mask] = [element for element in individual[0:V_size]]
         self.W = np.zeros(self.w_mask.shape, float)
-        self.W[self.w_mask] = [element for element in individual[V_size:V_size + W_size]]
         self.T = np.zeros(self.t_mask.shape, float)
+        self.V[self.v_mask] = [element for element in individual[0:V_size]]
+        self.W[self.w_mask] = [element for element in individual[V_size:V_size + W_size]]
         self.T[self.t_mask] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
         index: int = V_size + W_size + T_size
@@ -49,8 +51,8 @@ class ContinuousTimeRNN:
             self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
         elif self.config.optimize_state_boundaries == "global":
             # apply the same learned state_boundary to all neuron
-            self.clipping_range_min = np.asarray([individual[index]] * N_n)
-            self.clipping_range_max = np.asarray([individual[index]] * N_n)
+            self.clipping_range_min = -abs(individual[index])
+            self.clipping_range_max = abs(individual[index])
         elif self.config.optimize_state_boundaries == "legacy":
             self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
             self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
