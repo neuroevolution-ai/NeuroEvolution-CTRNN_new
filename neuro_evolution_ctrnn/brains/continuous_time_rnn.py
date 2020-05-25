@@ -136,7 +136,7 @@ class ContinuousTimeRNN:
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
-
+        # todo: also story masks in checkpoints and hof.
         cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
         cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                         config.w_mask_param)
@@ -150,6 +150,8 @@ class ContinuousTimeRNN:
             if mask_param < 1.05:
                 raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
             base = mask_param
+            # todo: when the matrix dimensions differ a lot, then some cols/row contain almost only zeros.
+            # solution: take the ratio of colls to rows into account when looking for diagonal
             indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
             indices = [0] + indices
             result = np.zeros((n, m), dtype=bool)
