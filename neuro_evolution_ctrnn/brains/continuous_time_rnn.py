@@ -1,7 +1,7 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
 from typing import Any, Collection, List, Union
-from gym.spaces import Space, Box
+from gym.spaces import Space, Box, Discrete
 import logging
 import math
 
@@ -89,6 +89,7 @@ class ContinuousTimeRNN:
                     raise NotImplementedError("normalize_input is only defined for input-type Box")
 
         # Differential equation
+        # value = alpha * np.tanh(self.y) + (1-alpha) * np.sin(self.y)
         dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
 
         # Euler forward discretization
@@ -131,8 +132,20 @@ class ContinuousTimeRNN:
 
     @classmethod
     def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space, output_space):
-        input_size = cls._get_size_from_shape(input_space.shape)
-        output_size = cls._get_size_from_shape(output_space.shape)
+
+        if isinstance(input_space, Discrete):
+            input_size = input_space.n
+        elif isinstance(input_space, Box):
+            input_size = cls._get_size_from_shape(input_space.shape)
+        else:
+            raise NotImplementedError("not implemented input space: " + str(type(input_space)))
+
+        if isinstance(output_space, Discrete):
+            output_size = output_space.n
+        elif isinstance(output_space, Box):
+            output_size = cls._get_size_from_shape(output_space.shape)
+        else:
+            raise NotImplementedError("not implemented output space: " + str(type(output_space)))
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
