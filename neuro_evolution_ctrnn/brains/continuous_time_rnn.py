@@ -154,21 +154,20 @@ class ContinuousTimeRNN:
             indices = [0] + indices
             result = np.zeros((n, m), dtype=bool)
 
-            # when the matrix is rectangular, we need to fine a pseudo-diagonal
+            # when the matrix is rectangular, we need to fine a pseudo-diagonal instead an
+            # actual diagonal, to guarantee each row and column gets values
             if m > n:
                 stretch = np.rint(np.array(range(m)) * ((n - 1) / m)).astype(int)
-                diag = zip(stretch, range(n))
+                pseudo_diag = zip(stretch, range(n))
             else:
                 stretch = np.rint(np.array(range(n)) * ((m - 1) / n)).astype(int)
-                diag = zip(range(n), stretch)
-            for x, y in diag:
+                pseudo_diag = zip(range(n), stretch)
+            for x, y in pseudo_diag:
                 for j in indices:
-                    if y + j < m:
-                        # set value left of diagonal
-                        result[x][y + j] = True
-                    if y - j >= 0:
-                        # set value right of diagonal
-                        result[x][y - j] = True
+                    # set value left of diagonal
+                    result[x][(y + j) % m] = True
+                    # set value right of diagonal
+                    result[x][(y - j) % m] = True
 
             return result
 
