@@ -158,7 +158,7 @@ class ContinuousTimeRNN:
             # actual diagonal, to guarantee each row and column gets values
             if m > n:
                 stretch = np.rint(np.array(range(m)) * ((n - 1) / m)).astype(int)
-                pseudo_diag = zip(stretch, range(n))
+                pseudo_diag = zip(stretch, range(m))
             else:
                 stretch = np.rint(np.array(range(n)) * ((m - 1) / n)).astype(int)
                 pseudo_diag = zip(range(n), stretch)
