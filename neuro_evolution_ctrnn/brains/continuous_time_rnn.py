@@ -150,19 +150,25 @@ class ContinuousTimeRNN:
             if mask_param < 1.05:
                 raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
             base = mask_param
-            # todo: when the matrix dimensions differ a lot, then some cols/row contain almost only zeros.
-            # solution: take the ratio of colls to rows into account when looking for diagonal
             indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
             indices = [0] + indices
             result = np.zeros((n, m), dtype=bool)
-            for i in range(min(m, n)):
+
+            # when the matrix is rectangular, we need to fine a pseudo-diagonal
+            if m > n:
+                stretch = np.rint(np.array(range(m)) * ((n - 1) / m)).astype(int)
+                diag = zip(stretch, range(n))
+            else:
+                stretch = np.rint(np.array(range(n)) * ((m - 1) / n)).astype(int)
+                diag = zip(range(n), stretch)
+            for x, y in diag:
                 for j in indices:
-                    if i + j < m:
+                    if y + j < m:
                         # set value left of diagonal
-                        result[i][i + j] = True
-                    if i - j >= 0:
+                        result[x][y + j] = True
+                    if y - j >= 0:
                         # set value right of diagonal
-                        result[i][i - j] = True
+                        result[x][y - j] = True
 
             return result
 
