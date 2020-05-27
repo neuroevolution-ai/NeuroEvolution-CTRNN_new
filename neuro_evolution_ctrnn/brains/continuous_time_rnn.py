@@ -47,8 +47,8 @@ class ContinuousTimeRNN:
         self.y = self.y0
 
         # Clipping ranges for state boundaries
-        self.clipping_range_min: Union[int, np.ndarray]
-        self.clipping_range_max: Union[int, np.ndarray]
+        self.clipping_range_min: Union[int, np.ndarray, List[int]]
+        self.clipping_range_max: Union[int, np.ndarray, List[int]]
         if self.config.optimize_state_boundaries == "per_neuron":
             self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
             self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
@@ -99,7 +99,7 @@ class ContinuousTimeRNN:
             self.y = np.random.normal(self.y, self.config.parameter_perturbations)
 
         if self.config.optimize_state_boundaries == "legacy":
-            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):
+            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
                 self.y = np.clip(self.y, y_min, y_max)
         else:
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)

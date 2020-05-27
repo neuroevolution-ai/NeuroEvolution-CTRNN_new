@@ -25,6 +25,7 @@ pip install mujoco-py 'gym[mujoco]'
 3. (optional) change configuration `nano configurations/default.json`
 3. run training
 	- this will take some time
+	- `tmux`
     - `. ~/.venv/neuro/bin/activate`
     - `python -m scoop neuro_evolution_ctrnn/train.py --configuration configurations/default.json`
 4. show results:
@@ -46,8 +47,29 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
 ```
 
+### tricks
+
+#### scrolling in tmux: 
+
+``` 
+echo "set -g mouse on" >> ~/.tmux.conf
+tmux kill-server && tmux
+```
+
+#### paramter für scripte
+
+jedes script in diesem repo, 
+dass direkt ausgeführt werden kann, hat eine hilfe-funktion, die 
+man mit `--help` aufrufen kann
+
+#### Results in IDE anzeigen
+
+Wenn du willst, dass der results-ordner im IDE 
+angezeigt wird, kannst du einfach einen softlink darauf ins repo legen: 
+`cd NeuroEvolution-CTRNN && ln -s ../CTRNN_Simulation_Results results`
 
 ## troubleshooting
+
 
 #### visualisierung fails with "ERROR: GLEW initalization error: Missing GL version"
 
