@@ -24,7 +24,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description='visualize CTRNN')
     parser.add_argument('--dir', metavar='dir', type=str,
                         help='path to the simulation result',
-                        default=os.path.join('results/data', '2020-05-22_16-38-09'))
+                        default=os.path.join('..', 'CTRNN_Simulation_Results', 'data', '2020-05-22_16-38-09'))
 
     parser.add_argument('--plot', dest='plot', action='store_true')
     parser.add_argument('--no-plot', dest='plot', action='store_false')
@@ -39,6 +39,9 @@ def parse_args(args=None):
     parser.add_argument('--hof', metavar='int', type=int,
                         help='show how many individuals in environment?',
                         default=0)
+    parser.add_argument('--style', metavar='int', type=str,
+                        help='Which plot-style should be used? ',
+                        default='seaborn-paper')
     return parser.parse_args(args)
 
 
@@ -52,6 +55,9 @@ with open(os.path.join(directory, 'HallOfFame.pickle'), "rb") as read_file_hof:
     hall_of_fame = pickle.load(read_file_hof)
 with open(os.path.join(directory, 'Log.json'), 'r') as read_file_log:
     log = json.load(read_file_log)
+
+with open(os.path.join(directory, 'Configuration.json'), "r") as read_file:
+    conf = json.load(read_file)
 
 if args.neuron_vis or args.hof:
     experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
@@ -69,6 +75,14 @@ if args.plot_save or args.plot:
     std_low = list(map(add, average, std))
     std_high = list(map(sub, average, std))
     minimum = [generation["min"] for generation in log]
+
+    base_dir = os.path.basename(args.dir)
+    params_display = conf['environment'] + \
+                     "\n" + conf['neural_network_type'] + \
+                     " + " + conf['trainer_type'] + \
+                     "\nneurons: " + str(conf['brain']['number_neurons'])
+
+    plt.style.use('seaborn-paper')
 
 
     def my_plot(*nargs, **kwargs, ):
@@ -92,6 +106,10 @@ if args.plot_save or args.plot:
     plt.ylabel('Fitness')
     plt.legend(loc='upper left')
     plt.grid()
+    plt.title(base_dir)
+    plt.text(0.96, 0.05, params_display, ha='right',
+             fontsize=8, fontname='Ubuntu', transform=plt.axes().transAxes,
+             bbox={'facecolor': 'white', 'alpha': 0.4, 'pad': 8})
 
     if args.plot_save:
         logging.info("saving plot to: " + str(args.plot_save))
