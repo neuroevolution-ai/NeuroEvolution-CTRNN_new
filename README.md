@@ -49,6 +49,24 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
 ### tricks
 
+### generate statistics 
+
+```
+python neuro_evolution_ctrnn/batch_generate_plot.py
+cd ../CTRNN_Simulation_Results
+python resuts_to_csv.py
+```
+
+now you can open `output.csv` in libreoffice-calc. 
+You can format the hyperlinks to the plots such that they become clickable links,
+which open the plots as images: https://ask.libreoffice.org/en/question/69088/calc-importing-csv-full-of-urls/
+
+Note: make sure the numbers are imported correctly. A comma can be a 
+decimal separator, a thousands separator and a column separator. 
+A dot can be a decimal-separator and a thousands separator. Sometimes
+Libreoffice uses the dot as thousands separator in some columns and as
+a decimal separator in others during the same import of an csv.
+
 #### scrolling in tmux: 
 
 ``` 

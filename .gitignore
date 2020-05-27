@@ -3,8 +3,10 @@ __pycache__/
 .idea/
 .pytest_cache/
 .mypy_cache/
-results
-results/
+
 configurations/default.json
 
 checkpoints
+/results/
+/results/*
+
