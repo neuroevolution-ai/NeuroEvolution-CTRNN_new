@@ -1,3 +1,0 @@
-[submodule "results"]
-	path = results
-	url = git@github.com:neuroevolution-ai/CTRNN_Simulation_Results.git
