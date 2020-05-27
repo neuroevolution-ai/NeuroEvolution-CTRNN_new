@@ -20,7 +20,9 @@ def parse_args(args=None):
                         help='use an alternative configuration file', default='configurations/default.json')
     parser.add_argument('--result-path', metavar='dir', type=os.path.abspath,
                         help='use an alternative path for simulation results',
-                        default=os.path.join("results/data/", datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
+                        default=os.path.join('..', 'CTRNN_Simulation_Results', 'data',
+                                             datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
+
     return parser.parse_args(args)
 
 
@@ -34,5 +36,5 @@ if __name__ == "__main__":  # pragma: no cover
     initialise everything that is not pickle-able before this point. Especially the DAEP-toolbox is not 
     pickle-able. 
     """
-    os.makedirs(args.result_path)
+    os.mkdir(args.result_path)
     experiment.run()

@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('--base-dir', metavar='dir', type=str,
                     help='path to the parent-folder of simulation results',
-                    default='results/data')
+                    default=os.path.join('..', 'CTRNN_Simulation_Results', 'data'))
 
 parser.add_argument('--plot-file-name', metavar='filename', type=str,
                     help='the filename under which to store the plots',
