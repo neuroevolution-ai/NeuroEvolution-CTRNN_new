@@ -87,6 +87,26 @@ Wenn du willst, dass der results-ordner im IDE
 angezeigt wird, kannst du einfach einen softlink darauf ins repo legen: 
 `cd NeuroEvolution-CTRNN && ln -s ../CTRNN_Simulation_Results results`
 
+
+#### json formatting
+
+All jsons are formatted with this style. Applying different formatting -or none at all- will result in 
+much clutter in the git commits. 
+
+File --> Settings --> Editor --> Code Style --> Json --> Wrapping and Braces
+
+- Hardwrap at: 120
+- Wrap on typing: yes
+- Visual guides: 80, 120
+- Keep when reformatting
+  - line breaks: ☑ 
+  - trailing comma: ☐ 
+- Ensure right margin is not exceeded: ☑
+- Arrays: Wrap if long
+- Objects Wrap if long
+  - Align: Do not align
+
+
 ## troubleshooting
 
 

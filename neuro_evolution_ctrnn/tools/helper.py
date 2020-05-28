@@ -18,6 +18,24 @@ def walk_dict(node, callback_node, depth=0):
             callback_node(key, item, depth, True)
 
 
+def sample_from_design_space(node):
+    result = {}
+    for key in node:
+        val = node[key]
+        if isinstance(val, list):
+            if val:
+                val = random.sample(val, 1)[0]
+            else:
+                # empty lists become None
+                val = None
+
+        if isinstance(val, dict):
+            result[key] = sample_from_design_space(val)
+        else:
+            result[key] = val
+    return result
+
+
 def config_from_file(json_path):
     # Load configuration file
     with open(json_path, "r") as read_file:
