@@ -2,12 +2,19 @@
   "environment": ["BipedalWalker-v3", "CartPole-v0"],
   "random_seed": [123, 456],
   "number_generations": [5, 6, 7],
-  "trainer": {
-    "type": "CMA_ES",
-    "population_size": [6, 3, 4],
-    "sigma": [0.5, 1.0, 2.0],
-    "checkpoint_frequency": 0
-  },
+  "trainer": [
+    {
+      "type": "CMA_ES",
+      "population_size": [3, 4],
+      "sigma": [0.5, 0.9],
+      "checkpoint_frequency": 0
+    }, {
+      "type": "CMA_ES",
+      "population_size": [10, 15],
+      "sigma": [1.0, 1.5, 2.0],
+      "checkpoint_frequency": 0
+    }
+  ],
   "brain": {
     "type": "CTRNN",
     "number_neurons": [7, 17, 27],
