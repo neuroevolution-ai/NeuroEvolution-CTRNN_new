@@ -57,9 +57,10 @@ cd ../CTRNN_Simulation_Results
 python resuts_to_csv.py
 ```
 
-now you can open `output.csv` in libreoffice-calc. 
-You can format the hyperlinks to the plots such that they become clickable links,
-which open the plots as images: https://ask.libreoffice.org/en/question/69088/calc-importing-csv-full-of-urls/
+now you can open `output.csv` in libreoffice-calc. The hyperlinks in the plot-column don't get formatted when loading. 
+Libreoffice will recognize the hyperlinks when you enter the cell, add a space to the end and leave it again. 
+When you then click the hyper links, a windows with the plot should open.
+
 
 Note: make sure the numbers are imported correctly. A comma can be a 
 decimal separator, a thousands separator and a column separator. 
