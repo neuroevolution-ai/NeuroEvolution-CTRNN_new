@@ -3,7 +3,6 @@ import logging
 import argparse
 import subprocess
 import json
-import random
 import tempfile
 from datetime import datetime
 from tools.helper import sample_from_design_space

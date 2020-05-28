@@ -3,7 +3,6 @@
 import pickle
 import os
 import json
-from datetime import datetime
 import matplotlib.pyplot as plt
 from deap import base
 from deap import creator

@@ -1,11 +1,9 @@
 import numpy as np
 import time
 import gym
-import json
-import random
 from deap import tools
 from scoop import futures
-import logging as l, logging
+import logging
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
@@ -61,7 +59,7 @@ class Experiment(object):
                                             output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain)
-        l.info("Infividual Size for this Experiment: " + str(self.individual_size))
+        logging.info("Infividual Size for this Experiment: " + str(self.individual_size))
 
         ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                   brain_conf=self.config.brain,

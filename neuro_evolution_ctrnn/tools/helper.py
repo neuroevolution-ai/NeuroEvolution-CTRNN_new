@@ -1,12 +1,11 @@
 import random
 import numpy as np
-from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 import json
 import copy
 import pickle
-from pathlib import Path
 import os
 import logging
+from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 
 
 def walk_dict(node, callback_node, depth=0):

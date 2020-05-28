@@ -1,6 +1,6 @@
 import numpy as np
-from tools.helper import set_random_seeds
 import gym
+from tools.helper import set_random_seeds
 from tools.configurations import EpisodeRunnerCfg
 
 

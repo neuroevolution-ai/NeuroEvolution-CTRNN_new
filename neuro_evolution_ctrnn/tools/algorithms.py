@@ -1,12 +1,8 @@
 import random
 
-from deap import tools
 import numpy as np
-from deap.algorithms import varOr
 from tools.helper import set_random_seeds
-from typing import Iterable, Sized, Collection
-from deap.tools.support import Logbook
-import logging
+from typing import Iterable, Collection
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):

@@ -1,8 +1,6 @@
 import os
 import json
 import pickle
-
-from collections import namedtuple
 from tools.helper import walk_dict
 import numpy as np
 

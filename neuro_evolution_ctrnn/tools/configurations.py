@@ -1,5 +1,5 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
-from typing import Iterable, List
+from typing import List
 
 
 class ConfigBase:
