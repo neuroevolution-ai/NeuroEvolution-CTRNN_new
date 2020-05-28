@@ -43,12 +43,12 @@ def config_from_file(json_path):
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
 
-    if config_dict["neural_network_type"] == 'CTRNN':
+    if config_dict["brain"]["type"] == 'CTRNN':
         brain_cfg_class = ContinuousTimeRNNCfg
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
 
-    if config_dict["trainer_type"] == 'CMA_ES':
+    if config_dict["trainer"]["type"] == 'CMA_ES':
         trainer_cfg_class = TrainerCmaEsCfg
     else:
         raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))

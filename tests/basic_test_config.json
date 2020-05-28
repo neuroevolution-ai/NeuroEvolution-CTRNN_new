@@ -1,15 +1,15 @@
 {
   "environment": "BipedalWalker-v3",
-  "neural_network_type": "CTRNN",
   "random_seed": 123,
   "number_generations": 2,
-  "trainer_type": "CMA_ES",
   "trainer": {
+    "type": "CMA_ES",
     "population_size": 2,
     "sigma": 1.0,
     "checkpoint_frequency": 0
   },
   "brain": {
+    "type": "CTRNN",
     "number_neurons": 2,
     "normalize_input": false,
     "normalize_input_target": 0,

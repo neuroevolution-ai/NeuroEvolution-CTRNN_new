@@ -8,7 +8,7 @@ import copy
 
 
 class TestCTRNN:
-    c = ContinuousTimeRNNCfg(optimize_y0=True,
+    c = ContinuousTimeRNNCfg(type="CTRNN", optimize_y0=True,
                              normalize_input=False,
                              normalize_input_target=0,
                              delta_t=0.05,

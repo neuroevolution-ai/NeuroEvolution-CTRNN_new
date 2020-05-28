@@ -22,10 +22,11 @@ class EpisodeRunnerCfg(ConfigBase):
 
 
 class ContinuousTimeRNNCfg(ConfigBase):
-    __slots__ = ['optimize_y0', 'delta_t', 'optimize_state_boundaries',
+    __slots__ = ['type', 'optimize_y0', 'delta_t', 'optimize_state_boundaries',
                  'set_principle_diagonal_elements_of_W_negative', 'number_neurons',
                  'normalize_input', 'clipping_range_min', 'clipping_range_max', 'normalize_input_target', 'v_mask',
                  'v_mask_param', 'w_mask', 'w_mask_param', 't_mask', 't_mask_param', 'parameter_perturbations']
+    type: str
     optimize_y0: bool
     delta_t: float
     optimize_state_boundaries: str
@@ -45,20 +46,18 @@ class ContinuousTimeRNNCfg(ConfigBase):
 
 
 class TrainerCmaEsCfg(ConfigBase):
-    __slots__ = ['population_size', 'sigma', 'checkpoint_frequency']
+    __slots__ = ['type', 'population_size', 'sigma', 'checkpoint_frequency']
+    type: str
     population_size: int
     sigma: float
     checkpoint_frequency: int
 
 
 class ExperimentCfg(ConfigBase):
-    __slots__ = ['neural_network_type', 'environment', 'random_seed',
-                 'trainer_type', 'number_generations', 'brain', 'episode_runner', 'trainer', 'raw_dict']
+    __slots__ = ['environment', 'random_seed', 'number_generations', 'brain', 'episode_runner', 'trainer', 'raw_dict']
 
-    neural_network_type: str
     environment: str
     random_seed: int
-    trainer_type: str
     number_generations: int
     brain: ContinuousTimeRNNCfg
     episode_runner: EpisodeRunnerCfg

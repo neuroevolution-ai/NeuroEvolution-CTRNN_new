@@ -24,12 +24,12 @@ class Experiment(object):
         self.from_checkpoint = from_checkpoint
         self.config = configuration
 
-        if self.config.neural_network_type == 'CTRNN':
+        if self.config.brain.type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
         else:
             raise RuntimeError("unknown neural_network_type: " + str(self.config.neural_network_type))
 
-        if self.config.trainer_type == 'CMA_ES':
+        if self.config.trainer.type == 'CMA_ES':
             self.trainer_class = TrainerCmaEs
         else:
             raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
@@ -72,15 +72,15 @@ class Experiment(object):
         stats.register("min", np.min)
         stats.register("max", np.max)
 
-        if self.config.trainer_type == "CMA_ES":
+        if self.config.trainer.type == "CMA_ES":
             self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
                                               eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer,
                                               stats=stats, from_checkoint=self.from_checkpoint)
         else:
-            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
+            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer.type))
 
         self.result_handler = ResultHandler(result_path=self.result_path,
-                                            neural_network_type=self.config.neural_network_type,
+                                            neural_network_type=self.config.brain.type,
                                             config_raw=self.config.raw_dict)
 
     def run(self):

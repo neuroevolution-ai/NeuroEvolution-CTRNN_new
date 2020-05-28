@@ -1,15 +1,15 @@
 {
   "environment": ["BipedalWalker-v3", "CartPole-v0"],
-  "neural_network_type": "CTRNN",
   "random_seed": [123, 456],
-  "number_generations": [5, 15, 25],
-  "trainer_type": "CMA_ES",
+  "number_generations": [5, 6, 7],
   "trainer": {
-    "population_size": [6, 16, 26],
+    "type": "CMA_ES",
+    "population_size": [6, 3, 4],
     "sigma": [0.5, 1.0, 2.0],
     "checkpoint_frequency": 0
   },
   "brain": {
+    "type": "CTRNN",
     "number_neurons": [7, 17, 27],
     "delta_t": [0.01, 0.05, 0.1],
     "normalize_input": [true, false],
