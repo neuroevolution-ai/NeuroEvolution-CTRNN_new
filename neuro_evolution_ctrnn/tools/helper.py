@@ -83,6 +83,9 @@ def get_checkpoint(checkpoint):
 
 
 def set_random_seeds(seed, env):
+    if not seed:
+        return
+
     if type(seed) != int:
         # env.seed only accepts native integer and not np.int32/64
         # so we need to extract the int before passing it to env.seed()
