@@ -1,6 +1,4 @@
 from tools.experiment import Experiment
-from tools.helper import config_from_file
-import os
 
 
 def mock_eval(a1, a2):
@@ -9,10 +7,8 @@ def mock_eval(a1, a2):
 
 class TestExperiment:
 
-    def test_run(self, tmpdir, mocker):
-        current_directory = os.path.dirname(os.path.realpath(__file__))
-        config_location = os.path.join(current_directory, "basic_test_config.json")
-        experiment = Experiment(configuration=config_from_file(config_location),
+    def test_run(self, tmpdir, config):
+        experiment = Experiment(configuration=config,
                                 result_path=tmpdir,
                                 from_checkpoint=None)
         experiment.run()
@@ -27,11 +23,11 @@ class TestExperiment:
                             ]
         assert experiment.result_handler.result_log[-1]["max"] in accepted_results
 
-    def test_run_atari(self, tmpdir, mocker):
+    def test_run_atari(self, tmpdir, mocker, config):
         mocker.patch('tools.episode_runner.EpisodeRunner.eval_fitness', side_effect=mock_eval)
-        current_directory = os.path.dirname(os.path.realpath(__file__))
-        config_location = os.path.join(current_directory, "atari_test_config.json")
-        experiment = Experiment(configuration=config_from_file(config_location),
+        config.environment = 'Qbert-ram-v0'
+        config.brain.normalize_input = True
+        experiment = Experiment(configuration=config,
                                 result_path=tmpdir,
                                 from_checkpoint=None)
         experiment.run()
