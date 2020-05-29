@@ -2,19 +2,26 @@
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import numpy as np
-from collections import namedtuple
 from gym.spaces import Box
-import copy
 import pytest
+from attr import evolve, s
 
-brain_param = namedtuple("brain_param", ["V", "W", "T", "y0", "clip_min", "clip_max"])
+
+@s(auto_attribs=True, frozen=True, slots=True)
+class BrainParam:
+    V: np.ndarray
+    W: np.ndarray
+    T: np.ndarray
+    y0: np.ndarray
+    clip_min: np.ndarray
+    clip_max: np.ndarray
 
 
 class TestCTRNN:
 
     @pytest.fixture
     def brain_param_simple(self):
-        return brain_param(
+        return BrainParam(
             V=np.array([[0, 1],
                         [2, 3]]),
             W=np.array([[4, 5],
@@ -31,7 +38,7 @@ class TestCTRNN:
 
     @pytest.fixture
     def brain_param_identity(self):
-        return brain_param(
+        return BrainParam(
             V=np.eye(2),
             W=np.eye(2),
             T=np.eye(2),
@@ -50,12 +57,12 @@ class TestCTRNN:
              param.clip_max.flatten()])
 
     def test_individual(self, brain_config, brain_param_simple, box2d):
-        brain_config.set_principle_diagonal_elements_of_W_negative = False
+        brain_config = evolve(brain_config, set_principle_diagonal_elements_of_W_negative=False)
 
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
         bp = brain_param_simple
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                                   config=brain_config)
         assert np.array_equal(bp.V, brain.V)
         assert np.array_equal(bp.W, brain.W)
@@ -64,11 +71,11 @@ class TestCTRNN:
         assert np.array_equal(bp.y0, brain.y)
 
     def test_step(self, brain_config, brain_param_identity, box2d):
-        brain_config.set_principle_diagonal_elements_of_W_negative = False
+        brain_config = evolve(brain_config, set_principle_diagonal_elements_of_W_negative=False)
         bp = brain_param_identity
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                                   config=brain_config)
         brain.delta_t = 1.0
         ob = np.array([1, 1])
@@ -85,7 +92,7 @@ class TestCTRNN:
         bp = brain_param_identity
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=self.box2d, output_space=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                                   config=brain_config)
         ob = np.array([1, 1])
         res = brain.step(ob * 1000)
@@ -95,18 +102,12 @@ class TestCTRNN:
         assert np.allclose(brain.y, np.ones([2, 2]) * 10)
 
     def test_clipping_per_neuron(self, brain_config, brain_param_identity, box2d):
-        brain_config = copy.deepcopy(brain_config)
-        brain_config.optimize_state_boundaries = "per_neuron"
-
-        # because brain-param are named_tuple, they are immutable and we need some hack to modify it
-        y = brain_param_identity._asdict()
-        y["clip_max"] = np.array([2, 3])
-        y["clip_min"] = np.array([-4, -5])
-        bp = brain_param(**y)
+        brain_config = evolve(brain_config, optimize_state_boundaries="per_neuron")
+        bp = evolve(brain_param_identity, clip_max=np.array([2, 3]), clip_min=np.array([-4, -5]))
 
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=box2d, )
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=2,
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d,
                                   individual=self.param_to_genom(bp), config=brain_config)
         ob = np.array([1, 1])
         brain.step(ob * 100000)

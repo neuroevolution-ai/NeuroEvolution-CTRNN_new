@@ -3,13 +3,13 @@ from typing import List
 import attr
 
 
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class EpisodeRunnerCfg:
     number_fitness_runs: int
     keep_env_seed_fixed_during_generation: bool
 
 
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class ContinuousTimeRNNCfg:
     type: str
     optimize_y0: bool
@@ -30,7 +30,7 @@ class ContinuousTimeRNNCfg:
     parameter_perturbations: float
 
 
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class OptimizerCmaEsCfg:
     type: str
     population_size: int
@@ -38,7 +38,7 @@ class OptimizerCmaEsCfg:
     checkpoint_frequency: int
 
 
-@attr.s(slots=True, auto_attribs=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class ExperimentCfg:
     environment: str
     random_seed: int

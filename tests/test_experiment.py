@@ -1,4 +1,5 @@
 from tools.experiment import Experiment
+from attr import evolve
 
 
 def mock_eval(*nargs, **kwargs):
@@ -24,8 +25,7 @@ class TestExperiment:
         assert experiment.result_handler.result_log[-1]["max"] in accepted_results
 
     def test_run_atari_setup(self, tmpdir, mocker, config):
-        config.environment = 'Qbert-ram-v0'
-        config.brain.normalize_input = True
+        config = evolve(config, environment='Qbert-ram-v0')
         Experiment(configuration=config,
                    result_path=tmpdir,
                    from_checkpoint=None)
