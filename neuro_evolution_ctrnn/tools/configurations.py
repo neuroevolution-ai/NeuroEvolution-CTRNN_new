@@ -1,6 +1,6 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
 from typing import List
-
+import attr
 
 class ConfigBase:
     # slots saves a little bit of memory, but more importantly
@@ -12,6 +12,7 @@ class ConfigBase:
             setattr(self, key, attr[key])
         for key in dir(self):
             if not hasattr(self, key):
+                # this branch is reached, when an attribute of the class hasn't been initialised from the dict
                 raise RuntimeError("key missing: " + key)
 
 
