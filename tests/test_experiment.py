@@ -1,7 +1,7 @@
 from tools.experiment import Experiment
 
 
-def mock_eval(a1, a2):
+def mock_eval(*nargs, **kwargs):
     return [1.0]
 
 
@@ -23,11 +23,9 @@ class TestExperiment:
                             ]
         assert experiment.result_handler.result_log[-1]["max"] in accepted_results
 
-    def test_run_atari(self, tmpdir, mocker, config):
-        mocker.patch('tools.episode_runner.EpisodeRunner.eval_fitness', side_effect=mock_eval)
+    def test_run_atari_setup(self, tmpdir, mocker, config):
         config.environment = 'Qbert-ram-v0'
         config.brain.normalize_input = True
-        experiment = Experiment(configuration=config,
-                                result_path=tmpdir,
-                                from_checkpoint=None)
-        experiment.run()
+        Experiment(configuration=config,
+                   result_path=tmpdir,
+                   from_checkpoint=None)

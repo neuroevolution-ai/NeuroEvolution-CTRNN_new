@@ -10,7 +10,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from tools.optimizer_cma_es import OptimizerCmaEs
-from tools.helper import set_random_seeds
+from tools.helper import set_random_seeds, dask_map
 from tools.configurations import ExperimentCfg
 
 
@@ -73,7 +73,7 @@ class Experiment(object):
         stats.register("max", np.max)
 
         if self.config.optimizer.type == "CMA_ES":
-            self.optimizer = self.optimizer_class(map_func=futures.map, individual_size=self.individual_size,
+            self.optimizer = self.optimizer_class(map_func=dask_map, individual_size=self.individual_size,
                                                 eval_fitness=ep_runner.eval_fitness, conf=self.config.optimizer,
                                                 stats=stats, from_checkoint=self.from_checkpoint)
         else:

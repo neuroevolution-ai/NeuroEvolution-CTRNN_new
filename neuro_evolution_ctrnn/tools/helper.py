@@ -6,6 +6,13 @@ import pickle
 import os
 import logging
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
+from dask.distributed import Client
+
+client = Client(processes=False)
+
+
+def dask_map(*args, **kwargs):
+    return client.gather(client.map(*args, **kwargs))
 
 
 def walk_dict(node, callback_node, depth=0):
