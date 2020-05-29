@@ -107,13 +107,6 @@ class ContinuousTimeRNN:
         o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T))
         return o
 
-    @staticmethod
-    def _get_size_from_shape(shape: np.shape):
-        size = 1
-        for val in shape:
-            size = size * val
-        return size
-
     @classmethod
     def get_individual_size(cls, config: ContinuousTimeRNNCfg):
         individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
@@ -136,14 +129,14 @@ class ContinuousTimeRNN:
         if isinstance(input_space, Discrete):
             input_size = input_space.n
         elif isinstance(input_space, Box):
-            input_size = cls._get_size_from_shape(input_space.shape)
+            input_size = np.prod(input_space.shape)
         else:
             raise NotImplementedError("not implemented input space: " + str(type(input_space)))
 
         if isinstance(output_space, Discrete):
             output_size = output_space.n
         elif isinstance(output_space, Box):
-            output_size = cls._get_size_from_shape(output_space.shape)
+            output_size = np.prod(output_space.shape)
         else:
             raise NotImplementedError("not implemented output space: " + str(type(output_space)))
 

@@ -114,10 +114,6 @@ class TestCTRNN:
         brain.step(ob * -100000)
         assert np.allclose(brain.y, bp.clip_min)
 
-    def test__get_size_from_shape(self):
-        size = ContinuousTimeRNN._get_size_from_shape([3, 3, 3])
-        assert size == 27
-
     def test_get_individual_size(self, brain_config):
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=Box(-1, 1, shape=[3]),
                                              output_space=Box(-1, 1, shape=[3]), )

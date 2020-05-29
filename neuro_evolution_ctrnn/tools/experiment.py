@@ -9,12 +9,12 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
-from tools.trainer_cma_es import TrainerCmaEs
+from tools.optimizer_cma_es import OptimizerCmaEs
 from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 
 
-# from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
+# from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
 
 
 class Experiment(object):
@@ -27,12 +27,12 @@ class Experiment(object):
         if self.config.brain.type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
         else:
-            raise RuntimeError("unknown neural_network_type: " + str(self.config.neural_network_type))
+            raise RuntimeError("unknown neural_network_type: " + str(self.config.brain.type))
 
-        if self.config.trainer.type == 'CMA_ES':
-            self.trainer_class = TrainerCmaEs
+        if self.config.optimizer.type == 'CMA_ES':
+            self.optimizer_class = OptimizerCmaEs
         else:
-            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
+            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self._setup()
 
@@ -72,12 +72,12 @@ class Experiment(object):
         stats.register("min", np.min)
         stats.register("max", np.max)
 
-        if self.config.trainer.type == "CMA_ES":
-            self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
-                                              eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer,
-                                              stats=stats, from_checkoint=self.from_checkpoint)
+        if self.config.optimizer.type == "CMA_ES":
+            self.optimizer = self.optimizer_class(map_func=futures.map, individual_size=self.individual_size,
+                                                eval_fitness=ep_runner.eval_fitness, conf=self.config.optimizer,
+                                                stats=stats, from_checkoint=self.from_checkpoint)
         else:
-            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer.type))
+            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,
@@ -86,10 +86,10 @@ class Experiment(object):
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-        log = self.trainer.train(number_generations=self.config.number_generations)
+        log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
-            hof=self.trainer.hof,
+            hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
             output_size=self.output_size,

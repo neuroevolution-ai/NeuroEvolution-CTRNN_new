@@ -10,3 +10,4 @@ checkpoints
 /results/
 /results/*
 
+.dmypy.json

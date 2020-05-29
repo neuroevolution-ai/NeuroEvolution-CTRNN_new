@@ -5,7 +5,7 @@ import copy
 import pickle
 import os
 import logging
-from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
+from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -46,12 +46,12 @@ def config_from_file(json_path):
     if config_dict["brain"]["type"] == 'CTRNN':
         brain_cfg_class = ContinuousTimeRNNCfg
     else:
-        raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
+        raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
-    if config_dict["trainer"]["type"] == 'CMA_ES':
-        trainer_cfg_class = TrainerCmaEsCfg
+    if config_dict["optimizer"]["type"] == 'CMA_ES':
+        optimizer_cfg_class = OptimizerCmaEsCfg
     else:
-        raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))
+        raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
     if not config_dict["random_seed"]:
         config_dict["random_seed"] = random.getstate()
@@ -59,7 +59,7 @@ def config_from_file(json_path):
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
-    config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
+    config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)
 

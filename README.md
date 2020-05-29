@@ -49,7 +49,15 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
 ### tricks
 
-### generate statistics 
+#### pycharm plugins
+
+  * https://plugins.jetbrains.com/plugin/11086-mypy
+    * funktioniert bei mir nicht, siehe: https://github.com/leinardi/mypy-pycharm/issues/60
+  * https://plugins.jetbrains.com/plugin/13348-mypy-official-
+    * config-parameter "Path suffix" muss auf bin-ordner von venv gesetzt werden
+    * command: `dmypy run . -- --follow-imports skip`
+
+#### generate statistics 
 
 ```
 python neuro_evolution_ctrnn/batch_generate_plot.py

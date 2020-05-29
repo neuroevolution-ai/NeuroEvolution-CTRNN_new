@@ -2,7 +2,7 @@
   "environment": "Qbert-ram-v0",
   "random_seed": 123,
   "number_generations": 500,
-  "trainer": {
+  "optimizer": {
     "type": "CMA_ES",
     "population_size": 150,
     "sigma": 1.0,

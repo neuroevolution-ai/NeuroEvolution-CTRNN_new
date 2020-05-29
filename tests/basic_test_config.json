@@ -2,7 +2,7 @@
   "environment": "BipedalWalker-v3",
   "random_seed": 123,
   "number_generations": 2,
-  "trainer": {
+  "optimizer": {
     "type": "CMA_ES",
     "population_size": 2,
     "sigma": 1.0,

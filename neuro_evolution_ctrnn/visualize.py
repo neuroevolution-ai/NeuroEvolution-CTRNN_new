@@ -76,10 +76,8 @@ if args.plot_save or args.plot:
     minimum = [generation["min"] for generation in log]
 
     base_dir = os.path.basename(args.dir)
-    params_display = conf['environment'] + \
-                     "\n" + conf['neural_network_type'] + \
-                     " + " + conf['trainer_type'] + \
-                     "\nneurons: " + str(conf['brain']['number_neurons'])
+    params_display = conf['environment'] + "\n" + conf['brain']['type'] + " + " + conf['optimizer'][
+        'type'] + "\nneurons: " + str(conf['brain']['number_neurons'])
 
     plt.style.use('seaborn-paper')
 

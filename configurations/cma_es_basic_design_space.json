@@ -2,7 +2,7 @@
   "environment": ["BipedalWalker-v3", "CartPole-v0"],
   "random_seed": [123, 456],
   "number_generations": [5, 6, 7],
-  "trainer": [
+  "optimizer": [
     {
       "type": "CMA_ES",
       "population_size": [3, 4],

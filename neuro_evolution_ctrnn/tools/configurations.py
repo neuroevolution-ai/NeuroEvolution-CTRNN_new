@@ -45,7 +45,7 @@ class ContinuousTimeRNNCfg(ConfigBase):
     parameter_perturbations: float
 
 
-class TrainerCmaEsCfg(ConfigBase):
+class OptimizerCmaEsCfg(ConfigBase):
     __slots__ = ['type', 'population_size', 'sigma', 'checkpoint_frequency']
     type: str
     population_size: int
@@ -54,12 +54,12 @@ class TrainerCmaEsCfg(ConfigBase):
 
 
 class ExperimentCfg(ConfigBase):
-    __slots__ = ['environment', 'random_seed', 'number_generations', 'brain', 'episode_runner', 'trainer', 'raw_dict']
+    __slots__ = ['environment', 'random_seed', 'number_generations', 'brain', 'episode_runner', 'optimizer', 'raw_dict']
 
     environment: str
     random_seed: int
     number_generations: int
     brain: ContinuousTimeRNNCfg
     episode_runner: EpisodeRunnerCfg
-    trainer: TrainerCmaEsCfg
+    optimizer: OptimizerCmaEsCfg
     raw_dict: dict
