@@ -6,22 +6,22 @@ import logging
 import math
 
 
+# noinspection PyPep8Naming
 class ContinuousTimeRNN:
     v_mask: np.ndarray
     w_mask: np.ndarray
     t_mask: np.ndarray
 
-    def __init__(self, input_space: Space, output_size: int, individual: np.ndarray, config: ContinuousTimeRNNCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         assert len(individual) == self.get_individual_size(config)
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
         self.config = config
         self.input_space: Space = input_space
-        set_principle_diagonal_elements_of_W_negative = config.set_principle_diagonal_elements_of_W_negative
+        self.output_space: Space = output_space
         N_n = config.number_neurons
 
         self.delta_t = delta_t
-        self.set_principle_diagonal_elements_of_W_negative = set_principle_diagonal_elements_of_W_negative
 
         # insert weights-values into weight-masks to receive weight-matrices
         # explanation here: https://stackoverflow.com/a/61968524/5132456
@@ -62,10 +62,10 @@ class ContinuousTimeRNN:
             self.clipping_range_min = np.asarray([config.clipping_range_min] * N_n)
             self.clipping_range_max = np.asarray([config.clipping_range_max] * N_n)
         else:
-            raise RuntimeError("unkown parameter for optimize_state_boundaries")
+            raise RuntimeError("unknown parameter for optimize_state_boundaries")
 
         # Set elements of main diagonal to less than 0
-        if set_principle_diagonal_elements_of_W_negative:
+        if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
                 self.W[j][j] = -abs(self.W[j][j])
 
@@ -123,26 +123,23 @@ class ContinuousTimeRNN:
             individual_size += 0
         return individual_size
 
+    @staticmethod
+    def _size_from_space(space: Space) -> int:
+        if isinstance(space, Discrete):
+            return space.n  # type: ignore
+        elif isinstance(space, Box):
+            return np.prod(space.shape)  # type: ignore
+        else:
+            raise NotImplementedError("not implemented input/output space: " + str(type(space)))
+
     @classmethod
-    def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space, output_space):
-
-        if isinstance(input_space, Discrete):
-            input_size = input_space.n
-        elif isinstance(input_space, Box):
-            input_size = np.prod(input_space.shape)
-        else:
-            raise NotImplementedError("not implemented input space: " + str(type(input_space)))
-
-        if isinstance(output_space, Discrete):
-            output_size = output_space.n
-        elif isinstance(output_space, Box):
-            output_size = np.prod(output_space.shape)
-        else:
-            raise NotImplementedError("not implemented output space: " + str(type(output_space)))
+    def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+        input_size = cls._size_from_space(input_space)
+        output_size = cls._size_from_space(output_space)
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
-        # todo: also story masks in checkpoints and hof.
+        # todo: also store masks in checkpoints and hof.
         cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
         cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                         config.w_mask_param)

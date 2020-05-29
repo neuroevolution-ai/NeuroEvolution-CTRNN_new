@@ -107,7 +107,7 @@ class Experiment(object):
             ob = env.reset()
             done = False
             brain = self.brain_class(input_space=self.input_space,
-                                     output_size=self.output_size,
+                                     output_space=self.output_size,
                                      individual=individual,
                                      config=self.config.brain)
             brain_vis = brain_vis_handler.launch_new_visualization(brain)

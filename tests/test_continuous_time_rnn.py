@@ -55,7 +55,7 @@ class TestCTRNN:
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
         bp = brain_param_simple
-        brain = ContinuousTimeRNN(input_space=box2d, output_size=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=2, individual=self.param_to_genom(bp),
                                   config=brain_config)
         assert np.array_equal(bp.V, brain.V)
         assert np.array_equal(bp.W, brain.W)
@@ -68,7 +68,7 @@ class TestCTRNN:
         bp = brain_param_identity
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=box2d, output_size=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=2, individual=self.param_to_genom(bp),
                                   config=brain_config)
         brain.delta_t = 1.0
         ob = np.array([1, 1])
@@ -85,7 +85,7 @@ class TestCTRNN:
         bp = brain_param_identity
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=self.box2d, output_size=2, individual=self.param_to_genom(bp),
+        brain = ContinuousTimeRNN(input_space=self.box2d, output_space=2, individual=self.param_to_genom(bp),
                                   config=brain_config)
         ob = np.array([1, 1])
         res = brain.step(ob * 1000)
@@ -106,7 +106,7 @@ class TestCTRNN:
 
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
                                              output_space=box2d, )
-        brain = ContinuousTimeRNN(input_space=box2d, output_size=2,
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=2,
                                   individual=self.param_to_genom(bp), config=brain_config)
         ob = np.array([1, 1])
         brain.step(ob * 100000)
