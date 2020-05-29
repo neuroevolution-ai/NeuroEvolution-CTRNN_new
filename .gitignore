@@ -9,5 +9,6 @@ configurations/default.json
 checkpoints
 /results/
 /results/*
+results
 
 .dmypy.json
