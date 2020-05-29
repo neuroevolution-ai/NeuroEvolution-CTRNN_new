@@ -38,6 +38,6 @@ for sim in simulation_folders:
     # instead of calling the other file, it would probably better to move the generation of the plot into a
     # separate module which is used both by visualize.py and this script
     subprocess.run(["./visualize.py",
-                     "--dir", sim,
-                     "--no-plot",
-                     "--plot-save", file])
+                    "--dir", sim,
+                    "--no-plot",
+                    "--plot-save", file])
