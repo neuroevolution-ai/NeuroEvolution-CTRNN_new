@@ -12,6 +12,11 @@ from tools.helper import write_checkpoint, get_checkpoint
 
 
 class OptimizerCmaEs(object):
+    @staticmethod
+    def create_classes():
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+
 
     # noinspection PyUnresolvedReferences
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerCmaEsCfg, stats, map_func=map,
@@ -20,8 +25,7 @@ class OptimizerCmaEs(object):
         self.toolbox = toolbox = base.Toolbox()
         self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+        self.create_classes()
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
             toolbox.initial_generation = cp["generation"] + 1

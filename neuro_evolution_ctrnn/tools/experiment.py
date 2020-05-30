@@ -89,7 +89,7 @@ class Experiment(object):
         self.result_handler.check_path()
         start_time = time.time()
 
-        DaskHandler.init_dask()
+        DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
         if self.config.episode_runner.reuse_env:
             DaskHandler.init_workers_with_env(self.env_template.spec.id)
         log = self.optimizer.train(number_generations=self.config.number_generations)
