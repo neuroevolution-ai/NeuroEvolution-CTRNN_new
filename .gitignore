@@ -10,6 +10,7 @@ checkpoints
 /results/
 /results/*
 results
+/results/data/2020-05-29_12-00-33/Configuration.json
 
 .dmypy.json
 .lock
