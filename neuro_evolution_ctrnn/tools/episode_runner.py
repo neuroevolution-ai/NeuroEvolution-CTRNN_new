@@ -1,10 +1,9 @@
 import numpy as np
 import gym
-from tools.helper import set_random_seeds, init_dask, stop_dask
+from tools.helper import set_random_seeds
 from tools.configurations import EpisodeRunnerCfg
 import logging
-from dask.distributed import get_worker
-import threading
+from tools.dask_handler import get_current_worker
 
 
 class EpisodeRunner(object):
@@ -17,26 +16,10 @@ class EpisodeRunner(object):
         self.input_space = input_space
         self.output_size = output_size
         self.env_id = env_template.spec.id
-        self.initialized = False
-
-    def init_workers(self):
-        assert threading.current_thread() is threading.main_thread()
-        if self.conf.reuse_env:
-            init_dask(self.env_id)
-        else:
-            init_dask()
-        self.initialized = True
-
-    def shutdown(self):
-        assert threading.current_thread() is threading.main_thread()
-        stop_dask()
-        self.initialized = False
 
     def eval_fitness(self, individual, seed):
-        assert self.initialized
-
         if self.conf.reuse_env:
-            env = get_worker().env
+            env = get_current_worker().env
         else:
             env = gym.make(self.env_id)
         set_random_seeds(seed, env)
