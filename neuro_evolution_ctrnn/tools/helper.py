@@ -5,13 +5,47 @@ import copy
 import pickle
 import os
 import logging
-from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
-from dask.distributed import Client
+import gym
 
-client = Client(processes=False)
+from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
+from dask.distributed import Client, Worker, WorkerPlugin
+from typing import Optional
+
+client: Optional[Client] = None
+
+
+class EnvPlugin(WorkerPlugin):
+    def __init__(self, env_id):
+        self.env_id = env_id
+
+    def setup(self, worker: Worker):
+        # called exactly once for every worker
+        if self.env_id:
+            worker.env = gym.make(self.env_id)
+            logging.info("creating new env for worker: " + str(worker))
+
+    def teardown(self, worker: Worker):
+        pass
+
+    def transition(self, key: str, start: str, finish: str, **kwargs):
+        # called whenever worker gets new task, i think
+        pass
+
+
+def init_dask(env_id: Optional[str] = None):
+    global client
+    client = Client(processes=True, asynchronous=False)
+    client.register_worker_plugin(EnvPlugin(env_id), name='env-plugin')
+
+
+def stop_dask():
+    global client
+    client.shutdown()
 
 
 def dask_map(*args, **kwargs):
+    if not client:
+        raise RuntimeError("dask-client not initialized. Call \"init_dask\" before calling \"dask_map\"")
     return client.gather(client.map(*args, **kwargs))
 
 
@@ -59,10 +93,6 @@ def config_from_file(json_path):
         optimizer_cfg_class = OptimizerCmaEsCfg
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
-
-    if not config_dict["random_seed"]:
-        config_dict["random_seed"] = random.getstate()
-        print("setting random seed to: " + str(config_dict["random_seed"]))
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
