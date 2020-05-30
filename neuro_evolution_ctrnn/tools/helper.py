@@ -5,14 +5,8 @@ import copy
 import pickle
 import os
 import logging
+
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
-from dask.distributed import Client
-
-client = Client(processes=False)
-
-
-def dask_map(*args, **kwargs):
-    return client.gather(client.map(*args, **kwargs))
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -59,10 +53,6 @@ def config_from_file(json_path):
         optimizer_cfg_class = OptimizerCmaEsCfg
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
-
-    if not config_dict["random_seed"]:
-        config_dict["random_seed"] = random.getstate()
-        print("setting random seed to: " + str(config_dict["random_seed"]))
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))

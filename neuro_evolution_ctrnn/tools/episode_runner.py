@@ -2,6 +2,8 @@ import numpy as np
 import gym
 from tools.helper import set_random_seeds
 from tools.configurations import EpisodeRunnerCfg
+import logging
+from tools.dask_handler import get_current_worker
 
 
 class EpisodeRunner(object):
@@ -16,7 +18,10 @@ class EpisodeRunner(object):
         self.env_id = env_template.spec.id
 
     def eval_fitness(self, individual, seed):
-        env = gym.make(self.env_id)
+        if self.conf.reuse_env:
+            env = get_current_worker().env
+        else:
+            env = gym.make(self.env_id)
         set_random_seeds(seed, env)
         fitness_total = 0
         for i in range(self.conf.number_fitness_runs):

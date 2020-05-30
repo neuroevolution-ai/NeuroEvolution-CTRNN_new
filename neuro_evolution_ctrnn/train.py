@@ -3,11 +3,10 @@
 import argparse
 import os
 from datetime import datetime
+import logging
 
 from tools.experiment import Experiment
 from tools.helper import config_from_file
-
-import logging
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -26,15 +25,16 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-args = parse_args()
-experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
-                        from_checkpoint=args.from_checkpoint)
-
 if __name__ == "__main__":  # pragma: no cover
-    """Everything outside this block will be executed by every scoop-worker, while this block is only run on the 
+    """Everything outside this block will be executed by every worker-thread, while this block is only run on the 
     main thread. Every object that is later passed to a worker must be pickle-able, that's why we 
-    initialise everything that is not pickle-able before this point. Especially the DEAP-toolbox is not 
+    initialise everything that is not pickle-able before this point. Especially the DEAP-toolbox's creator-object is not 
     pickle-able. 
     """
+
+    args = parse_args()
+    experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
+                            from_checkpoint=args.from_checkpoint)
+
     os.mkdir(args.result_path)
     experiment.run()

@@ -7,6 +7,7 @@ import attr
 class EpisodeRunnerCfg:
     number_fitness_runs: int
     keep_env_seed_fixed_during_generation: bool
+    reuse_env: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

@@ -12,6 +12,16 @@ class ContinuousTimeRNN:
     w_mask: np.ndarray
     t_mask: np.ndarray
 
+    @classmethod
+    def get_class_state(cls):
+        return {"v_mask": cls.v_mask, "w_mask": cls.w_mask, "t_mask": cls.t_mask}
+
+    @classmethod
+    def set_class_state(cls, v_mask, w_mask, t_mask):
+        cls.v_mask = v_mask
+        cls.w_mask = w_mask
+        cls.t_mask = t_mask
+
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         assert len(individual) == self.get_individual_size(config)
         optimize_y0 = config.optimize_y0
@@ -140,10 +150,12 @@ class ContinuousTimeRNN:
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
         # todo: also store masks in checkpoints and hof.
-        cls.v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
-        cls.w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
-                                        config.w_mask_param)
-        cls.t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)
+        v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
+        w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
+                                    config.w_mask_param)
+        t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)
+
+        cls.set_class_state(v_mask=v_mask, w_mask=w_mask, t_mask=t_mask)
 
     @staticmethod
     def _generate_mask(mask_type, n, m, mask_param):

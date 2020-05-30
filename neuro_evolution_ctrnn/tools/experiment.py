@@ -10,8 +10,9 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from tools.optimizer_cma_es import OptimizerCmaEs
-from tools.helper import set_random_seeds, dask_map
+from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
+from tools.dask_handler import DaskHandler
 
 
 # from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
@@ -61,10 +62,10 @@ class Experiment(object):
         self.individual_size = self.brain_class.get_individual_size(self.config.brain)
         logging.info("Infividual Size for this Experiment: " + str(self.individual_size))
 
-        ep_runner = EpisodeRunner(conf=self.config.episode_runner,
-                                  brain_conf=self.config.brain,
-                                  discrete_actions=self.discrete_actions, brain_class=self.brain_class,
-                                  input_space=self.input_space, output_size=self.output_size, env_template=env)
+        self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
+                                       brain_conf=self.config.brain,
+                                       discrete_actions=self.discrete_actions, brain_class=self.brain_class,
+                                       input_space=self.input_space, output_size=self.output_size, env_template=env)
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
@@ -73,9 +74,10 @@ class Experiment(object):
         stats.register("max", np.max)
 
         if self.config.optimizer.type == "CMA_ES":
-            self.optimizer = self.optimizer_class(map_func=dask_map, individual_size=self.individual_size,
-                                                eval_fitness=ep_runner.eval_fitness, conf=self.config.optimizer,
-                                                stats=stats, from_checkoint=self.from_checkpoint)
+            self.optimizer = self.optimizer_class(map_func=DaskHandler.dask_map,
+                                                  individual_size=self.individual_size,
+                                                  eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
+                                                  stats=stats, from_checkoint=self.from_checkpoint)
         else:
             raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
 
@@ -86,6 +88,10 @@ class Experiment(object):
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
+
+        DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
+        if self.config.episode_runner.reuse_env:
+            DaskHandler.init_workers_with_env(self.env_template.spec.id)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
@@ -95,6 +101,7 @@ class Experiment(object):
             output_size=self.output_size,
             input_space=self.input_space,
             individual_size=self.individual_size)
+        DaskHandler.stop_dask()
         print("done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
@@ -104,10 +111,9 @@ class Experiment(object):
         for individual in individuals:
             set_random_seeds(self.config.random_seed, env)
             brain = self.brain_class(input_space=self.input_space,
-                                     output_size=self.output_size,
+                                     output_space=self.output_space,
                                      individual=individual,
                                      config=self.config.brain)
-
 
             brain_vis = brain_vis_handler.launch_new_visualization(brain)
             for i in range(rounds_per_individual):
