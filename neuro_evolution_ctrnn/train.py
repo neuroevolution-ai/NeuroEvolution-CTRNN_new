@@ -33,7 +33,7 @@ experiment = Experiment(configuration=config_from_file(args.configuration), resu
 if __name__ == "__main__":  # pragma: no cover
     """Everything outside this block will be executed by every scoop-worker, while this block is only run on the 
     main thread. Every object that is later passed to a worker must be pickle-able, that's why we 
-    initialise everything that is not pickle-able before this point. Especially the DAEP-toolbox is not 
+    initialise everything that is not pickle-able before this point. Especially the DEAP-toolbox is not 
     pickle-able. 
     """
     os.mkdir(args.result_path)

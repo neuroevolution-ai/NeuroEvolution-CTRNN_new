@@ -1,12 +1,18 @@
 import random
 import numpy as np
-from tools.configurations import ExperimentCfg, TrainerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
 import json
 import copy
 import pickle
-from pathlib import Path
 import os
 import logging
+from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
+from dask.distributed import Client
+
+client = Client(processes=False)
+
+
+def dask_map(*args, **kwargs):
+    return client.gather(client.map(*args, **kwargs))
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -18,6 +24,24 @@ def walk_dict(node, callback_node, depth=0):
             callback_node(key, item, depth, True)
 
 
+def sample_from_design_space(node):
+    result = {}
+    for key in node:
+        val = node[key]
+        if isinstance(val, list):
+            if val:
+                val = random.sample(val, 1)[0]
+            else:
+                # empty lists become None
+                val = None
+
+        if isinstance(val, dict):
+            result[key] = sample_from_design_space(val)
+        else:
+            result[key] = val
+    return result
+
+
 def config_from_file(json_path):
     # Load configuration file
     with open(json_path, "r") as read_file:
@@ -26,15 +50,15 @@ def config_from_file(json_path):
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
 
-    if config_dict["neural_network_type"] == 'CTRNN':
+    if config_dict["brain"]["type"] == 'CTRNN':
         brain_cfg_class = ContinuousTimeRNNCfg
     else:
-        raise RuntimeError("unknown neural_network_type: " + str(config_dict["neural_network_type"]))
+        raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
-    if config_dict["trainer_type"] == 'CMA_ES':
-        trainer_cfg_class = TrainerCmaEsCfg
+    if config_dict["optimizer"]["type"] == 'CMA_ES':
+        optimizer_cfg_class = OptimizerCmaEsCfg
     else:
-        raise RuntimeError("unknown trainer_type: " + str(config_dict["neural_network_type"]))
+        raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
     if not config_dict["random_seed"]:
         config_dict["random_seed"] = random.getstate()
@@ -42,7 +66,7 @@ def config_from_file(json_path):
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
-    config_dict["trainer"] = trainer_cfg_class(**(config_dict["trainer"]))
+    config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)
 
@@ -66,6 +90,9 @@ def get_checkpoint(checkpoint):
 
 
 def set_random_seeds(seed, env):
+    if not seed:
+        return
+
     if type(seed) != int:
         # env.seed only accepts native integer and not np.int32/64
         # so we need to extract the int before passing it to env.seed()

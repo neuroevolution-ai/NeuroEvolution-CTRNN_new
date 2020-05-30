@@ -7,18 +7,18 @@ from deap import creator
 from deap import tools
 from deap import cma
 from tools import algorithms
-from tools.configurations import TrainerCmaEsCfg
+from tools.configurations import OptimizerCmaEsCfg
 from tools.helper import write_checkpoint, get_checkpoint
 
 
-class TrainerCmaEs(object):
+class OptimizerCmaEs(object):
 
     # noinspection PyUnresolvedReferences
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: TrainerCmaEsCfg, stats, map_func=map,
+    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerCmaEsCfg, stats, map_func=map,
                  hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
 
         self.toolbox = toolbox = base.Toolbox()
-        self.conf: TrainerCmaEsCfg = conf
+        self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)

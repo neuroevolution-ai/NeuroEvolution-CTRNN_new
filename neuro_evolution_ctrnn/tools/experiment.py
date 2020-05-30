@@ -1,23 +1,20 @@
 import numpy as np
 import time
 import gym
-import json
-import random
 from deap import tools
 from scoop import futures
-import logging as l, logging
-import time
+import logging
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
-from tools.trainer_cma_es import TrainerCmaEs
-from tools.helper import set_random_seeds
+from tools.optimizer_cma_es import OptimizerCmaEs
+from tools.helper import set_random_seeds, dask_map
 from tools.configurations import ExperimentCfg
 
 
-# from neuro_evolution_ctrnn.tools.trainer_mu_plus_lambda import TrainerMuPlusLambda
+# from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
 
 
 class Experiment(object):
@@ -27,15 +24,15 @@ class Experiment(object):
         self.from_checkpoint = from_checkpoint
         self.config = configuration
 
-        if self.config.neural_network_type == 'CTRNN':
+        if self.config.brain.type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
         else:
-            raise RuntimeError("unknown neural_network_type: " + str(self.config.neural_network_type))
+            raise RuntimeError("unknown neural_network_type: " + str(self.config.brain.type))
 
-        if self.config.trainer_type == 'CMA_ES':
-            self.trainer_class = TrainerCmaEs
+        if self.config.optimizer.type == 'CMA_ES':
+            self.optimizer_class = OptimizerCmaEs
         else:
-            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
+            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self._setup()
 
@@ -62,7 +59,7 @@ class Experiment(object):
                                             output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain)
-        l.info("Infividual Size for this Experiment: " + str(self.individual_size))
+        logging.info("Infividual Size for this Experiment: " + str(self.individual_size))
 
         ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                   brain_conf=self.config.brain,
@@ -75,24 +72,24 @@ class Experiment(object):
         stats.register("min", np.min)
         stats.register("max", np.max)
 
-        if self.config.trainer_type == "CMA_ES":
-            self.trainer = self.trainer_class(map_func=futures.map, individual_size=self.individual_size,
-                                              eval_fitness=ep_runner.eval_fitness, conf=self.config.trainer,
-                                              stats=stats, from_checkoint=self.from_checkpoint)
+        if self.config.optimizer.type == "CMA_ES":
+            self.optimizer = self.optimizer_class(map_func=dask_map, individual_size=self.individual_size,
+                                                eval_fitness=ep_runner.eval_fitness, conf=self.config.optimizer,
+                                                stats=stats, from_checkoint=self.from_checkpoint)
         else:
-            raise RuntimeError("unknown trainer_type: " + str(self.config.trainer_type))
+            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self.result_handler = ResultHandler(result_path=self.result_path,
-                                            neural_network_type=self.config.neural_network_type,
+                                            neural_network_type=self.config.brain.type,
                                             config_raw=self.config.raw_dict)
 
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-        log = self.trainer.train(number_generations=self.config.number_generations)
+        log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
-            hof=self.trainer.hof,
+            hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
             output_size=self.output_size,
@@ -102,18 +99,21 @@ class Experiment(object):
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
         env = gym.make(self.config.environment)
-        set_random_seeds(self.config.random_seed, env)
         env.render()
 
         for individual in individuals:
+            set_random_seeds(self.config.random_seed, env)
+            brain = self.brain_class(input_space=self.input_space,
+                                     output_size=self.output_size,
+                                     individual=individual,
+                                     config=self.config.brain)
+
+
+            brain_vis = brain_vis_handler.launch_new_visualization(brain)
             for i in range(rounds_per_individual):
                 fitness_current = 0
                 ob = env.reset()
                 done = False
-                brain = self.brain_class(input_space=self.input_space,
-                                         output_size=self.output_size,
-                                         individual=individual,
-                                         config=self.config.brain)
                 if neuron_vis:
                     brain_vis = brain_vis_handler.launch_new_visualization(brain)
 

@@ -1,6 +1,6 @@
 import numpy as np
-from tools.helper import set_random_seeds
 import gym
+from tools.helper import set_random_seeds
 from tools.configurations import EpisodeRunnerCfg
 
 
@@ -18,11 +18,11 @@ class EpisodeRunner(object):
     def eval_fitness(self, individual, seed):
         env = gym.make(self.env_id)
         set_random_seeds(seed, env)
-        brain = self.brain_class(self.input_space, self.output_size, individual,
-                                 self.brain_conf)
-
-        fitness_current = 0
+        fitness_total = 0
         for i in range(self.conf.number_fitness_runs):
+            fitness_current = 0
+            brain = self.brain_class(self.input_space, self.output_size, individual,
+                                     self.brain_conf)
             ob = env.reset()
             done = False
             consecutive_non_movement = 0
@@ -43,5 +43,6 @@ class EpisodeRunner(object):
                     else:
                         consecutive_non_movement = 0
                 fitness_current += rew
+            fitness_total += fitness_current
 
-        return fitness_current / self.conf.number_fitness_runs,
+        return fitness_total / self.conf.number_fitness_runs,

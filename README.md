@@ -49,7 +49,15 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
 ### tricks
 
-### generate statistics 
+#### pycharm plugins
+
+  * https://plugins.jetbrains.com/plugin/11086-mypy
+    * funktioniert bei mir nicht, siehe: https://github.com/leinardi/mypy-pycharm/issues/60
+  * https://plugins.jetbrains.com/plugin/13348-mypy-official-
+    * config-parameter "Path suffix" muss auf bin-ordner von venv gesetzt werden
+    * command: `dmypy run . -- --follow-imports skip`
+
+#### generate statistics 
 
 ```
 python neuro_evolution_ctrnn/batch_generate_plot.py
@@ -57,9 +65,10 @@ cd ../CTRNN_Simulation_Results
 python resuts_to_csv.py
 ```
 
-now you can open `output.csv` in libreoffice-calc. 
-You can format the hyperlinks to the plots such that they become clickable links,
-which open the plots as images: https://ask.libreoffice.org/en/question/69088/calc-importing-csv-full-of-urls/
+now you can open `output.csv` in libreoffice-calc. The hyperlinks in the plot-column don't get formatted when loading. 
+Libreoffice will recognize the hyperlinks when you enter the cell, add a space to the end and leave it again. 
+When you then click the hyper links, a windows with the plot should open.
+
 
 Note: make sure the numbers are imported correctly. A comma can be a 
 decimal separator, a thousands separator and a column separator. 
@@ -85,6 +94,26 @@ man mit `--help` aufrufen kann
 Wenn du willst, dass der results-ordner im IDE 
 angezeigt wird, kannst du einfach einen softlink darauf ins repo legen: 
 `cd NeuroEvolution-CTRNN && ln -s ../CTRNN_Simulation_Results results`
+
+
+#### json formatting
+
+All jsons are formatted with this style. Applying different formatting -or none at all- will result in 
+much clutter in the git commits. 
+
+File --> Settings --> Editor --> Code Style --> Json --> Wrapping and Braces
+
+- Hardwrap at: 120
+- Wrap on typing: yes
+- Visual guides: 80, 120
+- Keep when reformatting
+  - line breaks: ☑ 
+  - trailing comma: ☐ 
+- Ensure right margin is not exceeded: ☑
+- Arrays: Wrap if long
+- Objects Wrap if long
+  - Align: Do not align
+
 
 ## troubleshooting
 

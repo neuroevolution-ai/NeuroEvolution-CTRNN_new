@@ -1,28 +1,28 @@
 {
-  "environment": "Qbert-ram-v0",
-  "neural_network_type": "CTRNN",
+  "environment": "BipedalWalker-v3",
   "random_seed": 123,
-  "number_generations": 500,
-  "trainer_type": "CMA_ES",
-  "trainer": {
-    "population_size": 150,
+  "number_generations": 5,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 5,
     "sigma": 1.0,
-    "checkpoint_frequency": 20
+    "checkpoint_frequency": 0
   },
   "brain": {
-    "number_neurons": 20,
+    "type": "CTRNN",
+    "number_neurons": 5,
     "delta_t": 0.05,
     "normalize_input": true,
     "normalize_input_target": 10,
-    "optimize_state_boundaries": "per_neuron",
+    "optimize_state_boundaries": "legacy",
     "clipping_range_max": 0.1,
     "clipping_range_min": -0.1,
     "optimize_y0": true,
     "set_principle_diagonal_elements_of_W_negative": true,
     "w_mask": "logarithmic",
-    "w_mask_param": 8,
+    "w_mask_param": 2,
     "v_mask": "logarithmic",
-    "v_mask_param": 4,
+    "v_mask_param": 2,
     "t_mask": "logarithmic",
     "t_mask_param": 2,
     "parameter_perturbations": 0.001
