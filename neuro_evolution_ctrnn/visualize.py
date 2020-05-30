@@ -33,12 +33,20 @@ def parse_args(args=None):
                         help='a filename where the plot should be saved',
                         default=None)
 
-    parser.add_argument('--neuron_vis', metavar='bool', type=bool,
-                        help='show neuron visualizer?',
-                        default=False)
-    parser.add_argument('--hof', metavar='int', type=int,
+
+    parser.add_argument('--neuron-vis', dest='neuron_vis', action='store_true')
+    parser.add_argument('--no-neuron-vis', dest='neuron_vis', action='store_false')
+    parser.set_defaults(neuron_vis=True)
+
+    parser.add_argument('--hof', type=int,
                         help='show how many individuals in environment?',
                         default=0)
+    parser.add_argument('--slow-down', type=int,
+                        help='Insert a pause between iteration (milliseconds)',
+                        default=0)
+    parser.add_argument('--rounds', metavar='int', type=int,
+                        help='how many rounds per individual?',
+                        default=1)
     parser.add_argument('--style', metavar='int', type=str,
                         help='Which plot-style should be used? ',
                         default='seaborn-paper')
@@ -63,7 +71,7 @@ if args.neuron_vis or args.hof:
     experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
                             result_path="asdasd",
                             from_checkpoint=None)
-    t = threading.Thread(target=experiment.visualize, args=[hall_of_fame[0:args.hof], BrainVisualizerHandler()])
+    t = threading.Thread(target=experiment.visualize, args=[hall_of_fame[0:args.hof], BrainVisualizerHandler(), args.rounds, args.neuron_vis, args.slow_down])
     t.start()
 
 # Plot results

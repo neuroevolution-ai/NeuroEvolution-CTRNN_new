@@ -6,6 +6,7 @@ import random
 from deap import tools
 from scoop import futures
 import logging as l, logging
+import time
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 # import brains.layered_nn as lnn
@@ -99,27 +100,32 @@ class Experiment(object):
             individual_size=self.individual_size)
         print("done")
 
-    def visualize(self, individuals, brain_vis_handler):
+    def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
         env = gym.make(self.config.environment)
+        set_random_seeds(self.config.random_seed, env)
         env.render()
 
         for individual in individuals:
-            fitness_current = 0
-            set_random_seeds(self.config.random_seed, env)
-            ob = env.reset()
-            done = False
-            brain = self.brain_class(input_space=self.input_space,
-                                     output_size=self.output_size,
-                                     individual=individual,
-                                     config=self.config.brain)
-            brain_vis = brain_vis_handler.launch_new_visualization(brain)
+            for i in range(rounds_per_individual):
+                fitness_current = 0
+                ob = env.reset()
+                done = False
+                brain = self.brain_class(input_space=self.input_space,
+                                         output_size=self.output_size,
+                                         individual=individual,
+                                         config=self.config.brain)
+                if neuron_vis:
+                    brain_vis = brain_vis_handler.launch_new_visualization(brain)
 
-            while not done:
-                action = brain.step(ob)
-                brain_vis.process_update(in_values=ob, out_values=action)
-                if self.discrete_actions:
-                    action = np.argmax(action)
-                ob, rew, done, info = env.step(action)
-                fitness_current += rew
-                env.render()
-            print(fitness_current)
+                while not done:
+                    action = brain.step(ob)
+                    if neuron_vis:
+                        brain_vis.process_update(in_values=ob, out_values=action)
+                    if self.discrete_actions:
+                        action = np.argmax(action)
+                    ob, rew, done, info = env.step(action)
+                    if slow_down:
+                        time.sleep(slow_down / 1000.0)
+                    fitness_current += rew
+                    env.render()
+                print(fitness_current)
