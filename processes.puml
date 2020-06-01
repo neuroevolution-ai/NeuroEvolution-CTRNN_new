@@ -78,10 +78,11 @@ loop number of Generations
 activate Optimizer
 
 Optimizer -> Optimizer: Strategy.generate()
-Optimizer -> DaskHandler: dask_map(eval_fitness, Individual)
+Optimizer -> DaskHandler: dask_map(eval_fitness, Individuals)
 activate DaskHandler
+DaskHandler --> DaskHandler: map(eval_fitness, Individuals)
 loop number of Individuals
-DaskHandler --> Worker: map(eval_fitness, Individual)
+DaskHandler --> Worker: run(eval_fitness, Individual)
 activate Worker
 Worker -> EpRunner: eval_fitness(Individual)
 activate EpRunner
