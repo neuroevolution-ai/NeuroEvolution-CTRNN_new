@@ -6,7 +6,8 @@ import pickle
 import os
 import logging
 
-from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg
+from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
+    IBrainCfg
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -36,7 +37,7 @@ def sample_from_design_space(node):
     return result
 
 
-def config_from_file(json_path):
+def config_from_file(json_path: str) -> IBrainCfg:
     # Load configuration file
     with open(json_path, "r") as read_file:
         config_dict = json.load(read_file)
@@ -46,6 +47,8 @@ def config_from_file(json_path):
 
     if config_dict["brain"]["type"] == 'CTRNN':
         brain_cfg_class = ContinuousTimeRNNCfg
+    elif config_dict["brain"]["type"] == 'LNN':
+        brain_cfg_class = LayeredNNCfg
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 

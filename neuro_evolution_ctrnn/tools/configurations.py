@@ -1,6 +1,12 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
 from typing import List
 import attr
+import abc
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class IBrainCfg(abc.ABC):
+    type: str
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -11,8 +17,7 @@ class EpisodeRunnerCfg:
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class ContinuousTimeRNNCfg:
-    type: str
+class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
     delta_t: float
     optimize_state_boundaries: str
@@ -29,6 +34,16 @@ class ContinuousTimeRNNCfg:
     t_mask: str
     t_mask_param: float
     parameter_perturbations: float
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LayeredNNCfg(IBrainCfg):
+    number_neurons_layer1: int
+    number_neurons_layer2: int
+    cppn_hidden_size1: int
+    cppn_hidden_size2: int
+    use_biases: bool
+    indirect_encoding: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

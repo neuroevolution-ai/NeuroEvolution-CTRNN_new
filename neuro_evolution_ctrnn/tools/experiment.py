@@ -6,6 +6,8 @@ from scoop import futures
 import logging
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains.layered_nn import LayeredNN
+from brains.i_brain import IBrain
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -24,9 +26,11 @@ class Experiment(object):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
-
+        self.brain_class: IBrain
         if self.config.brain.type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
+        elif self.config.brain.type == 'LNN':
+            self.brain_class = LayeredNN
         else:
             raise RuntimeError("unknown neural_network_type: " + str(self.config.brain.type))
 
@@ -59,13 +63,15 @@ class Experiment(object):
                                             input_space=self.input_space,
                                             output_space=self.output_space)
 
-        self.individual_size = self.brain_class.get_individual_size(self.config.brain)
+        self.individual_size = self.brain_class.get_individual_size(self.config.brain,
+                                            input_space=self.input_space,
+                                            output_space=self.output_space)
         logging.info("Infividual Size for this Experiment: " + str(self.individual_size))
 
         self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                        brain_conf=self.config.brain,
                                        discrete_actions=self.discrete_actions, brain_class=self.brain_class,
-                                       input_space=self.input_space, output_size=self.output_size, env_template=env)
+                                       input_space=self.input_space, output_space=self.output_space, env_template=env)
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)

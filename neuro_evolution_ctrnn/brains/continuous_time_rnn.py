@@ -4,10 +4,11 @@ from typing import List, Union
 from gym.spaces import Space, Box, Discrete
 import logging
 import math
+from brains.i_brain import IBrain
 
 
 # noinspection PyPep8Naming
-class ContinuousTimeRNN:
+class ContinuousTimeRNN(IBrain):
     v_mask: np.ndarray
     w_mask: np.ndarray
     t_mask: np.ndarray
@@ -23,7 +24,8 @@ class ContinuousTimeRNN:
         cls.t_mask = t_mask
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
-        assert len(individual) == self.get_individual_size(config)
+        super().__init__(input_space, output_space, individual, config)
+        assert len(individual) == self.get_individual_size(config, input_space, output_space)
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
         self.config = config
@@ -79,14 +81,6 @@ class ContinuousTimeRNN:
             for j in range(N_n):
                 self.W[j][j] = -abs(self.W[j][j])
 
-    @staticmethod
-    def _normalize(x, low, high):
-        if high > 1e5 or low < -1e5:
-            # treat high spaces as unbounded
-            # note: some spaces some envs don't define input_space.bounded_below properly
-            return x
-        return (((x - low) / (high - low)) * 2) - 1
-
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
         if self.config.normalize_input:
@@ -118,7 +112,7 @@ class ContinuousTimeRNN:
         return o
 
     @classmethod
-    def get_individual_size(cls, config: ContinuousTimeRNNCfg):
+    def get_individual_size(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
         individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
         if config.optimize_y0:
             individual_size += config.number_neurons
@@ -132,15 +126,6 @@ class ContinuousTimeRNN:
         elif config.optimize_state_boundaries == "fixed":
             individual_size += 0
         return individual_size
-
-    @staticmethod
-    def _size_from_space(space: Space) -> int:
-        if isinstance(space, Discrete):
-            return space.n  # type: ignore
-        elif isinstance(space, Box):
-            return np.prod(space.shape)  # type: ignore
-        else:
-            raise NotImplementedError("not implemented input/output space: " + str(type(space)))
 
     @classmethod
     def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):

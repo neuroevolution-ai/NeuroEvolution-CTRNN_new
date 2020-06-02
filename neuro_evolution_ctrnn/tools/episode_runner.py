@@ -8,13 +8,13 @@ from tools.dask_handler import get_current_worker
 
 class EpisodeRunner(object):
     def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, discrete_actions, brain_class, input_space,
-                 output_size, env_template):
+                 output_space, env_template):
         self.conf = conf
         self.discrete_actions = discrete_actions
         self.brain_class = brain_class
         self.brain_conf = brain_conf
         self.input_space = input_space
-        self.output_size = output_size
+        self.output_space = output_space
         self.env_id = env_template.spec.id
 
     def eval_fitness(self, individual, seed):
@@ -26,7 +26,7 @@ class EpisodeRunner(object):
         fitness_total = 0
         for i in range(self.conf.number_fitness_runs):
             fitness_current = 0
-            brain = self.brain_class(self.input_space, self.output_size, individual,
+            brain = self.brain_class(self.input_space, self.output_space, individual,
                                      self.brain_conf)
             ob = env.reset()
             done = False

@@ -13,7 +13,8 @@ pytest-mock
 git+git://github.com/numpy/numpy-stubs.git#egg=numpy-stubs
 attrs
 dask[distributed]
-
+torch
+pytest-parallel
 
 # optional, if needed install manually
 # gym[mujoco]
