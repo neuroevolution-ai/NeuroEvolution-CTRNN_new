@@ -1,4 +1,3 @@
-# import neu
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import numpy as np
@@ -99,7 +98,7 @@ class TestCTRNN:
         # due to tanh the maximum output is 1.0
         assert np.allclose(res, np.ones(2))
         # with legacy-clipping everything is clipped to the lowest max-value, which is 10 in this genome
-        assert np.allclose(brain.y, np.ones([2, 2]) * 10)
+        assert np.allclose(brain.y, np.ones(2) * 10)
 
     def test_clipping_per_neuron(self, brain_config, brain_param_identity, box2d):
         brain_config = evolve(brain_config, optimize_state_boundaries="per_neuron")
@@ -114,6 +113,37 @@ class TestCTRNN:
         assert np.allclose(brain.y, bp.clip_max)
         brain.step(ob * -100000)
         assert np.allclose(brain.y, bp.clip_min)
+
+    def test_generating_masks_random(self, brain_config, box2d):
+        ContinuousTimeRNN.set_masks_globally(
+            config=evolve(brain_config, v_mask="random", t_mask="random", w_mask="random", v_mask_param=0.5,
+                          w_mask_param=0.5, t_mask_param=0.5), input_space=box2d,
+            output_space=box2d, )
+
+    def test_generating_masks_dense(self, brain_config, box2d):
+        ContinuousTimeRNN.set_masks_globally(
+            config=evolve(brain_config, v_mask="dense", t_mask="dense", w_mask="dense"), input_space=box2d,
+            output_space=box2d, )
+
+    def test_generating_masks_log(self, brain_config, box2d):
+        ContinuousTimeRNN.set_masks_globally(
+            config=evolve(brain_config, v_mask="logarithmic", w_mask="logarithmic", t_mask="logarithmic",
+                          v_mask_param=2.5, w_mask_param=5, t_mask_param=1.1),
+            input_space=box2d,
+            output_space=box2d, )
+
+    def test_wrong_size(self, brain_config, box2d, brain_param_identity):
+        ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=box2d,
+                                             output_space=box2d, )
+        ind = self.param_to_genom(brain_param_identity)
+        ContinuousTimeRNN(input_space=box2d, output_space=box2d,
+                          individual=np.append(ind[:-1], [1]), config=brain_config)
+        with pytest.raises(AssertionError):
+            ContinuousTimeRNN(input_space=box2d, output_space=box2d,
+                              individual=ind[:-1], config=brain_config)
+        with pytest.raises(AssertionError):
+            ContinuousTimeRNN(input_space=box2d, output_space=box2d,
+                              individual=np.append(ind, [1]), config=brain_config)
 
     def test_get_individual_size(self, brain_config):
         ContinuousTimeRNN.set_masks_globally(config=brain_config, input_space=Box(-1, 1, shape=[3]),
