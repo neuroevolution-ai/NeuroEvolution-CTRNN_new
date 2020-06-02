@@ -32,12 +32,12 @@ class Experiment(object):
         elif self.config.brain.type == 'LNN':
             self.brain_class = LayeredNN
         else:
-            raise RuntimeError("unknown neural_network_type: " + str(self.config.brain.type))
+            raise RuntimeError("Unknown neural_network_type: " + str(self.config.brain.type))
 
         if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
         else:
-            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
+            raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self._setup()
 
@@ -66,7 +66,7 @@ class Experiment(object):
         self.individual_size = self.brain_class.get_individual_size(self.config.brain,
                                             input_space=self.input_space,
                                             output_space=self.output_space)
-        logging.info("Infividual Size for this Experiment: " + str(self.individual_size))
+        logging.info("Individual size for this experiment: " + str(self.individual_size))
 
         self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                        brain_conf=self.config.brain,
@@ -85,7 +85,7 @@ class Experiment(object):
                                                   eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
                                                   stats=stats, from_checkoint=self.from_checkpoint)
         else:
-            raise RuntimeError("unknown optimizer.type: " + str(self.config.optimizer.type))
+            raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,
@@ -108,7 +108,7 @@ class Experiment(object):
             input_space=self.input_space,
             individual_size=self.individual_size)
         DaskHandler.stop_dask()
-        print("done")
+        print("Done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
         env = gym.make(self.config.environment)
