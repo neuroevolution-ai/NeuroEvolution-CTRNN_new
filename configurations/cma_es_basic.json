@@ -1,10 +1,10 @@
 {
-  "environment": "BipedalWalker-v3",
-  "random_seed": 123,
-  "number_generations": 5,
+  "environment": "Qbert-ram-v0",
+  "random_seed": 0,
+  "number_generations": 2,
   "optimizer": {
     "type": "CMA_ES",
-    "population_size": 5,
+    "population_size": 30,
     "sigma": 1.0,
     "checkpoint_frequency": 0
   },
@@ -20,7 +20,7 @@
     "optimize_y0": true,
     "set_principle_diagonal_elements_of_W_negative": true,
     "w_mask": "logarithmic",
-    "w_mask_param": 2,
+    "w_mask_param": 8,
     "v_mask": "logarithmic",
     "v_mask_param": 2,
     "t_mask": "logarithmic",
@@ -30,6 +30,6 @@
   "episode_runner": {
     "keep_env_seed_fixed_during_generation": false,
     "number_fitness_runs": 1,
-    "reuse_env": false
+    "reuse_env": true
   }
 }

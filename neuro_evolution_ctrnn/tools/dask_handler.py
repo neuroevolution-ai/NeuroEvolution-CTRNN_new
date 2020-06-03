@@ -1,10 +1,11 @@
-from dask.distributed import Client, Worker, WorkerPlugin
+from dask.distributed import Client, Worker, WorkerPlugin, LocalCluster
 from typing import Optional
 import logging
 import gym
 from dask.distributed import get_worker
 from typing import Callable, Union
 from brains.continuous_time_rnn import ContinuousTimeRNN
+import multiprocessing
 
 # This is used by the episode running to get the current worker's env
 get_current_worker = get_worker
@@ -62,7 +63,9 @@ class DaskHandler:
     def init_dask(cls, class_cb: Callable, brain_class):
         if cls._client:
             raise RuntimeError("dask client already initialized")
-        cls._client: Client = Client(processes=True, asynchronous=False)
+        cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1, silence_logs=logging.WARN,
+                                    n_workers=multiprocessing.cpu_count())
+        cls._client: Client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')
 
     @classmethod
