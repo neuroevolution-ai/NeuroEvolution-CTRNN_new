@@ -58,18 +58,23 @@ class _EnvPlugin(WorkerPlugin):
 class DaskHandler:
     """this class wraps all Dask-Related functions."""
     _client: Optional[Client] = None
+    _cluster: Optional[LocalCluster] = None
 
     @classmethod
-    def init_dask(cls, class_cb: Callable, brain_class):
+    def init_dask(cls, class_cb: Callable, brain_class, worker_log_level=logging.WARN):
         if cls._client:
             raise RuntimeError("dask client already initialized")
-        cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1, silence_logs=logging.WARN,
+
+        cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
+                                    silence_logs=worker_log_level,
                                     n_workers=multiprocessing.cpu_count())
-        cls._client: Client = Client(cls._cluster)
+        cls._client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')
 
     @classmethod
     def init_workers_with_env(cls, env_id: str):
+        if not cls._client:
+            raise RuntimeError("Client not initialised. Please call init_dask before calling this method. ")
         cls._client.register_worker_plugin(_EnvPlugin(env_id), name='env-plugin')
 
     @classmethod

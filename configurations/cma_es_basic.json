@@ -1,16 +1,16 @@
 {
   "environment": "Qbert-ram-v0",
   "random_seed": 0,
-  "number_generations": 2,
+  "number_generations": 150,
   "optimizer": {
     "type": "CMA_ES",
-    "population_size": 30,
+    "population_size": 100,
     "sigma": 1.0,
     "checkpoint_frequency": 0
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 5,
+    "number_neurons": 20,
     "delta_t": 0.05,
     "normalize_input": true,
     "normalize_input_target": 10,

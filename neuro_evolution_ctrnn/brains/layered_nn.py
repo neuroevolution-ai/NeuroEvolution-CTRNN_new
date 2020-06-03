@@ -6,7 +6,7 @@ from tools.configurations import LayeredNNCfg
 from gym.spaces import Space, Discrete, Box
 
 
-class LayeredNN(nn.Module, IBrain):
+class LayeredNN(nn.Module, IBrain[LayeredNNCfg]):
 
     def __init__(self, input_space, output_space, individual, config: LayeredNNCfg):
         super(LayeredNN, self).__init__()

@@ -2,12 +2,12 @@ import abc
 from tools.configurations import IBrainCfg
 import numpy as np
 from gym.spaces import Space, Discrete, Box
-from typing import Type, TypeVar
-
+from typing import TypeVar, Generic
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
-class IBrain(abc.ABC):
+
+class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IBrainCfg):
