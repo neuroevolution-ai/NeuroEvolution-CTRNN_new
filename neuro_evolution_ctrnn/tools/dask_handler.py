@@ -63,6 +63,8 @@ class DaskHandler:
     def init_dask(cls, class_cb: Callable, brain_class):
         if cls._client:
             raise RuntimeError("dask client already initialized")
+        # threads_per_worker must be one, because atari-env is not thread-safe.
+        # And because lower the thread-count from the default, we must increase the number of workers
         cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1, silence_logs=logging.WARN,
                                     n_workers=multiprocessing.cpu_count())
         cls._client: Client = Client(cls._cluster)
