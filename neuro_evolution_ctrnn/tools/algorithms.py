@@ -9,6 +9,15 @@ from deap.algorithms import varOr
 def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
                    include_parents_in_next_generation=True):
     population = toolbox.population
+
+    invalid_ind = [ind for ind in population if not ind.fitness.valid]
+    seed_after_map: int = random.randint(1, 10000)
+    seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(invalid_ind))
+    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind, seeds_for_evaluation)
+    for ind, fit in zip(invalid_ind, fitnesses):
+        ind.fitness.values = fit
+    set_random_seeds(seed_after_map, env=None)
+
     for gen in range(toolbox.initial_generation, ngen + 1):
         offspring = varOr(population, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
 
@@ -18,7 +27,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             candidates = offspring
 
         seed_after_map: int = random.randint(1, 10000)
-        seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(population))
+        seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
         fitnesses = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
         for ind, fit in zip(candidates, fitnesses):
             ind.fitness.values = fit
@@ -35,7 +44,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=seed_after_map, strategy=toolbox.strategy))
+                                         logbook=toolbox.logbook, last_seed=seed_after_map, strategy=None))
 
     return toolbox.logbook
 
