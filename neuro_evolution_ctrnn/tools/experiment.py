@@ -2,8 +2,8 @@ import numpy as np
 import time
 import gym
 from deap import tools
-from scoop import futures
 import logging
+from typing import Type
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.layered_nn import LayeredNN
@@ -26,7 +26,7 @@ class Experiment(object):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
-        self.brain_class: IBrain
+        self.brain_class: Type[IBrain]
         if self.config.brain.type == 'CTRNN':
             self.brain_class = ContinuousTimeRNN
         elif self.config.brain.type == 'LNN':
@@ -64,8 +64,8 @@ class Experiment(object):
                                             output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain,
-                                            input_space=self.input_space,
-                                            output_space=self.output_space)
+                                                                    input_space=self.input_space,
+                                                                    output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
         self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,

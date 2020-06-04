@@ -5,6 +5,7 @@ import copy
 import pickle
 import os
 import logging
+from typing import Type
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
     IBrainCfg
@@ -37,14 +38,14 @@ def sample_from_design_space(node):
     return result
 
 
-def config_from_file(json_path: str) -> IBrainCfg:
+def config_from_file(json_path: str) -> ExperimentCfg:
     # Load configuration file
     with open(json_path, "r") as read_file:
         config_dict = json.load(read_file)
 
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
-
+    brain_cfg_class: Type[IBrainCfg]
     if config_dict["brain"]["type"] == 'CTRNN':
         brain_cfg_class = ContinuousTimeRNNCfg
     elif config_dict["brain"]["type"] == 'LNN':
