@@ -47,11 +47,35 @@ class LayeredNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class OptimizerCmaEsCfg:
+class IOptimizerCfg(abc.ABC):
     type: str
+    checkpoint_frequency: int
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class OptimizerMuLambdaCfg(IOptimizerCfg):
+    population_size: int
+    initial_gene_range: int
+    mate_indpb_1: float
+    mate_indpb_2: float
+    mutation_Gaussian_sigma_1: float
+    mutation_Gaussian_sigma_2: float
+    mutation_Gaussian_sigma_3: float
+    mutation_Gaussian_indpb_1: float
+    mutation_Gaussian_indpb_2: float
+    mutation_Gaussian_indpb_3: float
+    elitist_ratio: int
+    tournsize: int
+    mu: float
+    lambda_: float
+    mutpb: float
+    include_parents_in_next_generation: float
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
-    checkpoint_frequency: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

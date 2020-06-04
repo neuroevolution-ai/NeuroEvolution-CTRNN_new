@@ -1,5 +1,9 @@
 from tools.experiment import Experiment
 from attr import evolve
+import glob
+import os
+from tools.helper import config_from_file, sample_from_design_space, config_from_dict
+import json
 
 
 def mock_eval(*nargs, **kwargs):
@@ -29,3 +33,21 @@ class TestExperiment:
         Experiment(configuration=config,
                    result_path=tmpdir,
                    from_checkpoint=None)
+
+    def test_init_from_example_configs(self, tmpdir):
+        current_directory = os.path.dirname(os.path.realpath(__file__))
+        example_conf_path = os.path.join(current_directory, "..", "configurations")
+        for conf_name in os.listdir(example_conf_path):
+            print("next conf: " + conf_name)
+            path = os.path.join(example_conf_path, conf_name)
+
+            if "design" in conf_name:
+                with open(path, "r") as read_file:
+                    design_space = json.load(read_file)
+                c = config_from_dict(sample_from_design_space(design_space))
+            else:
+                c = config_from_file(path)
+
+            Experiment(configuration=c,
+                       result_path=tmpdir,
+                       from_checkpoint=None)

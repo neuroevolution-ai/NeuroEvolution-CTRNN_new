@@ -11,7 +11,8 @@ from brains.i_brain import IBrain
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
-from tools.optimizer_cma_es import OptimizerCmaEs
+from optimizer.optimizer_cma_es import OptimizerCmaEs
+from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
 from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
@@ -36,6 +37,8 @@ class Experiment(object):
 
         if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
+        elif self.config.optimizer.type == 'MU_ES':
+            self.optimizer_class = OptimizerMuPlusLambda
         else:
             raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
 
@@ -79,13 +82,10 @@ class Experiment(object):
         stats.register("min", np.min)
         stats.register("max", np.max)
 
-        if self.config.optimizer.type == "CMA_ES":
-            self.optimizer = self.optimizer_class(map_func=DaskHandler.dask_map,
-                                                  individual_size=self.individual_size,
-                                                  eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                                  stats=stats, from_checkoint=self.from_checkpoint)
-        else:
-            raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
+        self.optimizer = self.optimizer_class(map_func=DaskHandler.dask_map,
+                                              individual_size=self.individual_size,
+                                              eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
+                                              stats=stats, from_checkoint=self.from_checkpoint)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,

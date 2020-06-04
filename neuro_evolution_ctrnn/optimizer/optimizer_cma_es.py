@@ -9,19 +9,19 @@ from deap import cma
 from tools import algorithms
 from tools.configurations import OptimizerCmaEsCfg
 from tools.helper import write_checkpoint, get_checkpoint
+from optimizer.i_optimizer import IOptimizer
 
 
-class OptimizerCmaEs(object):
+class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
     @staticmethod
     def create_classes():
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-
-    # noinspection PyUnresolvedReferences
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerCmaEsCfg, stats, map_func=map,
                  hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
-
+        super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
+                                             hof, from_checkoint)
         self.toolbox = toolbox = base.Toolbox()
         self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats
@@ -46,10 +46,7 @@ class OptimizerCmaEs(object):
         toolbox.register("generate", toolbox.strategy.generate, creator.Individual)
         toolbox.register("update", toolbox.strategy.update)
 
-        cp_base_path = "checkpoints"
-        Path(cp_base_path).mkdir(parents=True, exist_ok=True)
-        logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
-        toolbox.register("checkpoint", write_checkpoint, cp_base_path, conf.checkpoint_frequency)
+        self.register_checkpoints(toolbox, conf.checkpoint_frequency)
 
     def train(self, number_generations) -> tools.Logbook:
         return algorithms.eaGenerateUpdate(self.toolbox, ngen=number_generations, halloffame=self.hof)

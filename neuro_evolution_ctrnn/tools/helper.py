@@ -8,7 +8,7 @@ import logging
 from typing import Type
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg
+    IBrainCfg, OptimizerMuLambdaCfg
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -39,10 +39,12 @@ def sample_from_design_space(node):
 
 
 def config_from_file(json_path: str) -> ExperimentCfg:
-    # Load configuration file
     with open(json_path, "r") as read_file:
         config_dict = json.load(read_file)
+    return config_from_dict(config_dict)
 
+
+def config_from_dict(config_dict: dict) -> ExperimentCfg:
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
     brain_cfg_class: Type[IBrainCfg]
@@ -55,6 +57,8 @@ def config_from_file(json_path: str) -> ExperimentCfg:
 
     if config_dict["optimizer"]["type"] == 'CMA_ES':
         optimizer_cfg_class = OptimizerCmaEsCfg
+    elif config_dict["optimizer"]["type"] == 'MU_ES':
+        optimizer_cfg_class = OptimizerMuLambdaCfg
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
