@@ -46,8 +46,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         mate_list = [
             tools.cxOnePoint,
             tools.cxTwoPoint,
-            partial(tools.cxUniform, indpb=self.conf.mate_indpb_1),
-            partial(tools.cxUniform, indpb=self.conf.mate_indpb_2)
+            partial(tools.cxUniform, indpb=self.conf.mate_indpb)
         ]
 
         mut_list = [
@@ -58,11 +57,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             partial(tools.mutGaussian,
                     mu=0.0,
                     sigma=self.conf.mutation_Gaussian_sigma_2,
-                    indpb=self.conf.mutation_Gaussian_indpb_2),
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_3,
-                    indpb=self.conf.mutation_Gaussian_indpb_3)
+                    indpb=self.conf.mutation_Gaussian_indpb_2)
         ]
 
         def mate(ind1, ind2):

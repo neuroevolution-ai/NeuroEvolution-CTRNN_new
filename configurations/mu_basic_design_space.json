@@ -7,7 +7,7 @@
     "population_size": 100,
     "checkpoint_frequency": 0,
     "initial_gene_range": [0.5, 1, 2, 5],
-    "mate_indpb_1": [0.3, 0.5],
+    "mate_indpb": [0.3, 0.5],
     "mutation_Gaussian_sigma_1": [5.0, 1.0],
     "mutation_Gaussian_sigma_2": [5.0, 1.0],
     "mutation_Gaussian_indpb_1": [0.1, 0.3],

@@ -8,7 +8,7 @@ import logging
 from typing import Type
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg, OptimizerMuLambdaCfg
+    IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -55,6 +55,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
+    optimizer_cfg_class: Type[IOptimizerCfg]
     if config_dict["optimizer"]["type"] == 'CMA_ES':
         optimizer_cfg_class = OptimizerCmaEsCfg
     elif config_dict["optimizer"]["type"] == 'MU_ES':

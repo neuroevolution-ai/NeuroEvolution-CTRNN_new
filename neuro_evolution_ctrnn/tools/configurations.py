@@ -56,14 +56,11 @@ class IOptimizerCfg(abc.ABC):
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     population_size: int
     initial_gene_range: int
-    mate_indpb_1: float
-    mate_indpb_2: float
+    mate_indpb: float
     mutation_Gaussian_sigma_1: float
     mutation_Gaussian_sigma_2: float
-    mutation_Gaussian_sigma_3: float
     mutation_Gaussian_indpb_1: float
     mutation_Gaussian_indpb_2: float
-    mutation_Gaussian_indpb_3: float
     elitist_ratio: int
     tournsize: int
     mu: float

@@ -8,6 +8,7 @@ from typing import Type
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.layered_nn import LayeredNN
 from brains.i_brain import IBrain
+from optimizer.i_optimizer import IOptimizer
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -35,6 +36,7 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown neural_network_type: " + str(self.config.brain.type))
 
+        self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
         elif self.config.optimizer.type == 'MU_ES':
