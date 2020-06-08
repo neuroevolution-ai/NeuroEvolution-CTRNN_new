@@ -70,6 +70,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     include_parents_in_next_generation: float
     keep_seeds_fixed_during_generation: bool
     novel_base: int
+    max_recorded_behaviors: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

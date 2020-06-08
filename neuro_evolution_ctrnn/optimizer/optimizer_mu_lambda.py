@@ -81,6 +81,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox.cxpb = 1.0 - self.conf.mutpb
         toolbox.mutpb = self.conf.mutpb
         toolbox.novel_base = self.conf.novel_base
+        toolbox.max_recorded_behaviors = self.conf.max_recorded_behaviors
 
         def create_seeds_for_evaluation(number_of_seeds):
             if self.conf.keep_seeds_fixed_during_generation:

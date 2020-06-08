@@ -4,6 +4,7 @@ import numpy as np
 from tools.helper import set_random_seeds
 from typing import Iterable, Collection
 from deap.algorithms import varOr
+from deap import tools
 
 
 def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
@@ -18,6 +19,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         ind.fitness.values = [res[0]]
         ind.behavior = res[1]
     set_random_seeds(seed_after_map, env=None)
+    recorded_behaviors = []
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         offspring = varOr(population, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
@@ -42,13 +44,17 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         set_random_seeds(seed_after_map, env=None)
 
         for ind in population:
-            b = np.array(ind.behavior).flatten()
-            a = np.array(best_behavior).flatten()
-            x = min(len(a), len(b))
-            b = b[:x]
-            a = a[:x]
-            ind.behavior_dist = [np.linalg.norm(a - b)]
+            ind.behavior_dist = [get_behavioral_dist(ind, best_behavior)]
+            for template in recorded_behaviors:
+                ind.behavior_dist[0] += get_behavioral_dist(ind, template)
+
         novel_cand = toolbox.select(candidates, toolbox.novel_base, fit_attr="behavior_dist")
+        recorded_behaviors.append(tools.selBest(novel_cand, 1, fit_attr="fitness"))
+
+        # drop recorded templates, when there are too many
+        overfill = len(recorded_behaviors) - toolbox.max_recorded_behaviors
+        if overfill > 0:
+            recorded_behaviors = recorded_behaviors[overfill:]
 
         if halloffame is not None:
             halloffame.update(offspring)
@@ -64,6 +70,15 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
                                          logbook=toolbox.logbook, last_seed=seed_after_map, strategy=None))
 
     return toolbox.logbook
+
+
+def get_behavioral_dist(a, b):
+    b = np.array(b).flatten()
+    a = np.array(a).flatten()
+    x = min(len(a), len(b))
+    b = b[:x]
+    a = a[:x]
+    return np.linalg.norm(a - b)
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):

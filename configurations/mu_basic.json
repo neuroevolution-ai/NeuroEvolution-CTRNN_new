@@ -1,12 +1,12 @@
 {
   "environment": "Qbert-ram-v0",
   "random_seed": 0,
-  "number_generations": 2,
+  "number_generations": 250,
   "optimizer": {
     "type": "MU_ES",
-    "population_size": 10,
+    "population_size": 100,
     "novel_base": 20,
-    "checkpoint_frequency": 0,
+    "checkpoint_frequency": 10,
     "initial_gene_range": 2,
     "mate_indpb": 0.3,
     "mutation_Gaussian_sigma_1": 1.0,
@@ -19,11 +19,12 @@
     "lambda_": 1.0,
     "mutpb": 0.8,
     "include_parents_in_next_generation": true,
-    "keep_seeds_fixed_during_generation": true
+    "keep_seeds_fixed_during_generation": true,
+    "max_recorded_behaviors": 50
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 10,
+    "number_neurons": 30,
     "delta_t": 0.5,
     "normalize_input": true,
     "normalize_input_target": 2,
