@@ -19,7 +19,8 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         ind.fitness.values = [res[0]]
         ind.behavior = res[1]
     set_random_seeds(seed_after_map, env=None)
-    toolbox.recorded_behaviors = []
+    toolbox.recorded_individuals = []
+    seed_for_behavior = 123
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         offspring = varOr(population, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
@@ -33,36 +34,37 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         seeds_for_evaluation = toolbox.create_seeds_for_evaluation(len(candidates))
 
         results = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
-        max_fit = -1000000
-        best_behavior = None
+
         for ind, res in zip(candidates, results):
             ind.fitness.values = [res[0]]
-            ind.behavior = res[1]
-            if ind.fitness.values[0] > max_fit:
-                max_fit = ind.fitness.values[0]
-                best_behavior = ind.behavior
+
+        if len(toolbox.recorded_individuals) == 0:
+            for ind in population:
+                ind.novelty = [0]
+        else:
+            seeds_for_behavior = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_behavior
+            results_2 = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_behavior)
+
+            for ind in population:
+                min_distance = 10e10
+                for res in results_2:
+                    dist = get_behavioral_dist(ind, res[1])
+                    if dist < min_distance:
+                        min_distance = dist
+                ind.novelty = [min_distance]
         set_random_seeds(seed_after_map, env=None)
+        novel_candidates = toolbox.select(candidates, toolbox.novel_base, fit_attr="novelty")
+        toolbox.recorded_individuals.append(tools.selBest(novel_candidates, 1, fit_attr="fitness")[0])
 
-        for ind in population:
-            min_distance = get_behavioral_dist(ind, best_behavior)
-            for template in toolbox.recorded_behaviors:
-                dist = get_behavioral_dist(ind, template)
-                if dist < min_distance:
-                    min_distance = dist
-            ind.behavior_dist = [min_distance]
-
-        novel_cand = toolbox.select(candidates, toolbox.novel_base, fit_attr="behavior_dist")
-        toolbox.recorded_behaviors.append(tools.selBest(novel_cand, 1, fit_attr="fitness"))
-
-        # drop recorded templates, when there are too many
-        overfill = len(toolbox.recorded_behaviors) - toolbox.max_recorded_behaviors
+        # drop recorded_individuals, when there are too many
+        overfill = len(toolbox.recorded_individuals) - toolbox.max_recorded_behaviors
         if overfill > 0:
-            recorded_behaviors = toolbox.recorded_behaviors[overfill:]
+            toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
         if halloffame is not None:
             halloffame.update(offspring)
 
-        population[:] = toolbox.select(candidates, toolbox.mu / 2) + toolbox.select(novel_cand, toolbox.mu / 2)
+        population[:] = toolbox.select(candidates, toolbox.mu / 2) + toolbox.select(novel_candidates, toolbox.mu / 2)
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
         toolbox.logbook.record(gen=gen, nevals=len(candidates), **record)
@@ -71,7 +73,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
                                          logbook=toolbox.logbook, last_seed=seed_after_map, strategy=None,
-                                         recorded_behaviors=toolbox.recorded_behaviors))
+                                         recorded_behaviors=toolbox.recorded_individuals))
 
     return toolbox.logbook
 

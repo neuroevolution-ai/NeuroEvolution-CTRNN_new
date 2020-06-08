@@ -20,7 +20,7 @@
     "mutpb": 0.8,
     "include_parents_in_next_generation": true,
     "keep_seeds_fixed_during_generation": true,
-    "max_recorded_behaviors": 50
+    "max_recorded_behaviors": 10
   },
   "brain": {
     "type": "CTRNN",
