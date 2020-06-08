@@ -19,7 +19,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         ind.fitness.values = [res[0]]
         ind.behavior = res[1]
     set_random_seeds(seed_after_map, env=None)
-    recorded_behaviors = []
+    toolbox.recorded_behaviors = []
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         offspring = varOr(population, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
@@ -44,17 +44,20 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         set_random_seeds(seed_after_map, env=None)
 
         for ind in population:
-            ind.behavior_dist = [get_behavioral_dist(ind, best_behavior)]
-            for template in recorded_behaviors:
-                ind.behavior_dist[0] += get_behavioral_dist(ind, template)
+            min_distance = get_behavioral_dist(ind, best_behavior)
+            for template in toolbox.recorded_behaviors:
+                dist = get_behavioral_dist(ind, template)
+                if dist < min_distance:
+                    min_distance = dist
+            ind.behavior_dist = [min_distance]
 
         novel_cand = toolbox.select(candidates, toolbox.novel_base, fit_attr="behavior_dist")
-        recorded_behaviors.append(tools.selBest(novel_cand, 1, fit_attr="fitness"))
+        toolbox.recorded_behaviors.append(tools.selBest(novel_cand, 1, fit_attr="fitness"))
 
         # drop recorded templates, when there are too many
-        overfill = len(recorded_behaviors) - toolbox.max_recorded_behaviors
+        overfill = len(toolbox.recorded_behaviors) - toolbox.max_recorded_behaviors
         if overfill > 0:
-            recorded_behaviors = recorded_behaviors[overfill:]
+            recorded_behaviors = toolbox.recorded_behaviors[overfill:]
 
         if halloffame is not None:
             halloffame.update(offspring)
@@ -66,8 +69,9 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=seed_after_map, strategy=None))
+            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
+                                         logbook=toolbox.logbook, last_seed=seed_after_map, strategy=None,
+                                         recorded_behaviors=toolbox.recorded_behaviors))
 
     return toolbox.logbook
 

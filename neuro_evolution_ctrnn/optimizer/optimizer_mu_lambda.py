@@ -97,6 +97,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.initial_seed = cp["last_seed"]
             toolbox.population = cp["population"]
             toolbox.logbook = cp["logbook"]
+            toolbox.recorded_behaviors = cp["recorded_behaviors"]
             self.hof = cp["halloffame"]
         else:
             toolbox.logbook = tools.Logbook()
@@ -105,6 +106,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.population = self.toolbox.population(n=int(self.conf.population_size))
             toolbox.logbook = tools.Logbook()
             toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+            toolbox.recorded_behaviors = []
             self.hof = hof
 
     def train(self, number_generations) -> tools.Logbook:
