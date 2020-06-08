@@ -45,6 +45,10 @@ class LayeredNNCfg(IBrainCfg):
     use_biases: bool
     indirect_encoding: bool
 
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LSTMCfg(IBrainCfg):
+    lstm_num_layers: int
+    use_biases: bool
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IOptimizerCfg(abc.ABC):

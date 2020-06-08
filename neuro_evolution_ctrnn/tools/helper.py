@@ -7,8 +7,9 @@ import os
 import logging
 from typing import Type
 
-from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg, OptimizerMuLambdaCfg
+from tools.configurations import \
+    ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, LSTMCfg, IBrainCfg,\
+    OptimizerMuLambdaCfg
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -52,6 +53,8 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         brain_cfg_class = ContinuousTimeRNNCfg
     elif config_dict["brain"]["type"] == 'LNN':
         brain_cfg_class = LayeredNNCfg
+    elif config_dict["brain"]["type"] == 'LSTM':
+        brain_cfg_class = LSTMCfg
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
