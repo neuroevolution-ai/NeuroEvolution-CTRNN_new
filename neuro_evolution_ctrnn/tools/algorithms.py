@@ -39,16 +39,18 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             ind.fitness.values = [res[0]]
 
         if len(toolbox.recorded_individuals) == 0:
-            for ind in population:
+            for ind in candidates:
                 ind.novelty = [0]
         else:
             seeds_for_behavior = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_behavior
+            seeds_for_behavior_3 = np.ones(len(candidates), dtype=np.int64) * seed_for_behavior
             results_2 = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_behavior)
+            results_3 = toolbox.map(toolbox.evaluate, candidates, seeds_for_behavior_3)
 
-            for ind in population:
+            for ind, res_3 in zip(candidates, results_3):
                 min_distance = 10e10
-                for res in results_2:
-                    dist = get_behavioral_dist(ind, res[1])
+                for res_2 in results_2:
+                    dist = get_behavioral_dist(res_3[1], res_2[1])
                     if dist < min_distance:
                         min_distance = dist
                 ind.novelty = [min_distance]
