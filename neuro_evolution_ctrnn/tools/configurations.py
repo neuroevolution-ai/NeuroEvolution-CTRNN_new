@@ -14,6 +14,7 @@ class EpisodeRunnerCfg:
     number_fitness_runs: int
     keep_env_seed_fixed_during_generation: bool
     reuse_env: bool
+    behavioral_interval: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -67,6 +68,8 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     lambda_: float
     mutpb: float
     include_parents_in_next_generation: float
+    keep_seeds_fixed_during_generation: bool
+    novel_base: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

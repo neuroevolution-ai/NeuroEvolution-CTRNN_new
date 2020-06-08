@@ -11,9 +11,9 @@ from typing import Callable
 from tools.helper import get_checkpoint
 
 
-def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize):
-    return tools.selBest(individuals, int(k_elitist * mu)) + \
-           tools.selTournament(individuals, int(k_tournament * mu), tournsize=tournsize)
+def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"):
+    return tools.selBest(individuals, int(k_elitist * mu), fit_attr="fitness") + \
+           tools.selTournament(individuals, int(k_tournament * mu), tournsize=tournsize, fit_attr="fitness")
 
 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
@@ -80,6 +80,15 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox.lambda_ = int(self.conf.population_size * self.conf.lambda_)
         toolbox.cxpb = 1.0 - self.conf.mutpb
         toolbox.mutpb = self.conf.mutpb
+        toolbox.novel_base = self.conf.novel_base
+
+        def create_seeds_for_evaluation(number_of_seeds):
+            if self.conf.keep_seeds_fixed_during_generation:
+                return np.ones(number_of_seeds, dtype=np.int64) * random.randint(1, 1000)
+            else:
+                return np.random.randint(1, 10000, size=number_of_seeds)
+
+        toolbox.register("create_seeds_for_evaluation", create_seeds_for_evaluation)
 
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
@@ -105,4 +114,3 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             halloffame=self.hof,
             include_parents_in_next_generation=self.conf.include_parents_in_next_generation
         )
-#         return algorithms.eaGenerateUpdate(self.toolbox, ngen=number_generations, halloffame=self.hof)

@@ -4,6 +4,7 @@ from tools.helper import set_random_seeds
 from tools.configurations import EpisodeRunnerCfg
 import logging
 from tools.dask_handler import get_current_worker
+from typing import List, Union
 
 
 class EpisodeRunner(object):
@@ -24,6 +25,7 @@ class EpisodeRunner(object):
             env = gym.make(self.env_id)
         set_random_seeds(seed, env)
         fitness_total = 0
+        behavior: List[List[Union[np.ndarray, np.generic]]] = []
         for i in range(self.conf.number_fitness_runs):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual,
@@ -31,11 +33,19 @@ class EpisodeRunner(object):
             ob = env.reset()
             done = False
             consecutive_non_movement = 0
+            behavior.append([])
+            step_count = 0
             while not done:
+                step_count += 1
                 action = brain.step(ob)
                 if self.discrete_actions:
                     action = np.argmax(action)
-
+                if self.conf.behavioral_interval:
+                    if step_count % self.conf.behavioral_interval == 0:
+                        if self.discrete_actions:
+                            behavior[i].append([action])
+                        else:
+                            behavior[i].append(action)
                 ob, rew, done, info = env.step(action)
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and
@@ -50,4 +60,4 @@ class EpisodeRunner(object):
                 fitness_current += rew
             fitness_total += fitness_current
 
-        return fitness_total / self.conf.number_fitness_runs,
+        return fitness_total / self.conf.number_fitness_runs, behavior,
