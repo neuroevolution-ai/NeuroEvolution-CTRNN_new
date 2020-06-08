@@ -20,7 +20,6 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         ind.behavior = res[1]
     set_random_seeds(seed_after_map, env=None)
     toolbox.recorded_individuals = []
-    seed_for_behavior = 123
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         offspring = varOr(population, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
@@ -31,29 +30,23 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             candidates = offspring
 
         seed_after_map: int = random.randint(1, 10000)
-        seeds_for_evaluation = toolbox.create_seeds_for_evaluation(len(candidates))
 
+        seed_for_generation = random.randint(1, 10000)
+        seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
+        seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
         results = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
+
+        results_recorded = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_recorded)
 
         for ind, res in zip(candidates, results):
             ind.fitness.values = [res[0]]
+            min_distance = 10e10
+            for rec_res in results_recorded:
+                dist = get_behavioral_dist(res[1], rec_res[1])
+                if dist < min_distance:
+                    min_distance = dist
+            ind.novelty = [min_distance]
 
-        if len(toolbox.recorded_individuals) == 0:
-            for ind in candidates:
-                ind.novelty = [0]
-        else:
-            seeds_for_behavior = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_behavior
-            seeds_for_behavior_3 = np.ones(len(candidates), dtype=np.int64) * seed_for_behavior
-            results_2 = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_behavior)
-            results_3 = toolbox.map(toolbox.evaluate, candidates, seeds_for_behavior_3)
-
-            for ind, res_3 in zip(candidates, results_3):
-                min_distance = 10e10
-                for res_2 in results_2:
-                    dist = get_behavioral_dist(res_3[1], res_2[1])
-                    if dist < min_distance:
-                        min_distance = dist
-                ind.novelty = [min_distance]
         set_random_seeds(seed_after_map, env=None)
         novel_candidates = toolbox.select(candidates, toolbox.novel_base, fit_attr="novelty")
         toolbox.recorded_individuals.append(tools.selBest(novel_candidates, 1, fit_attr="fitness")[0])
