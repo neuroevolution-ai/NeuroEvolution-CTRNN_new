@@ -73,6 +73,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     keep_seeds_fixed_during_generation: bool
     novel_base: int
     max_recorded_behaviors: int
+    distance: str
 
 
 

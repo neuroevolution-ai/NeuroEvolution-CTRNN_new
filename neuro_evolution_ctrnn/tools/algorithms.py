@@ -5,6 +5,7 @@ from tools.helper import set_random_seeds
 from typing import Iterable, Collection
 from deap.algorithms import varOr
 from deap import tools
+from bz2 import compress, decompress
 
 
 def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
@@ -51,8 +52,11 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         for ind, res in zip(candidates, results):
             ind.fitness.values = [res[0]]
             min_distance = 10e20
+            behavior = list(decompress(res[1]))
             for rec_res in results_recorded:
-                dist = get_behavioral_dist(res[1], rec_res[1])
+                behavior_rec = list(decompress(rec_res[1]))
+                #
+                dist = toolbox.get_distance(behavior, behavior_rec)
                 if dist < min_distance:
                     min_distance = dist
             ind.novelty = [min_distance]
@@ -83,14 +87,6 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
     return toolbox.logbook
 
 
-def get_behavioral_dist(a, b):
-    b = np.array(b).flatten()
-    a = np.array(a).flatten()
-    x = min(len(a), len(b))
-    b = b[:x]
-    a = a[:x]
-    return np.linalg.norm(a - b)
-
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
     if toolbox.initial_seed:
@@ -103,6 +99,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         finesses: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
         for ind, fit in zip(population, finesses):
             ind.fitness.values = fit
+            ind.novelty = 0
         # reseed because workers seem to affect the global state
         # also this must happen AFTER fitness-values have been processes, because futures
         set_random_seeds(seed_after_map, env=None)

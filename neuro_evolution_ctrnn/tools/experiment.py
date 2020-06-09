@@ -78,7 +78,11 @@ class Experiment(object):
                                        discrete_actions=self.discrete_actions, brain_class=self.brain_class,
                                        input_space=self.input_space, output_space=self.output_space, env_template=env)
 
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
+
+        stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
+        stats_novel = tools.Statistics(key=lambda ind: ind.novelty)
+        stats = tools.MultiStatistics(fitness=stats_fit, novelty=stats_novel)
+
         stats.register("avg", np.mean)
         stats.register("std", np.std)
         stats.register("min", np.min)

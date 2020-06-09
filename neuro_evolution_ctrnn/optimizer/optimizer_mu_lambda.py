@@ -8,7 +8,7 @@ from functools import partial
 from optimizer.i_optimizer import IOptimizer
 from tools.configurations import OptimizerMuLambdaCfg
 from typing import Callable
-from tools.helper import get_checkpoint
+from tools.helper import get_checkpoint, normalized_compression_distance, euklidian_distance
 
 
 def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"):
@@ -70,8 +70,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             return random.choice(mut_list)(ind1)
 
         def fct_mutation_learned(ind1):
-            sigma = 2**ind1[-1]
-            indpb = 4**(ind1[-2]-2)
+            sigma = 2 ** ind1[-1]
+            indpb = 4 ** (ind1[-2] - 2)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
         toolbox.register("mate", mate)
@@ -120,6 +120,13 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
             toolbox.recorded_individuals = []
             self.hof = hof
+
+        if conf.distance == "euclid":
+            toolbox.register("get_distance", euklidian_distance)
+        elif conf.distance == "NCD":
+            toolbox.register("get_distance", normalized_compression_distance)
+        else:
+            raise RuntimeError("unkown configuration value for distance: " + str(conf.distance))
 
     def train(self, number_generations) -> tools.Logbook:
 

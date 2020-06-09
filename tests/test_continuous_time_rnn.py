@@ -136,9 +136,6 @@ class TestCTRNN:
         with pytest.raises(AssertionError):
             ContinuousTimeRNN(input_space=box2d, output_space=box2d,
                               individual=ind[:-1], config=ctrnn_config)
-        with pytest.raises(AssertionError):
-            ContinuousTimeRNN(input_space=box2d, output_space=box2d,
-                              individual=np.append(ind, [1]), config=ctrnn_config)
 
     def test_get_individual_size(self, ctrnn_config):
         in_space = Box(-1, 1, shape=[3])

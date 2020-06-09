@@ -65,11 +65,21 @@ class ResultHandler(object):
             write_file.write(dash + '\n')
 
             # Write data for each episode
-            for line in log:
+            for idx, line in enumerate(log):
+                if log.chapters:
+                    avg = log.chapters["fitness"][idx]["avg"]
+                    std = log.chapters["fitness"][idx]["std"]
+                    min = log.chapters["fitness"][idx]["min"]
+                    max = log.chapters["fitness"][idx]["max"]
+                else:
+                    avg = line["avg"]
+                    std = line["std"]
+                    min = line["min"]
+                    max = line["max"]
+
                 write_file.write(
                     '{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n'.format(line['gen'], line['nevals'],
-                                                                                 line['avg'], line['std'], line['min'],
-                                                                                 line['max']))
+                                                                                 avg, std, min, max))
 
             # Write elapsed time
             write_file.write("\nTime elapsed: %.4f seconds" % (time_elapsed))

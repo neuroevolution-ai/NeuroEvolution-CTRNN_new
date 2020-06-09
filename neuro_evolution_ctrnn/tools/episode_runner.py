@@ -5,7 +5,7 @@ from tools.configurations import EpisodeRunnerCfg
 import logging
 from tools.dask_handler import get_current_worker
 from typing import List, Union
-
+from bz2 import BZ2Compressor
 
 class EpisodeRunner(object):
     def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, discrete_actions, brain_class, input_space,
@@ -19,6 +19,7 @@ class EpisodeRunner(object):
         self.env_id = env_template.spec.id
 
     def eval_fitness(self, individual, seed):
+        compressor = BZ2Compressor(1)
         if self.conf.reuse_env:
             env = get_current_worker().env
         else:
@@ -26,6 +27,7 @@ class EpisodeRunner(object):
         set_random_seeds(seed, env)
         fitness_total = 0
         behavior: List[List[Union[np.ndarray, np.generic]]] = []
+        behavior_compressed = b''
         for i in range(self.conf.number_fitness_runs):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual,
@@ -43,9 +45,9 @@ class EpisodeRunner(object):
                 if self.conf.behavioral_interval and len(behavior[i]) < self.conf.behavioral_max_length:
                     if step_count % self.conf.behavioral_interval == 0:
                         if self.discrete_actions:
-                            behavior[i].append([action])
+                            behavior_compressed += compressor.compress(bytearray([action]))
                         else:
-                            behavior[i].append(action)
+                            behavior_compressed += compressor.compress(bytearray(action))
                 ob, rew, done, info = env.step(action)
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and
@@ -60,4 +62,5 @@ class EpisodeRunner(object):
                 fitness_current += rew
             fitness_total += fitness_current
 
-        return fitness_total / self.conf.number_fitness_runs, behavior,
+        return fitness_total / self.conf.number_fitness_runs, behavior_compressed + compressor.flush(),
+
