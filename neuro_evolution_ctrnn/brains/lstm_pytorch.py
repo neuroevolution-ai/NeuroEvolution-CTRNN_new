@@ -21,8 +21,10 @@ class LSTMPyTorch(nn.Module, IBrain):
 
         self.input_size = self._size_from_space(input_space)
         self.output_size = self._size_from_space(output_space)
-        self.lstm_num_layers = config.brain.lstm_num_layers
-        self.use_biases = config.brain.use_biases
+        self.lstm_num_layers = config.lstm_num_layers
+        self.use_biases = config.use_biases
+
+        individual = np.array(individual, dtype=np.float32)
 
         # Disable tracking of the gradients since backpropagation is not used
         with torch.no_grad():
@@ -76,7 +78,7 @@ class LSTMPyTorch(nn.Module, IBrain):
     def step(self, ob: np.ndarray):
         with torch.no_grad():
             # Input requires the form (seq_len, batch, input_size)
-            out, self.hidden = self.lstm(torch.from_numpy(ob).view(1, 1, -1), self.hidden)
+            out, self.hidden = self.lstm(torch.from_numpy(ob.astype(np.float32)).view(1, 1, -1), self.hidden)
             return out.view(self.output_size).numpy()
 
     @classmethod
@@ -84,7 +86,7 @@ class LSTMPyTorch(nn.Module, IBrain):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
-        lstm_num_layers = config.brain.lstm_num_layers
+        lstm_num_layers = config.lstm_num_layers
 
         individual_size = 0
 
@@ -92,14 +94,14 @@ class LSTMPyTorch(nn.Module, IBrain):
         if lstm_num_layers > 0:
             individual_size += 4 * output_size * (input_size + output_size)
 
-            if config.brain.use_biases:
+            if config.use_biases:
                 individual_size += 8 * output_size
 
         for i in range(1, lstm_num_layers):
             # Here it is assumed that the LSTM is not bidirectional
             individual_size += 8 * output_size * output_size
 
-            if config.brain.use_biases:
+            if config.use_biases:
                 individual_size += 8 * output_size
 
         return individual_size
