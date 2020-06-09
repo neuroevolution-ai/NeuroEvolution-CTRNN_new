@@ -53,7 +53,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         brain_cfg_class = ContinuousTimeRNNCfg
     elif config_dict["brain"]["type"] == 'LNN':
         brain_cfg_class = LayeredNNCfg
-    elif config_dict["brain"]["type"] == 'LSTM':
+    elif config_dict["brain"]["type"] == 'LSTM_PyTorch':
         brain_cfg_class = LSTMCfg
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))

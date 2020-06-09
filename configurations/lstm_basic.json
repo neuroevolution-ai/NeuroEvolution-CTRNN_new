@@ -1,7 +1,7 @@
 {
-  "environment": "AntBulletEnv-v0",
+  "environment": "CartPole-v1",
   "random_seed": 0,
-  "number_generations": 3,
+  "number_generations": 50,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 3,
@@ -9,7 +9,7 @@
     "checkpoint_frequency": 10
   },
   "brain": {
-    "type": "LSTM",
+    "type": "LSTM_PyTorch",
     "lstm_num_layers": 1,
     "use_biases": true
   },
