@@ -88,6 +88,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                              self.conf.elitist_ratio),
                          tournsize=self.conf.tournsize)
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
+
         def create_seeds_for_evaluation(number_of_seeds):
             if self.conf.keep_seeds_fixed_during_generation:
                 return np.ones(number_of_seeds, dtype=np.int64) * random.randint(1, 1000)
@@ -105,13 +106,17 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.recorded_individuals = cp["recorded_individuals"]
             self.hof = cp["halloffame"]
         else:
-            toolbox.logbook = tools.Logbook()
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.population = self.toolbox.population(n=int(self.conf.mu))
-            toolbox.logbook = tools.Logbook()
-            toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
-            toolbox.recorded_individuals = []
+            toolbox.logbook = logbook = tools.Logbook()
+            logbook.header = "gen", "evals", "fitness", "novelty"
+            logbook.chapters["fitness"].header = "min", "avg", "std", "max"
+            logbook.chapters["novelty"].header = "min", "avg", "std", "max"
+            # toolbox.recorded_individuals = []
+            logbook.columns_len = [3,3,0,0]
+            logbook.chapters["fitness"].columns_len = [8]*4
+            logbook.chapters["novelty"].columns_len = [8]*4
             self.hof = hof
 
         if conf.distance == "euclid":

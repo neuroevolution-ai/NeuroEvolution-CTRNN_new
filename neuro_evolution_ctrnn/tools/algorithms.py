@@ -78,7 +78,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
                         toolbox.select(candidates, toolbox.conf.mu_novel, fit_attr="novelty")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
-        toolbox.logbook.record(gen=gen, nevals=len(candidates), **record)
+        toolbox.logbook.record(gen=gen, evals=len(candidates), **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
@@ -108,7 +108,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, nevals=len(population), **record)
+        toolbox.logbook.record(gen=gen, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
