@@ -29,7 +29,7 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         extra = []
         if halloffame.items:
             extra = [random.choice(halloffame.items)]
-        offspring = varOr(population + extra, toolbox, toolbox.lambda_, toolbox.cxpb, toolbox.mutpb)
+        offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
 
         if include_parents_in_next_generation:
             candidates = population + offspring
@@ -62,18 +62,20 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             ind.novelty = [min_distance]
 
         set_random_seeds(seed_after_map, env=None)
-        novel_candidates = toolbox.select(candidates, toolbox.novel_base, fit_attr="novelty")
+        novel_candidates = toolbox.select(candidates, toolbox.conf.mu_mixed_base, fit_attr="novelty")
         toolbox.recorded_individuals.append(random.choice(novel_candidates))
 
         # drop recorded_individuals, when there are too many
-        overfill = len(toolbox.recorded_individuals) - toolbox.max_recorded_behaviors
+        overfill = len(toolbox.recorded_individuals) - toolbox.conf.max_recorded_behaviors
         if overfill > 0:
             toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
         if halloffame is not None:
             halloffame.update(offspring)
 
-        population[:] = toolbox.select(candidates, toolbox.mu / 2) + toolbox.select(novel_candidates, toolbox.mu / 2)
+        population[:] = toolbox.select(candidates, toolbox.conf.mu) + \
+                        toolbox.select(novel_candidates, toolbox.conf.mu_mixed_base) + \
+                        toolbox.select(candidates, toolbox.conf.mu_novel, fit_attr="novelty")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
         toolbox.logbook.record(gen=gen, nevals=len(candidates), **record)
@@ -85,7 +87,6 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
                                          recorded_individuals=toolbox.recorded_individuals))
 
     return toolbox.logbook
-
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):

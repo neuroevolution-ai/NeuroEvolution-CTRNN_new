@@ -88,13 +88,6 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                              self.conf.elitist_ratio),
                          tournsize=self.conf.tournsize)
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
-        toolbox.mu = int(self.conf.population_size * self.conf.mu)
-        toolbox.lambda_ = int(self.conf.population_size * self.conf.lambda_)
-        toolbox.cxpb = 1.0 - self.conf.mutpb
-        toolbox.mutpb = self.conf.mutpb
-        toolbox.novel_base = self.conf.novel_base
-        toolbox.max_recorded_behaviors = self.conf.max_recorded_behaviors
-
         def create_seeds_for_evaluation(number_of_seeds):
             if self.conf.keep_seeds_fixed_during_generation:
                 return np.ones(number_of_seeds, dtype=np.int64) * random.randint(1, 1000)
@@ -115,7 +108,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.logbook = tools.Logbook()
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
-            toolbox.population = self.toolbox.population(n=int(self.conf.population_size))
+            toolbox.population = self.toolbox.population(n=int(self.conf.mu))
             toolbox.logbook = tools.Logbook()
             toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
             toolbox.recorded_individuals = []

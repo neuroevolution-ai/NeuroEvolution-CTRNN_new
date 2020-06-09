@@ -4,7 +4,6 @@
   "number_generations": 50,
   "optimizer": {
     "type": "MU_ES",
-    "population_size": 100,
     "checkpoint_frequency": 0,
     "initial_gene_range": [0.5, 1, 2, 5],
     "mate_indpb": [0.3, 0.5],
@@ -14,15 +13,17 @@
     "mutation_Gaussian_indpb_2": [1.0, 0.1, 0.01],
     "elitist_ratio": [0.0, 0.0, 0.05, 0.1, 0.2],
     "tournsize": [3, 5],
-    "mu": [0.2, 0.3, 0.5],
-    "lambda_": [1.0],
+    "mu": [5,10,20],
+    "mu_mixed": [2,5],
+    "mu_mixed_base": [10,15],
+    "mu_novel": [2,5],
+    "lambda_": [80],
     "mutpb": [0.90, 0.8, 0.5],
     "include_parents_in_next_generation": true,
     "keep_seeds_fixed_during_generation": true,
     "mutation_learned": [true,false],
     "distance": ["NCD", "euclid"],
-    "max_recorded_behaviors": [1,10,25],
-    "novel_base": [5,10,20]
+    "max_recorded_behaviors": [1,10,25]
   },
   "brain": {
     "type": "CTRNN",
