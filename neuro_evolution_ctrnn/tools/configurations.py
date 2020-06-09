@@ -15,6 +15,7 @@ class EpisodeRunnerCfg:
     keep_env_seed_fixed_during_generation: bool
     reuse_env: bool
     behavioral_interval: int
+    behavioral_max_length: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -62,6 +63,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     mutation_Gaussian_sigma_2: float
     mutation_Gaussian_indpb_1: float
     mutation_Gaussian_indpb_2: float
+    mutation_learned: bool
     elitist_ratio: int
     tournsize: int
     mu: float
@@ -71,6 +73,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     keep_seeds_fixed_during_generation: bool
     novel_base: int
     max_recorded_behaviors: int
+
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

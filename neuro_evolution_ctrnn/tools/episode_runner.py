@@ -40,7 +40,7 @@ class EpisodeRunner(object):
                 action = brain.step(ob)
                 if self.discrete_actions:
                     action = np.argmax(action)
-                if self.conf.behavioral_interval:
+                if self.conf.behavioral_interval and len(behavior[i]) < self.conf.behavioral_max_length:
                     if step_count % self.conf.behavioral_interval == 0:
                         if self.discrete_actions:
                             behavior[i].append([action])

@@ -35,6 +35,9 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox.register("map", map_func)
         toolbox.register("evaluate", eval_fitness)
 
+        if self.conf.mutation_learned:
+            individual_size += 2
+
         toolbox.register("indices", np.random.uniform,
                          -self.conf.initial_gene_range,
                          self.conf.initial_gene_range,
@@ -66,9 +69,18 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         def mutate(ind1):
             return random.choice(mut_list)(ind1)
 
-        toolbox.register("mate", mate)
-        toolbox.register("mutate", mutate)
+        def fct_mutation_learned(ind1):
+            sigma = 2**ind1[-1]
+            indpb = 4**(ind1[-2]-2)
+            return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
+        toolbox.register("mate", mate)
+
+        if self.conf.mutation_learned:
+            toolbox.register("mutate", fct_mutation_learned)
+        else:
+            toolbox.register("mutate", mutate)
+        toolbox.conf = conf
         toolbox.register("select",
                          sel_elitist_tournament,
                          k_elitist=int(self.conf.elitist_ratio),
