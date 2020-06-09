@@ -16,3 +16,6 @@ results
 .lock
 dask-worker-space/
 /MUJOCO_LOG.TXT
+
+*.latex
+*.png
