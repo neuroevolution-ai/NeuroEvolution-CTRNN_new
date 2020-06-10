@@ -7,8 +7,8 @@ import os
 import logging
 from typing import Type
 
-from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg, OptimizerMuLambdaCfg
+from tools.configurations import (ExperimentCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg, StandardEpisodeRunnerCfg,
+                                  MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg, IBrainCfg)
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -62,8 +62,16 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
+    if config_dict["episode_runner"]["type"] == "Standard":
+        episode_runner_cfg_class = StandardEpisodeRunnerCfg
+    elif config_dict["episode_runner"]["type"] == "Memory":
+        episode_runner_cfg_class = MemoryExperimentCfg
+    else:
+        raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
+                           + str(config_dict["episode_runner"]["type"]))
+
     # turn json into nested class so python's type-hinting can do its magic
-    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
+    config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)

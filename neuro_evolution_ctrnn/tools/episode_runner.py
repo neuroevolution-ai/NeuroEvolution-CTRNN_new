@@ -1,21 +1,30 @@
 import numpy as np
 import gym
 from tools.helper import set_random_seeds
-from tools.configurations import EpisodeRunnerCfg
+from tools.configurations import IEpisodeRunnerCfg, StandardEpisodeRunnerCfg, MemoryExperimentCfg, IBrainCfg
 import logging
 from tools.dask_handler import get_current_worker
 
 
-class EpisodeRunner(object):
-    def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, discrete_actions, brain_class, input_space,
+class IEpisodeRunner:
+    def __init__(self, conf: IEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
                  output_space, env_template):
         self.conf = conf
+        self.brain_conf = brain_conf
         self.discrete_actions = discrete_actions
         self.brain_class = brain_class
-        self.brain_conf = brain_conf
         self.input_space = input_space
         self.output_space = output_space
         self.env_id = env_template.spec.id
+
+    def eval_fitness(self, individual, seed):
+        pass
+
+
+class EpisodeRunner(IEpisodeRunner):
+    def __init__(self, conf: StandardEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class,
+                 input_space, output_space, env_template):
+        super().__init__(conf, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed):
         if self.conf.reuse_env:
@@ -51,3 +60,22 @@ class EpisodeRunner(object):
             fitness_total += fitness_current
 
         return fitness_total / self.conf.number_fitness_runs,
+
+
+class MemoryEpisodeRunner(IEpisodeRunner):
+    def __init__(self, conf: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
+                 output_space, env_template):
+        super().__init__(conf, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
+
+    def eval_fitness(self, individual, seed):
+        if self.conf.reuse_env:
+            env = get_current_worker().env
+        else:
+            env = gym.make(self.env_id)
+
+        set_random_seeds(seed, env)
+
+
+        print("Observation frames {}".format(self.conf.observation_frames))
+        print("Memory frames {}".format(self.conf.memory_frames))
+        print("Action frames {}".format(self.conf.action_frames))

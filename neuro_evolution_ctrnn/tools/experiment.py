@@ -9,7 +9,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.layered_nn import LayeredNN
 from brains.i_brain import IBrain
 # import brains.layered_nn as lnn
-from tools.episode_runner import EpisodeRunner
+from tools.episode_runner import EpisodeRunner, MemoryEpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
@@ -42,6 +42,14 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
 
+        if self.config.episode_runner.type == "Standard":
+            self.episode_runner_class = EpisodeRunner
+        elif self.config.episode_runner.type == "Memory":
+            self.episode_runner_class = MemoryEpisodeRunner
+        else:
+            raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
+                               + str(self.config.episode_runner.type))
+
         self._setup()
 
     def _setup(self):
@@ -71,10 +79,11 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
-                                       brain_conf=self.config.brain,
-                                       discrete_actions=self.discrete_actions, brain_class=self.brain_class,
-                                       input_space=self.input_space, output_space=self.output_space, env_template=env)
+        self.ep_runner = self.episode_runner_class(conf=self.config.episode_runner,
+                                                   brain_conf=self.config.brain,
+                                                   discrete_actions=self.discrete_actions, brain_class=self.brain_class,
+                                                   input_space=self.input_space, output_space=self.output_space,
+                                                   env_template=env)
 
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
