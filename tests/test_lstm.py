@@ -1,6 +1,5 @@
-from brains.lstm_pytorch import LSTMPyTorch
-from brains.lstm_numpy import LSTMNumPy
-from tools.configurations import ExperimentCfg, LSTMCfg
+from lstm import LSTMPyTorch, LSTMNumPy
+from tools.configurations import LSTMCfg
 
 import numpy as np
 import gym

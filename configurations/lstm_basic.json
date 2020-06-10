@@ -4,13 +4,13 @@
   "number_generations": 50,
   "optimizer": {
     "type": "CMA_ES",
-    "population_size": 3,
+    "population_size": 250,
     "sigma": 1.0,
     "checkpoint_frequency": 10
   },
   "brain": {
-    "type": "LSTM_PyTorch",
-    "lstm_num_layers": 1,
+    "type": "LSTM_NumPy",
+    "lstm_num_layers": 3,
     "use_biases": true
   },
   "episode_runner": {
