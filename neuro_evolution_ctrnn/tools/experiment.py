@@ -79,7 +79,7 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = self.episode_runner_class(conf=self.config.episode_runner,
+        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner,
                                                    brain_conf=self.config.brain,
                                                    discrete_actions=self.discrete_actions, brain_class=self.brain_class,
                                                    input_space=self.input_space, output_space=self.output_space,

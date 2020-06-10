@@ -5,6 +5,7 @@ import copy
 import pickle
 import os
 import logging
+import torch
 from typing import Type
 
 from tools.configurations import (ExperimentCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg, StandardEpisodeRunnerCfg,
@@ -106,6 +107,7 @@ def set_random_seeds(seed, env):
 
     random.seed(seed)
     np.random.seed(seed)
+    torch.manual_seed(seed)
     if env:
         env.seed(seed)
         env.action_space.seed(seed)

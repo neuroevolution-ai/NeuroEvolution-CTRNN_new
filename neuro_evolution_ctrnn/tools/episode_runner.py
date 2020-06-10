@@ -2,14 +2,14 @@ import numpy as np
 import gym
 from tools.helper import set_random_seeds
 from tools.configurations import IEpisodeRunnerCfg, StandardEpisodeRunnerCfg, MemoryExperimentCfg, IBrainCfg
-import logging
 from tools.dask_handler import get_current_worker
+from brains.i_brain import IBrain
 
 
 class IEpisodeRunner:
-    def __init__(self, conf: IEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
+    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
                  output_space, env_template):
-        self.conf = conf
+        self.config = config
         self.brain_conf = brain_conf
         self.discrete_actions = discrete_actions
         self.brain_class = brain_class
@@ -22,18 +22,18 @@ class IEpisodeRunner:
 
 
 class EpisodeRunner(IEpisodeRunner):
-    def __init__(self, conf: StandardEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class,
+    def __init__(self, config: StandardEpisodeRunnerCfg, brain_conf: IBrainCfg, discrete_actions, brain_class,
                  input_space, output_space, env_template):
-        super().__init__(conf, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
+        super().__init__(config, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed):
-        if self.conf.reuse_env:
+        if self.config.reuse_env:
             env = get_current_worker().env
         else:
             env = gym.make(self.env_id)
         set_random_seeds(seed, env)
         fitness_total = 0
-        for i in range(self.conf.number_fitness_runs):
+        for i in range(self.config.number_fitness_runs):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual,
                                      self.brain_conf)
@@ -59,23 +59,61 @@ class EpisodeRunner(IEpisodeRunner):
                 fitness_current += rew
             fitness_total += fitness_current
 
-        return fitness_total / self.conf.number_fitness_runs,
+        return fitness_total / self.config.number_fitness_runs,
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):
-    def __init__(self, conf: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
+    def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
                  output_space, env_template):
-        super().__init__(conf, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
+        super().__init__(config, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed):
-        if self.conf.reuse_env:
+        if self.config.reuse_env:
             env = get_current_worker().env
         else:
             env = gym.make(self.env_id)
 
         set_random_seeds(seed, env)
+        fitness_current = 0
+        observation_mask = self.config.observation_mask
 
+        for i in range(self.config.number_fitness_runs):
 
-        print("Observation frames {}".format(self.conf.observation_frames))
-        print("Memory frames {}".format(self.conf.memory_frames))
-        print("Action frames {}".format(self.conf.action_frames))
+            # TODO is this still necessary (increasing the seed for each worker?
+            # if configuration_data["random_seed_for_environment"] is not -1:
+            #     env.seed(configuration_data["random_seed_for_environment"] + i)
+
+            ob = env.reset()
+            max_episode_steps = self.config.observation_frames + self.config.memory_frames + self.config.action_frames
+
+            # Create brain
+            brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_conf)
+            input_size = IBrain._size_from_space(self.input_space)
+            t = 0
+            for _ in range(max_episode_steps):
+
+                # Perform step of the brain simulation
+                action = brain.step(ob)
+
+                if t <= self.config.observation_frames + self.config.memory_frames:
+                    action = np.zeros(input_size)
+
+                if self.discrete_actions:
+                    action = np.argmax(action)
+
+                # Perform step of the environment simulation
+                ob, rew, done, info = env.step(action)
+
+                if t >= self.config.observation_frames:
+                    for index in observation_mask:
+                        ob[index] = 0.0
+
+                if t >= self.config.observation_frames + self.config.memory_frames:
+                    fitness_current += rew
+
+                t += 1
+
+                if done:
+                    break
+
+        return fitness_current / self.config.number_fitness_runs
