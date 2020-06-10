@@ -9,14 +9,15 @@ from bz2 import compress, decompress
 from itertools import tee
 
 
-def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
+def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                    include_parents_in_next_generation=True):
     population = toolbox.population
+    halloffame = toolbox.hof
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         extra = []
         if halloffame.items:
-            extra = [random.choice(halloffame.items)]
+            extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
         offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
 
         if include_parents_in_next_generation:
@@ -106,7 +107,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen,  nevals=len(population), **record)
+        toolbox.logbook.record(gen=gen, nevals=len(population), **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,

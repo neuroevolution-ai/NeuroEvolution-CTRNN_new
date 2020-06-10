@@ -52,6 +52,7 @@ class LayeredNNCfg(IBrainCfg):
 class IOptimizerCfg(abc.ABC):
     type: str
     checkpoint_frequency: int
+    hof_size: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -71,6 +72,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     mu_novel: int
     lambda_: int
     mutpb: float
+    extra_from_hof: int
     include_parents_in_next_generation: float
     keep_seeds_fixed_during_generation: bool
     max_recorded_behaviors: int

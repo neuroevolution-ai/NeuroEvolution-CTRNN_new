@@ -16,7 +16,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: ConfigClass, stats, map_func=map,
-                 hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
+                 from_checkoint=None):
         pass
 
     @staticmethod

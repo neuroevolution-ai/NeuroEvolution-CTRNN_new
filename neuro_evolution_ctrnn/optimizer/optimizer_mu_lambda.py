@@ -22,14 +22,13 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerMuLambdaCfg, stats, map_func=map,
-                 hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
+    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerMuLambdaCfg, stats,
+                 map_func=map, from_checkoint=None):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
-                                                    hof, from_checkoint)
+                                                    from_checkoint)
         self.create_classes()
         self.toolbox = toolbox = base.Toolbox()
         self.conf = conf
-        self.hof = hof
         toolbox.stats = stats
 
         toolbox.register("map", map_func)
@@ -98,14 +97,14 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.population = cp["population"]
             toolbox.logbook = cp["logbook"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
-            self.hof = cp["halloffame"]
+            toolbox.hof = self.hof = cp["halloffame"]
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.population = self.toolbox.population(n=self.conf.mu + self.conf.mu_mixed + self.conf.mu_novel)
             toolbox.logbook = self.create_logbook()
             toolbox.recorded_individuals = []
-            self.hof = hof
+            toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
 
         if conf.distance == "euclid":
             toolbox.register("get_distance", euklidian_distance)
@@ -115,4 +114,4 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             raise RuntimeError("unknown configuration value for distance: " + str(conf.distance))
 
     def train(self, number_generations) -> tools.Logbook:
-        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations, halloffame=self.hof)
+        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)
