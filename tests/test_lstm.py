@@ -31,23 +31,48 @@ class TestLSTM:
 
         lstm_numpy = LSTMNumPy(input_space, output_space, individual_numpy, lstm_config)
 
-        assert np.array_equal(lstm_pytorch.lstm.weight_ih_l0.detach().numpy(), lstm_numpy.weight_ih_l0)
-        assert np.array_equal(lstm_pytorch.lstm.weight_hh_l0.detach().numpy(), lstm_numpy.weight_hh_l0)
-
-        assert np.array_equal(lstm_pytorch.lstm.bias_hh_l0.detach().numpy(), lstm_numpy.bias_hh_l0)
-        assert np.array_equal(lstm_pytorch.lstm.bias_hh_l0.detach().numpy(), lstm_numpy.bias_hh_l0)
-
         # Also initialize the values for the hidden and cell states the same
         hidden_pytorch = np.random.randn(*lstm_pytorch.hidden[0].size()).astype(np.float32)
         cell_pytorch = np.random.randn(*lstm_pytorch.hidden[1].size()).astype(np.float32)
 
-        hidden_numpy = np.copy(hidden_pytorch).reshape(1, -1)
-        cell_numpy = np.copy(cell_pytorch).reshape(1, -1)
+        hidden_numpy = np.copy(hidden_pytorch).reshape(lstm_config.lstm_num_layers, -1)
+        cell_numpy = np.copy(cell_pytorch).reshape(lstm_config.lstm_num_layers, -1)
 
         lstm_pytorch.hidden = (torch.from_numpy(hidden_pytorch), torch.from_numpy(cell_pytorch))
 
         lstm_numpy.hidden = np.copy(hidden_numpy)
         lstm_numpy.cell_state = np.copy(cell_numpy)
+
+        with torch.no_grad():
+            for i in range(lstm_config.lstm_num_layers):
+                attr_weight_ih_li = "weight_ih_l{}".format(i)
+                attr_weight_hh_li = "weight_hh_l{}".format(i)
+
+                # Even if bias is not used they got initialized (to zeros in this case)
+                attr_bias_ih_li = "bias_ih_l{}".format(i)
+                attr_bias_hh_li = "bias_hh_l{}".format(i)
+
+                weight_ih_li_pytorch = getattr(lstm_pytorch.lstm, attr_weight_ih_li).detach().numpy()
+                weight_hh_li_pytorch = getattr(lstm_pytorch.lstm, attr_weight_hh_li).detach().numpy()
+
+                weight_ih_li_numpy = getattr(lstm_numpy, attr_weight_ih_li).reshape(weight_ih_li_pytorch.shape)
+                weight_hh_li_numpy = getattr(lstm_numpy, attr_weight_hh_li).reshape(weight_hh_li_pytorch.shape)
+
+                bias_ih_li_pytorch = getattr(lstm_pytorch.lstm, attr_bias_ih_li).detach().numpy()
+                bias_hh_li_pytorch = getattr(lstm_pytorch.lstm, attr_bias_hh_li).detach().numpy()
+
+                bias_ih_li_numpy = getattr(lstm_numpy, attr_bias_ih_li).reshape(bias_ih_li_pytorch.shape)
+                bias_hh_li_numpy = getattr(lstm_numpy, attr_bias_hh_li).reshape(bias_hh_li_pytorch.shape)
+
+                assert np.array_equal(weight_ih_li_pytorch, weight_ih_li_numpy)
+                assert np.array_equal(weight_hh_li_pytorch, weight_hh_li_numpy)
+
+                assert np.array_equal(bias_ih_li_pytorch, bias_ih_li_numpy)
+                assert np.array_equal(bias_hh_li_pytorch, bias_hh_li_numpy)
+
+                # Check hidden and cell states
+                assert np.array_equal(lstm_pytorch.hidden[0][i].view(-1).detach().numpy(), lstm_numpy.hidden[i])
+                assert np.array_equal(lstm_pytorch.hidden[1][i].view(-1).detach().numpy(), lstm_numpy.cell_state[i])
 
         inputs = np.random.randn(number_of_inputs, 28).astype(np.float32)
 
@@ -57,6 +82,7 @@ class TestLSTM:
         lstm_pytorch_times = []
         lstm_numpy_times = []
 
+        # Collect predictions of PyTorch and NumPy implementations and collect time data
         for i in inputs:
             with torch.no_grad():
                 time_s = time.time()
@@ -78,10 +104,6 @@ class TestLSTM:
         assert len(lstm_pytorch_outputs) == len(lstm_numpy_outputs)
         assert lstm_pytorch_outputs.size == lstm_numpy_outputs.size
 
-        print("PyTorch: ", lstm_pytorch_outputs)
-        print("------------------------------------")
-        print("NumPy: ", lstm_numpy_outputs)
-
         print("PyTorch Mean Prediction Time {}s | NumPy Mean Prediction Time {}s"
               .format(np.mean(lstm_pytorch_times), np.mean(lstm_numpy_times)))
 
@@ -94,7 +116,12 @@ class TestLSTM:
         print("PyTorch Min Prediction Time {}s | NumPy Min Prediction Time {}s"
               .format(np.min(lstm_pytorch_times), np.min(lstm_numpy_times)))
 
+        # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
         close_percentage = np.count_nonzero(
             np.isclose(lstm_pytorch_outputs, lstm_numpy_outputs)) / lstm_pytorch_outputs.size
 
         assert close_percentage > 0.98
+
+        print(
+            "Equal predictions between PyTorch and NumPy",
+            "Implementation of LSTM: {}% of {} predictions".format(close_percentage*100, number_of_inputs))

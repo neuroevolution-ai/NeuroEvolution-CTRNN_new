@@ -31,4 +31,4 @@ def lnn_config() -> LayeredNNCfg:
 
 @pytest.fixture
 def lstm_config() -> LSTMCfg:
-    return LSTMCfg(type="LSTM_PyTorch", lstm_num_layers=1, use_biases=True)
+    return LSTMCfg(type="LSTM_PyTorch", lstm_num_layers=3, use_biases=True)
