@@ -19,41 +19,82 @@ class LSTMNumPy(IBrain):
         self.lstm_num_layers = config.lstm_num_layers
         self.use_biases = config.use_biases
 
-        # TODO multiple layers
+        if self.lstm_num_layers <= 0:
+            raise RuntimeError("LSTMs need at least one layer.")
 
-        self.weight_ih_l0 = np.random.randn(4 * self.output_size, self.input_size).astype(np.float32)
-        self.weight_hh_l0 = np.random.randn(4 * self.output_size, self.output_size).astype(np.float32)
+        # Initialize the first layer, shape will be used for following layers
+        # First dimension is 4 because it represents the weights for each of the four gates (input, forget, cell, output
+        # gate)
+        self.weight_ih_l0 = np.random.randn(4, self.output_size, self.input_size).astype(np.float32)
+        self.weight_hh_l0 = np.random.randn(4, self.output_size, self.output_size).astype(np.float32)
 
         if config.use_biases:
-            self.bias_ih_l0 = np.random.randn(4 * self.output_size).astype(np.float32)
-            self.bias_hh_l0 = np.random.randn(4 * self.output_size).astype(np.float32)
+            self.bias_ih_l0 = np.random.randn(4, self.output_size).astype(np.float32)
+            self.bias_hh_l0 = np.random.randn(4, self.output_size).astype(np.float32)
         else:
-            self.bias_ih_l0 = self.bias_hh_l0 = np.zeros(4 * self.output_size).astype(np.float32)
+            self.bias_ih_l0 = self.bias_hh_l0 = np.zeros((4, self.output_size)).astype(np.float32)
 
         self.hidden = np.random.randn(self.lstm_num_layers, self.output_size).astype(np.float32)
         self.cell_state = np.random.randn(self.lstm_num_layers, self.output_size).astype(np.float32)
 
         individual = np.array(individual, dtype=np.float32)
 
-        weight_ih_l0_shape = self.weight_ih_l0.shape
-        weight_hh_l0_shape = self.weight_hh_l0.shape
-
-        bias_ih_l0_shape = self.bias_ih_l0.shape
-        bias_hh_l0_shape = self.bias_hh_l0.shape
-
         current_index = 0
-        self.weight_ih_l0 = individual[current_index:current_index + self.weight_ih_l0.size].reshape(weight_ih_l0_shape)
-        current_index += self.weight_ih_l0.size
 
-        self.weight_hh_l0 = individual[current_index:current_index + self.weight_hh_l0.size].reshape(weight_hh_l0_shape)
-        current_index += self.weight_hh_l0.size
+        if self.lstm_num_layers > 0:
 
-        if config.use_biases:
-            self.bias_ih_l0 = individual[current_index:current_index + self.bias_ih_l0.size].reshape(bias_ih_l0_shape)
-            current_index += self.bias_ih_l0.size
+            self.weight_ih_l0 = individual[current_index:current_index + self.weight_ih_l0.size].reshape(
+                self.weight_ih_l0.shape)
+            current_index += self.weight_ih_l0.size
 
-            self.bias_hh_l0 = individual[current_index:current_index + self.bias_hh_l0.size].reshape(bias_hh_l0_shape)
-            current_index += self.bias_hh_l0.size
+            self.weight_hh_l0 = individual[current_index:current_index + self.weight_hh_l0.size].reshape(
+                self.weight_hh_l0.shape)
+            current_index += self.weight_hh_l0.size
+
+            if self.use_biases:
+                self.bias_ih_l0 = individual[current_index:current_index + self.bias_ih_l0.size].reshape(
+                    self.bias_ih_l0.shape)
+                current_index += self.bias_ih_l0.size
+
+                self.bias_hh_l0 = individual[current_index:current_index + self.bias_hh_l0.size].reshape(
+                    self.bias_hh_l0.shape)
+                current_index += self.bias_hh_l0.size
+
+        weight_shape = (4, self.output_size, self.output_size)
+        bias_shape = (4, self.output_size)
+
+        weight_size = np.prod(weight_shape)
+        bias_size = np.prod(bias_shape)
+
+        # Weights for following layers have not been created
+        for i in range(1, self.lstm_num_layers):
+
+            setattr(
+                self,
+                "weight_ih_l{}".format(i),
+                individual[current_index:current_index + weight_size].reshape(weight_shape))
+            current_index += weight_size
+
+            setattr(
+                self,
+                "weight_hh_l{}".format(i),
+                individual[current_index:current_index + weight_size].reshape(weight_shape))
+            current_index += weight_size
+
+            attr_bias_ih_li = "bias_ih_l{}".format(i)
+            attr_bias_hh_li = "bias_hh_l{}".format(i)
+
+            if config.use_biases:
+                setattr(self, attr_bias_ih_li, individual[current_index:current_index + bias_size].reshape(bias_shape))
+                current_index += bias_size
+
+                setattr(self, attr_bias_hh_li, individual[current_index:current_index + bias_size].reshape(bias_shape))
+                current_index += bias_size
+            else:
+                # Initialize all not used biases with zeros, since they only get added in a step
+                # Therefore remove the need to check for biases every time when a prediction is called
+                setattr(self, attr_bias_ih_li, np.zeros(bias_shape).astype(np.float32))
+                setattr(self, attr_bias_hh_li, np.zeros(bias_shape).astype(np.float32))
 
         assert current_index == len(individual)
 
@@ -62,33 +103,50 @@ class LSTMNumPy(IBrain):
         return 1 / (1 + np.exp(-x))
 
     def step(self, ob: np.ndarray):
-        ob = ob.astype(np.float32)
+        x = ob.astype(np.float32)
 
-        # Input Gate
-        i_t = self.sigmoid(np.dot(self.weight_ih_l0[0:8], ob)
-                           + self.bias_ih_l0[0:8]
-                           + np.dot(self.weight_hh_l0[0:8], self.hidden[0])
-                           + self.bias_hh_l0[0:8])
+        # The input for the i-th layer is the (i-1)-th hidden feature or if i==0 the input
+        # Calculated as in the PyTorch description of the LSTM:
+        # https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
+        for i in range(self.lstm_num_layers):
 
-        f_t = self.sigmoid(np.dot(self.weight_ih_l0[8:16], ob)
-                           + self.bias_ih_l0[8:16]
-                           + np.dot(self.weight_hh_l0[8:16], self.hidden[0])
-                           + self.bias_hh_l0[8:16])
+            weight_ih_li = getattr(self, "weight_ih_l{}".format(i))
+            weight_hh_li = getattr(self, "weight_hh_l{}".format(i))
 
-        g_t = np.tanh(np.dot(self.weight_ih_l0[16:24], ob)
-                      + self.bias_ih_l0[16:24]
-                      + np.dot(self.weight_hh_l0[16:24], self.hidden[0])
-                      + self.bias_hh_l0[16:24])
+            # Even if bias is not used they got initialized (to zeros in this case)
+            bias_ih_li = getattr(self, "bias_ih_l{}".format(i))
+            bias_hh_li = getattr(self, "bias_hh_l{}".format(i))
 
-        o_t = self.sigmoid(np.dot(self.weight_ih_l0[24:32], ob)
-                           + self.bias_ih_l0[24:32]
-                           + np.dot(self.weight_hh_l0[24:32], self.hidden[0])
-                           + self.bias_hh_l0[24:32])
+            # Input Gate
+            i_t = self.sigmoid(np.dot(weight_ih_li[0], x)
+                               + bias_ih_li[0]
+                               + np.dot(weight_hh_li[0], self.hidden[i])
+                               + bias_hh_li[0])
 
-        self.cell_state[0] = np.multiply(f_t, self.cell_state[0]) + np.multiply(i_t, g_t)
-        self.hidden[0] = np.multiply(o_t, np.tanh(self.cell_state[0]))
+            # Forget Gate
+            f_t = self.sigmoid(np.dot(weight_ih_li[1], x)
+                               + bias_ih_li[1]
+                               + np.dot(weight_hh_li[1], self.hidden[i])
+                               + bias_hh_li[1])
 
-        return np.copy(self.hidden[0])
+            # Cell Gate
+            g_t = np.tanh(np.dot(weight_ih_li[2], x)
+                          + bias_ih_li[2]
+                          + np.dot(weight_hh_li[2], self.hidden[i])
+                          + bias_hh_li[2])
+
+            # Output Gate
+            o_t = self.sigmoid(np.dot(weight_ih_li[3], x)
+                               + bias_ih_li[3]
+                               + np.dot(weight_hh_li[3], self.hidden[i])
+                               + bias_hh_li[3])
+
+            self.cell_state[i] = np.multiply(f_t, self.cell_state[i]) + np.multiply(i_t, g_t)
+            self.hidden[i] = np.multiply(o_t, np.tanh(self.cell_state[i]))
+
+            x = self.hidden[i]
+
+        return np.copy(self.hidden[-1])
 
     @classmethod
     def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space):
