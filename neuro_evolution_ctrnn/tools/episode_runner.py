@@ -88,7 +88,7 @@ class MemoryEpisodeRunner(IEpisodeRunner):
 
             # Create brain
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_conf)
-            input_size = IBrain._size_from_space(self.input_space)
+            output_size = IBrain._size_from_space(self.output_space)
             t = 0
             for _ in range(max_episode_steps):
 
@@ -96,7 +96,7 @@ class MemoryEpisodeRunner(IEpisodeRunner):
                 action = brain.step(ob)
 
                 if t <= self.config.observation_frames + self.config.memory_frames:
-                    action = np.zeros(input_size)
+                    action = np.zeros(output_size)
 
                 if self.discrete_actions:
                     action = np.argmax(action)
