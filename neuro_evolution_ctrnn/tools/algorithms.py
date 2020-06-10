@@ -6,6 +6,7 @@ from typing import Iterable, Collection
 from deap.algorithms import varOr
 from deap import tools
 from bz2 import compress, decompress
+from itertools import tee
 
 
 def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
@@ -24,7 +25,6 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             candidates = offspring
 
         seed_after_map: int = random.randint(1, 10000)
-
         seed_for_generation = random.randint(1, 10000)
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
         seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
@@ -32,12 +32,13 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         brain_genomes = strip_strategy_from_population(candidates, toolbox)
         brain_genomes_recorded = strip_strategy_from_population(toolbox.recorded_individuals, toolbox)
         results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
-        results_recorded = toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)
-
+        results_recorded_orig = toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)
         for ind, res in zip(candidates, results):
             fitness, behavior_compressed = res
             ind.fitness.values = [fitness]
             min_distance = 10e20
+            # tee() is needed to iterate over the same iterator multiple times
+            results_recorded, results_recorded_orig = tee(results_recorded_orig, 2)
             behavior = list(decompress(behavior_compressed))
             for rec_res in results_recorded:
                 _, recorded_behavior_compressed = rec_res
