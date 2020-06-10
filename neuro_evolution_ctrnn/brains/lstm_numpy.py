@@ -65,30 +65,30 @@ class LSTMNumPy(IBrain):
         ob = ob.astype(np.float32)
 
         # Input Gate
-        i_t = self.sigmoid(np.dot(self.weight_ih_l0[0], ob)
-                           + self.bias_ih_l0[0]
-                           + np.dot(self.weight_hh_l0[0], self.hidden[0])
-                           + self.bias_hh_l0[0])
+        i_t = self.sigmoid(np.dot(self.weight_ih_l0[0:8], ob)
+                           + self.bias_ih_l0[0:8]
+                           + np.dot(self.weight_hh_l0[0:8], self.hidden[0])
+                           + self.bias_hh_l0[0:8])
 
-        f_t = self.sigmoid(np.dot(self.weight_ih_l0[1], ob)
-                           + self.bias_ih_l0[1]
-                           + np.dot(self.weight_hh_l0[1], self.hidden[0])
-                           + self.bias_hh_l0[1])
+        f_t = self.sigmoid(np.dot(self.weight_ih_l0[8:16], ob)
+                           + self.bias_ih_l0[8:16]
+                           + np.dot(self.weight_hh_l0[8:16], self.hidden[0])
+                           + self.bias_hh_l0[8:16])
 
-        g_t = np.tanh(np.dot(self.weight_ih_l0[2], ob)
-                      + self.bias_ih_l0[2]
-                      + np.dot(self.weight_hh_l0[2], self.hidden[0])
-                      + self.bias_hh_l0[2])
+        g_t = np.tanh(np.dot(self.weight_ih_l0[16:24], ob)
+                      + self.bias_ih_l0[16:24]
+                      + np.dot(self.weight_hh_l0[16:24], self.hidden[0])
+                      + self.bias_hh_l0[16:24])
 
-        o_t = self.sigmoid(np.dot(self.weight_ih_l0[3], ob)
-                           + self.bias_ih_l0[3]
-                           + np.dot(self.weight_hh_l0[3], self.hidden[0])
-                           + self.bias_hh_l0[3])
+        o_t = self.sigmoid(np.dot(self.weight_ih_l0[24:32], ob)
+                           + self.bias_ih_l0[24:32]
+                           + np.dot(self.weight_hh_l0[24:32], self.hidden[0])
+                           + self.bias_hh_l0[24:32])
 
         self.cell_state[0] = np.multiply(f_t, self.cell_state[0]) + np.multiply(i_t, g_t)
         self.hidden[0] = np.multiply(o_t, np.tanh(self.cell_state[0]))
 
-        return self.hidden[0]
+        return np.copy(self.hidden[0])
 
     @classmethod
     def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space):
