@@ -45,7 +45,7 @@ for i in range(params.max_experiments):
             json.dump(config, conf_file)
 
         logging.info('starting experiment...')
-        subprocess.call(["python", "-m", "scoop",
+        subprocess.call(["python",
                          "neuro_evolution_ctrnn/train.py",
                          "--configuration", conf_path,
                          "--result-path", result_path])

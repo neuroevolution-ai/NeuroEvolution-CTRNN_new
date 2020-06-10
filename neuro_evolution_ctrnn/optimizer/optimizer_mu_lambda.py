@@ -70,6 +70,10 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             return random.choice(mut_list)(ind1)
 
         def fct_mutation_learned(ind1):
+            if ind1[-1] < -3:
+                ind1[-1] = -3
+            if ind1[-2] < -3:
+                ind1[-2] = -3
             sigma = 2 ** ind1[-1]
             indpb = 4 ** (ind1[-2] - 2)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)

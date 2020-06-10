@@ -19,3 +19,4 @@ dask-worker-space/
 
 *.latex
 *.png
+/configurations/exp_design_space.json

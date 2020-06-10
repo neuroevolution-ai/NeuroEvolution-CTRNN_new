@@ -1,7 +1,7 @@
 {
   "environment": "LunarLander-v2",
   "random_seed": 0,
-  "number_generations": 10,
+  "number_generations": 30,
   "optimizer": {
     "type": "MU_ES",
     "checkpoint_frequency": 10,
@@ -13,11 +13,11 @@
     "mutation_Gaussian_indpb_2": 0.007,
     "elitist_ratio": 0.0,
     "tournsize": 7,
-    "mu": 2,
-    "mu_mixed": 2,
-    "mu_mixed_base": 5,
-    "mu_novel": 2,
-    "lambda_": 20,
+    "mu": 10,
+    "mu_mixed": 10,
+    "mu_mixed_base": 20,
+    "mu_novel": 5,
+    "lambda_": 400,
     "mutpb": 0.8,
     "include_parents_in_next_generation": true,
     "keep_seeds_fixed_during_generation": true,
@@ -27,7 +27,7 @@
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 8,
+    "number_neurons": 20,
     "delta_t": 0.5,
     "normalize_input": true,
     "normalize_input_target": 5,
@@ -49,6 +49,6 @@
     "number_fitness_runs": 3,
     "reuse_env": true,
     "behavioral_interval": 1,
-    "behavioral_max_length": 50000
+    "behavioral_max_length": 500000
   }
 }
