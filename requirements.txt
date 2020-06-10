@@ -15,6 +15,7 @@ attrs
 dask[distributed]
 torch
 pytest-parallel
+bokeh # for dash-dashboard
 
 # optional, if needed install manually
 # gym[mujoco]

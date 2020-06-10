@@ -85,21 +85,9 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             toolbox.register("mutate", mutate)
         toolbox.conf = conf
-        toolbox.register("select",
-                         sel_elitist_tournament,
-                         k_elitist=int(self.conf.elitist_ratio),
-                         k_tournament=1.0 - int(
-                             self.conf.elitist_ratio),
-                         tournsize=self.conf.tournsize)
+        toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
+
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
-
-        def create_seeds_for_evaluation(number_of_seeds):
-            if self.conf.keep_seeds_fixed_during_generation:
-                return np.ones(number_of_seeds, dtype=np.int64) * random.randint(1, 1000)
-            else:
-                return np.random.randint(1, 10000, size=number_of_seeds)
-
-        toolbox.register("create_seeds_for_evaluation", create_seeds_for_evaluation)
 
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
@@ -112,15 +100,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
-            toolbox.population = self.toolbox.population(n=int(self.conf.mu))
-            toolbox.logbook = logbook = tools.Logbook()
-            logbook.header = "gen", "evals", "fitness", "novelty"
-            logbook.chapters["fitness"].header = "min", "avg", "std", "max"
-            logbook.chapters["novelty"].header = "min", "avg", "std", "max"
-            # toolbox.recorded_individuals = []
-            logbook.columns_len = [3,3,0,0]
-            logbook.chapters["fitness"].columns_len = [8]*4
-            logbook.chapters["novelty"].columns_len = [8]*4
+            toolbox.population = self.toolbox.population(n=self.conf.mu+self.conf.mu_mixed+self.conf.mu_novel)
+            toolbox.logbook = self.create_logbook()
             self.hof = hof
 
         if conf.distance == "euclid":
@@ -128,13 +109,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         elif conf.distance == "NCD":
             toolbox.register("get_distance", normalized_compression_distance)
         else:
-            raise RuntimeError("unkown configuration value for distance: " + str(conf.distance))
+            raise RuntimeError("unknown configuration value for distance: " + str(conf.distance))
 
     def train(self, number_generations) -> tools.Logbook:
-
-        return algorithms.eaMuPlusLambda(
-            toolbox=self.toolbox,
-            ngen=number_generations,
-            halloffame=self.hof,
-            include_parents_in_next_generation=self.conf.include_parents_in_next_generation
-        )
+        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations, halloffame=self.hof)

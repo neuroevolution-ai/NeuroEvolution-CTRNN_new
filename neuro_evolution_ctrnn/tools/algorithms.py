@@ -12,17 +12,6 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
                    include_parents_in_next_generation=True):
     population = toolbox.population
 
-    invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    seed_after_map: int = random.randint(1, 10000)
-    seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(invalid_ind))
-    if toolbox.conf.mutation_learned:
-        results = toolbox.map(toolbox.evaluate, list(np.array(invalid_ind)[:, :-2]), seeds_for_evaluation)
-    else:
-        results = toolbox.map(toolbox.evaluate, invalid_ind, seeds_for_evaluation)
-    for ind, res in zip(invalid_ind, results):
-        ind.fitness.values = [res[0]]
-        ind.behavior = res[1]
-    set_random_seeds(seed_after_map, env=None)
     toolbox.recorded_individuals = []
 
     for gen in range(toolbox.initial_generation, ngen + 1):
@@ -42,21 +31,19 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
         seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
 
-        if toolbox.conf.mutation_learned:
-            results = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
-            results_recorded = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_recorded)
-        else:
-            results = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
-            results_recorded = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_recorded)
+        results = toolbox.map(toolbox.evaluate, candidates, seeds_for_evaluation)
+        results_recorded = toolbox.map(toolbox.evaluate, toolbox.recorded_individuals, seeds_for_recorded)
+
 
         for ind, res in zip(candidates, results):
-            ind.fitness.values = [res[0]]
+            fitness, behavior_compressed = res
+            ind.fitness.values = [fitness]
             min_distance = 10e20
-            behavior = list(decompress(res[1]))
+            behavior = list(decompress(behavior_compressed))
             for rec_res in results_recorded:
-                behavior_rec = list(decompress(rec_res[1]))
-                #
-                dist = toolbox.get_distance(behavior, behavior_rec)
+                _, recorded_behavior_compressed = rec_res
+                recorded_behavior = list(decompress(recorded_behavior_compressed))
+                dist = toolbox.get_distance(behavior, recorded_behavior)
                 if dist < min_distance:
                     min_distance = dist
             ind.novelty = [min_distance]
@@ -74,11 +61,11 @@ def eaMuPlusLambda(toolbox, ngen, halloffame=None, verbose=__debug__,
             halloffame.update(offspring)
 
         population[:] = toolbox.select(candidates, toolbox.conf.mu) + \
-                        toolbox.select(novel_candidates, toolbox.conf.mu_mixed_base) + \
+                        toolbox.select(novel_candidates, toolbox.conf.mu_mixed) + \
                         toolbox.select(candidates, toolbox.conf.mu_novel, fit_attr="novelty")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
-        toolbox.logbook.record(gen=gen, evals=len(candidates), **record)
+        toolbox.logbook.record(gen=gen, nevals=len(candidates), **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
@@ -108,7 +95,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, **record)
+        toolbox.logbook.record(gen=gen,  nevals=len(population), **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,

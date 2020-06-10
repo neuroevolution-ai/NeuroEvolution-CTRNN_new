@@ -78,7 +78,7 @@ class ResultHandler(object):
                     max = line["max"]
 
                 write_file.write(
-                    '{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n'.format(line['gen'], line['evals'],
+                    '{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n'.format(line['gen'], line['nevals'],
                                                                                  avg, std, min, max))
 
             # Write elapsed time

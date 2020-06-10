@@ -38,7 +38,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.logbook = tools.Logbook()
-            toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+            toolbox.logbook = self.create_logbook()
             toolbox.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
                                             lambda_=conf.population_size)
         toolbox.register("map", map_func)
