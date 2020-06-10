@@ -13,6 +13,13 @@ class LSTM(IBrain):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
         super().__init__(input_space, output_space, individual, config)
 
+        self.config = config
+
+        self.input_size = self._size_from_space(input_space)
+        self.output_size = self._size_from_space(output_space)
+        self.lstm_num_layers = config.lstm_num_layers
+        self.use_biases = config.use_biases
+
     def step(self, ob: np.ndarray):
         pass
 
@@ -50,13 +57,6 @@ class LSTMPyTorch(nn.Module, LSTM):
 
         assert len(individual) == self.get_individual_size(
             config=config, input_space=input_space, output_space=output_space)
-
-        self.config = config
-
-        self.input_size = self._size_from_space(input_space)
-        self.output_size = self._size_from_space(output_space)
-        self.lstm_num_layers = config.lstm_num_layers
-        self.use_biases = config.use_biases
 
         if self.lstm_num_layers <= 0:
             raise RuntimeError("LSTMs need at least one layer.")
@@ -124,13 +124,6 @@ class LSTMNumPy(LSTM):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
         super().__init__(input_space, output_space, individual, config)
-
-        self.config = config
-
-        self.input_size = self._size_from_space(input_space)
-        self.output_size = self._size_from_space(output_space)
-        self.lstm_num_layers = config.lstm_num_layers
-        self.use_biases = config.use_biases
 
         if self.lstm_num_layers <= 0:
             raise RuntimeError("LSTMs need at least one layer.")
