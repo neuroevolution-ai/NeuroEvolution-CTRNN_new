@@ -25,7 +25,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         super().__init__(input_space, output_space, individual, config)
-        assert len(individual) >= self.get_individual_size(config, input_space, output_space)
+        assert len(individual) == self.get_individual_size(config, input_space, output_space)
         optimize_y0 = config.optimize_y0
         delta_t = config.delta_t
         self.config = config

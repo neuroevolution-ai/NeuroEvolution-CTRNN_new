@@ -70,10 +70,12 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             return random.choice(mut_list)(ind1)
 
         def fct_mutation_learned(ind1):
-            if ind1[-1] < -3:
-                ind1[-1] = -3
-            if ind1[-2] < -3:
-                ind1[-2] = -3
+            # need to clip in up-direction because too large numbers create overflows
+            # need to clip below to avoid stagnations, which happens when a top individuals
+            # mutates bad strategy parameters
+            ind1[-1] = np.clip(ind1[-1], -3, 3)
+            ind1[-2] = np.clip(ind1[-2], -3, 3)
+
             sigma = 2 ** ind1[-1]
             indpb = 4 ** (ind1[-2] - 2)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
@@ -100,8 +102,9 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
-            toolbox.population = self.toolbox.population(n=self.conf.mu+self.conf.mu_mixed+self.conf.mu_novel)
+            toolbox.population = self.toolbox.population(n=self.conf.mu + self.conf.mu_mixed + self.conf.mu_novel)
             toolbox.logbook = self.create_logbook()
+            toolbox.recorded_individuals = []
             self.hof = hof
 
         if conf.distance == "euclid":

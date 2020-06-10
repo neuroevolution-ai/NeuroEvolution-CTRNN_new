@@ -92,3 +92,4 @@ class ExperimentCfg:
     episode_runner: EpisodeRunnerCfg
     optimizer: OptimizerCmaEsCfg
     raw_dict: dict
+    use_worker_processes: bool

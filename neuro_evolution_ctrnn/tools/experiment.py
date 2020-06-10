@@ -86,8 +86,14 @@ class Experiment(object):
         stats.register("avg", np.mean)
         stats.register("std", np.std)
         stats.register("max", np.max)
+        if self.config.use_worker_processes:
+            map_func = DaskHandler.dask_map
+        else:
+            map_func = map
+            if self.config.episode_runner.reuse_env:
+                logging.warning("can't reuse env on workers without multithreading. ")
 
-        self.optimizer = self.optimizer_class(map_func=DaskHandler.dask_map,
+        self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
                                               stats=stats, from_checkoint=self.from_checkpoint)
