@@ -45,3 +45,14 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         logbook.chapters["fitness"].columns_len = [8] * 4
         logbook.chapters["novelty"].columns_len = [8] * 4
         return logbook
+
+    @staticmethod
+    def strip_strategy_from_population(population, mutation_learned):
+        """Sometimes strategy parameters are learned along side brain parameters. In these caeses
+        the strategy parameters need to be stripped  from the population before sending the brain genomes to
+        the evaluation. """
+        if len(population) == 0:
+            return population
+        if mutation_learned:
+            return list(np.array(population)[:, :-2])
+        return population

@@ -30,8 +30,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
         seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
 
-        brain_genomes = strip_strategy_from_population(candidates, toolbox)
-        brain_genomes_recorded = strip_strategy_from_population(toolbox.recorded_individuals, toolbox)
+        brain_genomes = toolbox.strip_strategy_from_population(candidates)
+        brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
         results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
         results_recorded_orig = toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)
         for ind, res in zip(candidates, results):
@@ -75,17 +75,6 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                                          recorded_individuals=toolbox.recorded_individuals))
 
     return toolbox.logbook
-
-
-def strip_strategy_from_population(population, toolbox):
-    """Sometimes strategy parameters are learned along side brain parameters. In these caeses
-    the strategy parameters need to be stripped  from the population before sending the brain genomes to
-    the evaluation. """
-    if len(population) == 0:
-        return population
-    if toolbox.conf.mutation_learned:
-        return list(np.array(population)[:, :-2])
-    return population
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):

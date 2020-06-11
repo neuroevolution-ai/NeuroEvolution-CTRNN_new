@@ -80,6 +80,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
         toolbox.register("mate", mate)
+        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
+                         mutation_learned=self.conf.mutation_learned)
 
         if self.conf.mutation_learned:
             toolbox.register("mutate", fct_mutation_learned)

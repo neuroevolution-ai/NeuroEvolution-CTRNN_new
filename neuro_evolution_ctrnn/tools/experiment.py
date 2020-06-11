@@ -124,9 +124,15 @@ class Experiment(object):
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
         env = gym.make(self.config.environment)
         env.render()
+        if hasattr(self.config.optimizer, "mutation_learned"):
+            # sometimes there are also optimizing strategies encoded in the genome. These parameters
+            # are not part of the brain and need to be removed from the genome before initializing the brain.
+            individuals = self.optimizer.strip_strategy_from_population(individuals,
+                                                                        self.config.optimizer.mutation_learned)
 
         for individual in individuals:
             set_random_seeds(self.config.random_seed, env)
+
             brain = self.brain_class(input_space=self.input_space,
                                      output_space=self.output_space,
                                      individual=individual,
