@@ -16,6 +16,7 @@ class EpisodeRunnerCfg:
     reuse_env: bool
     behavioral_interval: int
     behavioral_max_length: int
+    behavior_from_observation: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

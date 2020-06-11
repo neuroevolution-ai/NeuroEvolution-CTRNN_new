@@ -7,6 +7,7 @@ from tools.dask_handler import get_current_worker
 from typing import List, Union
 from bz2 import BZ2Compressor
 
+
 class EpisodeRunner(object):
     def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, discrete_actions, brain_class, input_space,
                  output_space, env_template):
@@ -26,7 +27,6 @@ class EpisodeRunner(object):
             env = gym.make(self.env_id)
         set_random_seeds(seed, env)
         fitness_total = 0
-        behavior: List[List[Union[np.ndarray, np.generic]]] = []
         behavior_compressed = b''
         for i in range(self.conf.number_fitness_runs):
             fitness_current = 0
@@ -35,19 +35,20 @@ class EpisodeRunner(object):
             ob = env.reset()
             done = False
             consecutive_non_movement = 0
-            behavior.append([])
             step_count = 0
             while not done:
                 step_count += 1
                 action = brain.step(ob)
-                if self.discrete_actions:
-                    action = np.argmax(action)
-                if self.conf.behavioral_interval and len(behavior[i]) < self.conf.behavioral_max_length:
+                if self.conf.behavioral_interval \
+                        and step_count * self.conf.behavioral_interval < self.conf.behavioral_max_length:
                     if step_count % self.conf.behavioral_interval == 0:
-                        if self.discrete_actions:
-                            behavior_compressed += compressor.compress(bytearray([action]))
+                        if self.conf.behavior_from_observation:
+                            behavior_compressed += compressor.compress(bytearray(ob))
                         else:
                             behavior_compressed += compressor.compress(bytearray(action))
+
+                if self.discrete_actions:
+                    action = np.argmax(action)
                 ob, rew, done, info = env.step(action)
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and
@@ -63,4 +64,3 @@ class EpisodeRunner(object):
             fitness_total += fitness_current
 
         return fitness_total / self.conf.number_fitness_runs, behavior_compressed + compressor.flush(),
-
