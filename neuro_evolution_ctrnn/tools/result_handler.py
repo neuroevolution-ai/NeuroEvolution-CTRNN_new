@@ -39,6 +39,8 @@ class ResultHandler(object):
             pickle.dump(hof, fp)
         with open(os.path.join(self.result_path, 'Log.json'), 'w') as outfile:
             json.dump(log, outfile)
+        with open(os.path.join(self.result_path, 'Log.pkl'), 'w') as pk_file:
+            pickle.dump(log, pk_file)
 
         with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
             def write(key, value, depth, is_leaf):
