@@ -29,6 +29,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         seed_for_generation = random.randint(1, 10000)
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
         seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
+        nevals = len(candidates) + len(toolbox.recorded_individuals)
 
         brain_genomes = toolbox.strip_strategy_from_population(candidates)
         brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
@@ -66,7 +67,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                         toolbox.select(candidates, toolbox.conf.mu_novel, fit_attr="novelty")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
-        toolbox.logbook.record(gen=gen, nevals=len(candidates), **record)
+        toolbox.logbook.record(gen=gen, nevals=nevals, **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
