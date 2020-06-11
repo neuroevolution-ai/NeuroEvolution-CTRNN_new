@@ -34,21 +34,20 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         brain_genomes = toolbox.strip_strategy_from_population(candidates)
         brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
         results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
-        results_recorded_orig = toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)
-        for ind, res in zip(candidates, results):
+        results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
+
+        if results_recorded_orig:
+            novelties = toolbox.map(calc_novelty,
+                            results,
+                            [results_recorded_orig] * len(candidates),
+                            [toolbox.get_distance] * len(candidates))
+        else:
+            novelties = [0] * len(candidates)
+
+        for ind, res, nov in zip(candidates, results, novelties):
             fitness, behavior_compressed = res
             ind.fitness.values = [fitness]
-            min_distance = 10e20
-            # tee() is needed to iterate over the same iterator multiple times
-            results_recorded, results_recorded_orig = tee(results_recorded_orig, 2)
-            behavior = list(decompress(behavior_compressed))
-            for rec_res in results_recorded:
-                _, recorded_behavior_compressed = rec_res
-                recorded_behavior = list(decompress(recorded_behavior_compressed))
-                dist = toolbox.get_distance(behavior, recorded_behavior)
-                if dist < min_distance:
-                    min_distance = dist
-            ind.novelty = [min_distance]
+            ind.novelty = nov
 
         set_random_seeds(seed_after_map, env=None)
         novel_candidates = toolbox.select(candidates, toolbox.conf.mu_mixed_base, fit_attr="novelty")
@@ -76,6 +75,19 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                                          recorded_individuals=toolbox.recorded_individuals))
 
     return toolbox.logbook
+
+
+def calc_novelty(res, results_recorded, get_distance):
+    behavior_compressed = res[1]
+    behavior = list(decompress(behavior_compressed))
+    min_distance = 10e20
+    for rec_res in results_recorded:
+        recorded_behavior_compressed = rec_res[1]
+        recorded_behavior = list(decompress(recorded_behavior_compressed))
+        dist = get_distance(behavior, recorded_behavior)
+        if dist < min_distance:
+            min_distance = dist
+    return min_distance
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
