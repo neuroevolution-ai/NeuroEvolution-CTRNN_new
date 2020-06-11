@@ -32,11 +32,28 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @staticmethod
     def _normalize(x, low, high):
-        if high > 1e5 or low < -1e5:
-            # treat high spaces as unbounded
-            # note: some spaces some envs don't define input_space.bounded_below properly
-            return x
-        return (((x - low) / (high - low)) * 2) - 1
+        """scales a value x from interval [low,high] to interval [0,1]"""
+        return ((x - low) / (high - low))
+
+    @staticmethod
+    def _scale_observation(ob, input_space:Space, target:float):
+
+        if isinstance(input_space, Box):
+            # note: some spaces from some envs don't define input_space.bounded_below properly so we treat
+            # very high bounds as unbounded, too
+            mask = input_space.bounded_below & input_space.bounded_above \
+                   & (input_space.bounded_below > -1e5) \
+                   & (input_space.bounded_above < 1e5)
+
+            # scaled is now between 0 and 1
+            scaled = IBrain._normalize(ob[mask], input_space.low[mask],
+                                     input_space.high[mask])
+
+            # ob[mask] is now betwen -target and +target
+            ob[mask] = (scaled - 0.5) * (2 * target)
+        else:
+            raise NotImplementedError("normalize_input is only defined for input-type Box")
+        return ob
 
     @staticmethod
     def _size_from_space(space: Space) -> int:

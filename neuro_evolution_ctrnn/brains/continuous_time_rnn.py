@@ -84,16 +84,13 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
         if self.config.normalize_input:
-            for idx, item in enumerate(ob):
-                if isinstance(self.input_space, Box):
-                    if self.input_space.bounded_below[idx] and self.input_space.bounded_above[idx]:
-                        ob[idx] = self._normalize(ob[idx], self.input_space.low[idx],
-                                                  self.input_space.high[idx]) * self.config.normalize_input_target
-                else:
-                    raise NotImplementedError("normalize_input is only defined for input-type Box")
+            ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
+
+        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+        ob = ob.flatten()
 
         # Differential equation
-        # value = alpha * np.tanh(self.y) + (1-alpha) * np.sin(self.y)
+        # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
         dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
 
         # Euler forward discretization
