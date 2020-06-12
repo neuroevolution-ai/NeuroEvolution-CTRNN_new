@@ -2,16 +2,20 @@
   "environment": "Qbert-ram-v0",
   "random_seed": 0,
   "number_generations": 150,
+  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 100,
     "sigma": 1.0,
-    "checkpoint_frequency": 0
+    "checkpoint_frequency": 0,
+    "hof_size": 5
   },
   "brain": {
     "type": "CTRNN",
     "number_neurons": 20,
     "delta_t": 0.05,
+    "neuron_activation": "relu",
+    "neuron_activation_inplace": true,
     "normalize_input": true,
     "normalize_input_target": 10,
     "optimize_state_boundaries": "legacy",
@@ -32,6 +36,8 @@
     "number_fitness_runs": 1,
     "reuse_env": true,
     "behavioral_interval": 0,
-    "behavioral_max_length": 0
+    "behavioral_max_length": 0,
+    "behavior_from_observation": false,
+    "max_steps_per_run": 0
   }
 }

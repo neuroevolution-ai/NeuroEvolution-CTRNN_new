@@ -2,11 +2,13 @@
   "environment": "BipedalWalker-v3",
   "random_seed": 123,
   "number_generations": 5,
+  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 5,
     "sigma": 1.0,
-    "checkpoint_frequency": 0
+    "checkpoint_frequency": 0,
+    "hof_size": 5
   },
   "brain": {
     "type": "LNN",
@@ -22,6 +24,8 @@
     "number_fitness_runs": 1,
     "reuse_env": false,
     "behavioral_interval": 0,
-    "behavioral_max_length": 0
+    "behavioral_max_length": 0,
+    "behavior_from_observation": false,
+    "max_steps_per_run": 0
   }
 }

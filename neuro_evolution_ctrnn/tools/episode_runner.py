@@ -61,7 +61,7 @@ class EpisodeRunner(object):
                     else:
                         consecutive_non_movement = 0
                 fitness_current += rew
-                if step_count > self.conf.max_steps_per_run:
+                if self.conf.max_steps_per_run and step_count > self.conf.max_steps_per_run:
                     done = True
             fitness_total += fitness_current
 

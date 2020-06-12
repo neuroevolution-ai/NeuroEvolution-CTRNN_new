@@ -2,17 +2,21 @@
   "environment": "BipedalWalker-v3",
   "random_seed": 123,
   "number_generations": 2,
+  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 2,
     "sigma": 1.0,
-    "checkpoint_frequency": 0
+    "checkpoint_frequency": 0,
+    "hof_size": 0
   },
   "brain": {
     "type": "CTRNN",
     "number_neurons": 2,
     "normalize_input": false,
     "normalize_input_target": 0,
+    "neuron_activation": "tanh",
+    "neuron_activation_inplace": false,
     "delta_t": 0.05,
     "optimize_state_boundaries": "legacy",
     "clipping_range_max": 1.0,
@@ -32,6 +36,8 @@
     "number_fitness_runs": 1,
     "reuse_env": false,
     "behavioral_interval": 0,
-    "behavioral_max_length": 0
+    "behavioral_max_length": 0,
+    "behavior_from_observation": false,
+    "max_steps_per_run": 0
   }
 }

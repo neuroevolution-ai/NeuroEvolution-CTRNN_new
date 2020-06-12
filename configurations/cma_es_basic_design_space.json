@@ -2,21 +2,26 @@
   "environment": ["BipedalWalker-v3", "CartPole-v0"],
   "random_seed": [123, 456],
   "number_generations": [5, 6, 7],
+  "use_worker_processes": true,
   "optimizer": [
     {
       "type": "CMA_ES",
       "population_size": [3, 4],
       "sigma": [0.5, 0.9],
-      "checkpoint_frequency": 0
+      "checkpoint_frequency": 0,
+      "hof_size": 5
     }, {
       "type": "CMA_ES",
       "population_size": [10, 15],
       "sigma": [1.0, 1.5, 2.0],
-      "checkpoint_frequency": 0
+      "checkpoint_frequency": 0,
+      "hof_size": 5
     }
   ],
   "brain": {
     "type": "CTRNN",
+    "neuron_activation": "relu",
+    "neuron_activation_inplace": true,
     "number_neurons": [7, 17, 27],
     "delta_t": [0.01, 0.05, 0.1],
     "normalize_input": [true, false],
@@ -39,6 +44,8 @@
     "number_fitness_runs": [1, 2, 5],
     "reuse_env": true,
     "behavioral_interval": 0,
-    "behavioral_max_length": 0
+    "behavioral_max_length": 0,
+    "behavior_from_observation": false,
+    "max_steps_per_run": 0
   }
 }
