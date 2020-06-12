@@ -6,6 +6,7 @@ from dask.distributed import get_worker
 from typing import Callable, Union
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import multiprocessing
+from tools.helper import make_env
 
 # This is used by the episode running to get the current worker's env
 get_current_worker = get_worker
@@ -44,7 +45,7 @@ class _EnvPlugin(WorkerPlugin):
 
     def setup(self, worker: Worker):
         # called exactly once for every worker before it executes the first task
-        worker.env = gym.make(self.env_id)
+        worker.env = make_env(self.env_id)
         logging.info("creating new env for worker: " + str(worker))
 
     def teardown(self, worker: Worker):

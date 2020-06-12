@@ -14,7 +14,7 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds
+from tools.helper import set_random_seeds, make_env
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
 
@@ -47,7 +47,7 @@ class Experiment(object):
         self._setup()
 
     def _setup(self):
-        env = gym.make(self.config.environment)
+        env = make_env(self.config.environment)
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
@@ -122,7 +122,7 @@ class Experiment(object):
         print("Done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env = gym.make(self.config.environment)
+        env = make_env(self.config.environment)
         env.render()
         if hasattr(self.config.optimizer, "mutation_learned"):
             # sometimes there are also optimizing strategies encoded in the genome. These parameters

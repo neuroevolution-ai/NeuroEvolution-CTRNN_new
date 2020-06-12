@@ -7,9 +7,18 @@ import os
 import logging
 from typing import Type
 from bz2 import compress
+from gym.wrappers.atari_preprocessing import AtariPreprocessing
+import gym
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
     IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg
+
+
+def make_env(env_id: str):
+    env = gym.make(env_id)
+    if env_id.startswith("QbertNoFrameskip"):
+        env = AtariPreprocessing(env, screen_size=16, scale_obs=True)
+    return env
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -106,9 +115,9 @@ def set_random_seeds(seed, env):
 
 
 def normalized_compression_distance(a, b):
-    a_len = len(compress(bytearray(a),1))
-    b_len = len(compress(bytearray(b),1))
-    ab_len = len(compress(bytearray(a + b),1))
+    a_len = len(compress(bytearray(a), 1))
+    b_len = len(compress(bytearray(b), 1))
+    ab_len = len(compress(bytearray(a + b), 1))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
 
 
