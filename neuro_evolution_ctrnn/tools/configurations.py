@@ -39,6 +39,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask_param: float
     parameter_perturbations: float
     neuron_activation: str
+    neuron_activation_inplace: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

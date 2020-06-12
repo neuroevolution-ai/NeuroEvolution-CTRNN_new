@@ -100,6 +100,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             raise NotImplementedError("learned activations are not yet implemented")
         else:
             raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+
+        if self.config.neuron_activation_inplace:
+            self.y = y_
         dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
         # Euler forward discretization
