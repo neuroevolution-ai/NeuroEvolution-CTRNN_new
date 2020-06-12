@@ -17,6 +17,7 @@ class EpisodeRunnerCfg:
     behavioral_interval: int
     behavioral_max_length: int
     behavior_from_observation: bool
+    max_steps_per_run: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -37,6 +38,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask: str
     t_mask_param: float
     parameter_perturbations: float
+    neuron_activation: str
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

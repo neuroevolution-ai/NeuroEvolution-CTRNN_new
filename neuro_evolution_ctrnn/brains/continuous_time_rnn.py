@@ -7,6 +7,7 @@ import math
 from brains.i_brain import IBrain
 from scipy import sparse
 
+
 # noinspection PyPep8Naming
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
@@ -43,8 +44,6 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.V = sparse.csr_matrix(self.v_mask, dtype=float)
         self.W = sparse.csr_matrix(self.w_mask, dtype=float)
         self.T = sparse.csr_matrix(self.t_mask, dtype=float)
-        #Out[246]: array([1, 1, 1, 1], dtype=int64)
-        #In [250]: M.data[:] = values
         self.V.data[:] = [element for element in individual[0:V_size]]
         self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
         self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
@@ -81,7 +80,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
-                self.W[j,j] = -abs(self.W[j,j])
+                self.W[j, j] = -abs(self.W[j, j])
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
@@ -92,9 +91,16 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         ob = ob.flatten()
 
         # Differential equation
-        # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-        # dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
-        dydt: np.ndarray = self.W.dot( np.tanh(self.y)) + self.V.dot(ob)
+        if self.config.neuron_activation == "relu":
+            y_ = np.maximum(0, self.y)
+        elif self.config.neuron_activation == "tanh":
+            y_ = np.tanh(self.y)
+        elif self.config.neuron_activation == "learned":
+            # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
+            raise NotImplementedError("learned activations are not yet implemented")
+        else:
+            raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+        dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt

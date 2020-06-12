@@ -61,6 +61,8 @@ class EpisodeRunner(object):
                     else:
                         consecutive_non_movement = 0
                 fitness_current += rew
+                if step_count > self.conf.max_steps_per_run:
+                    done = True
             fitness_total += fitness_current
 
         return fitness_total / self.conf.number_fitness_runs, behavior_compressed + compressor.flush(),
