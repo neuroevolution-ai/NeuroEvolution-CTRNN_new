@@ -148,7 +148,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                 raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
             base = mask_param
             indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
-            indices = [0] + indices
+            indices = indices
             result = np.zeros((n, m), dtype=bool)
 
             # when the matrix is rectangular, we need to fine a pseudo-diagonal instead an
