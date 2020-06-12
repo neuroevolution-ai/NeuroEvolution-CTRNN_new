@@ -87,8 +87,13 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if self.config.normalize_input:
             ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
 
-        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
-        ob = ob.flatten()
+        if isinstance(self.input_space, Discrete):
+            ob_new = np.zeros(self.input_space.n)
+            ob_new[ob] = 1
+            ob = ob_new
+        else:
+            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+            ob = ob.flatten()
 
         # Differential equation
         if self.config.neuron_activation == "relu":
