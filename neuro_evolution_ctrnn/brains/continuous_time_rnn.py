@@ -5,7 +5,7 @@ from gym.spaces import Space, Box, Discrete
 import logging
 import math
 from brains.i_brain import IBrain
-
+from scipy import sparse
 
 # noinspection PyPep8Naming
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
@@ -40,12 +40,14 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
         W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
         T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
-        self.V = np.zeros(self.v_mask.shape, float)
-        self.W = np.zeros(self.w_mask.shape, float)
-        self.T = np.zeros(self.t_mask.shape, float)
-        self.V[self.v_mask] = [element for element in individual[0:V_size]]
-        self.W[self.w_mask] = [element for element in individual[V_size:V_size + W_size]]
-        self.T[self.t_mask] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+        self.V = sparse.csr_matrix(self.v_mask, dtype=float)
+        self.W = sparse.csr_matrix(self.w_mask, dtype=float)
+        self.T = sparse.csr_matrix(self.t_mask, dtype=float)
+        #Out[246]: array([1, 1, 1, 1], dtype=int64)
+        #In [250]: M.data[:] = values
+        self.V.data[:] = [element for element in individual[0:V_size]]
+        self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
+        self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
         index: int = V_size + W_size + T_size
 
@@ -79,7 +81,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
-                self.W[j][j] = -abs(self.W[j][j])
+                self.W[j,j] = -abs(self.W[j,j])
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
@@ -91,7 +93,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
         # Differential equation
         # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
+        # dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
+        dydt: np.ndarray = self.W.dot( np.tanh(self.y)) + self.V.dot(ob)
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
@@ -105,7 +108,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         else:
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T))
+        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T.toarray()))
         return o
 
     @classmethod
