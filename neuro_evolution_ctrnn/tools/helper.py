@@ -114,14 +114,16 @@ def set_random_seeds(seed, env):
         env.action_space.seed(seed)
 
 
-def normalized_compression_distance(a, b):
-    a_len = len(compress(bytearray(a), 1))
-    b_len = len(compress(bytearray(b), 1))
+def normalized_compression_distance(a, b, a_len=None, b_len=None):
+    if not a_len:
+        a_len = len(compress(bytearray(a), 1))
+    if not b_len:
+        b_len = len(compress(bytearray(b), 1))
     ab_len = len(compress(bytearray(a + b), 1))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
 
 
-def euklidian_distance(a, b):
+def euklidian_distance(a, b, a_len=None, b_len=None):
     b = np.array(b).flatten()
     a = np.array(a).flatten()
     x = min(len(a), len(b))

@@ -85,7 +85,8 @@ def calc_novelty(res, results_recorded, get_distance):
     for rec_res in results_recorded:
         recorded_behavior_compressed = rec_res[1]
         recorded_behavior = list(decompress(recorded_behavior_compressed))
-        dist = get_distance(behavior, recorded_behavior)
+        dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
+                            b_len=len(recorded_behavior_compressed))
         if dist < min_distance:
             min_distance = dist
     return min_distance
