@@ -39,9 +39,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
         if results_recorded_orig:
             novelties = toolbox.map(calc_novelty,
-                            results,
-                            [results_recorded_orig] * len(candidates),
-                            [toolbox.get_distance] * len(candidates))
+                                    results,
+                                    [results_recorded_orig] * len(candidates),
+                                    [toolbox.get_distance] * len(candidates))
         else:
             novelties = [0] * len(candidates)
 
@@ -52,7 +52,6 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
         set_random_seeds(seed_after_map, env=None)
         novel_candidates = toolbox.select(candidates, toolbox.conf.mu_mixed_base, fit_attr="novelty")
-        toolbox.recorded_individuals.append(random.choice(novel_candidates))
 
         # drop recorded_individuals, when there are too many
         overfill = len(toolbox.recorded_individuals) - toolbox.conf.max_recorded_behaviors

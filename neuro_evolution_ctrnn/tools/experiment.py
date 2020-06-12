@@ -145,8 +145,9 @@ class Experiment(object):
                 done = False
                 if neuron_vis:
                     brain_vis = brain_vis_handler.launch_new_visualization(brain)
-
+                step_count = 0
                 while not done:
+                    step_count += 1
                     action = brain.step(ob)
                     if neuron_vis:
                         brain_vis.process_update(in_values=ob, out_values=action)
@@ -157,4 +158,4 @@ class Experiment(object):
                         time.sleep(slow_down / 1000.0)
                     fitness_current += rew
                     env.render()
-                print(fitness_current)
+                print("steps: " + str(step_count) + " \tReward: " + str(fitness_current))

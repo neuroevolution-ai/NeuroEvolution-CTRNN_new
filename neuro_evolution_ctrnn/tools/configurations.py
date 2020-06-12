@@ -18,6 +18,7 @@ class EpisodeRunnerCfg:
     behavioral_max_length: int
     behavior_from_observation: bool
     max_steps_per_run: int
+    max_steps_penalty: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
