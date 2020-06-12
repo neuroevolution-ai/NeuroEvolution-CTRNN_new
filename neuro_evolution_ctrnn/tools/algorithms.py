@@ -15,6 +15,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     halloffame = toolbox.hof
 
     for gen in range(toolbox.initial_generation, ngen + 1):
+        toolbox.recorded_individuals.append(random.choice(population))
         extra = []
         if halloffame.items:
             extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
