@@ -1,18 +1,19 @@
 import numpy as np
 import gym
-from tools.helper import set_random_seeds
+from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg
 import logging
 from tools.dask_handler import get_current_worker
 from typing import List, Union
 from bz2 import BZ2Compressor
+from gym.spaces import Space, Discrete, Box, tuple
 
 
 class EpisodeRunner(object):
-    def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, discrete_actions, brain_class, input_space,
+    def __init__(self, conf: EpisodeRunnerCfg, brain_conf: object, action_space, brain_class, input_space,
                  output_space, env_template):
         self.conf = conf
-        self.discrete_actions = discrete_actions
+        self.action_space = action_space
         self.brain_class = brain_class
         self.brain_conf = brain_conf
         self.input_space = input_space
@@ -46,9 +47,7 @@ class EpisodeRunner(object):
                             behavior_compressed += compressor.compress(bytearray(ob))
                         else:
                             behavior_compressed += compressor.compress(bytearray(action))
-
-                if self.discrete_actions:
-                    action = np.argmax(action)
+                action = output_to_action(action, self.output_space)
                 ob, rew, done, info = env.step(action)
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and

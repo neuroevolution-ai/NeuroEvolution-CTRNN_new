@@ -1,7 +1,7 @@
 import abc
 from tools.configurations import IBrainCfg
 import numpy as np
-from gym.spaces import Space, Discrete, Box
+from gym.spaces import Space, Discrete, Box, tuple
 from typing import TypeVar, Generic
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
@@ -61,6 +61,11 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             return space.n  # type: ignore
         elif isinstance(space, Box):
             return np.prod(space.shape)  # type: ignore
+        elif isinstance(space, tuple.Tuple):
+            sum = 0
+            for x in space:
+                sum += IBrain._size_from_space(x)
+            return sum
         else:
             raise NotImplementedError("not implemented input/output space: " + str(type(space)))
 

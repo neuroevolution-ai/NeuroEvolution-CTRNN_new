@@ -21,6 +21,21 @@ def make_env(env_id: str):
     return env
 
 
+def output_to_action(output, action_space):
+    if isinstance(action_space, gym.spaces.Discrete):
+        return np.argmax(output)
+    elif isinstance(action_space, gym.spaces.tuple.Tuple):
+        index = 0
+        action_list = []
+        for space in action_space:
+            sub_output = output[index:index + space.n]
+            action_list.append(output_to_action(sub_output, space))
+            index += space.n
+        return action_list
+    else:
+        # for output type box, the data is already in the right format
+        return output
+
 def walk_dict(node, callback_node, depth=0):
     for key, item in node.items():
         if isinstance(item, dict):

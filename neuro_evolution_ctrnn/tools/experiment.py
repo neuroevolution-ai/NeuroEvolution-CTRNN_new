@@ -14,7 +14,7 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, make_env
+from tools.helper import set_random_seeds, make_env, output_to_action
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
 
@@ -55,14 +55,6 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
-        if env.action_space.shape:
-            # e.g. box2d, mujoco
-            self.output_size = env.action_space.shape[0]
-            self.discrete_actions = False
-        else:
-            # e.g. lunarlander
-            self.output_size = env.action_space.n
-            self.discrete_actions = True
 
         self.brain_class.set_masks_globally(config=self.config.brain,
                                             input_space=self.input_space,
@@ -75,7 +67,7 @@ class Experiment(object):
 
         self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                        brain_conf=self.config.brain,
-                                       discrete_actions=self.discrete_actions, brain_class=self.brain_class,
+                                       action_space=self.output_space, brain_class=self.brain_class,
                                        input_space=self.input_space, output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
@@ -115,7 +107,7 @@ class Experiment(object):
             hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
-            output_size=self.output_size,
+            output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
         DaskHandler.stop_dask()
@@ -151,8 +143,7 @@ class Experiment(object):
                     action = brain.step(ob)
                     if neuron_vis:
                         brain_vis.process_update(in_values=ob, out_values=action)
-                    if self.discrete_actions:
-                        action = np.argmax(action)
+                    action = output_to_action(action, self.output_space)
                     ob, rew, done, info = env.step(action)
                     if slow_down:
                         time.sleep(slow_down / 1000.0)

@@ -26,7 +26,7 @@ class ResultHandler(object):
         if not os.access(self.result_path, os.W_OK):
             raise RuntimeError("result path '" + self.result_path + "' is not writable")
 
-    def write_result(self, hof, log, time_elapsed: float, individual_size: int, input_space: np.shape, output_size):
+    def write_result(self, hof, log, time_elapsed: float, individual_size: int, input_space: np.shape, output_space):
         # store results in object, so it can be accept directly by other modules
         self.result_hof = hof
         self.result_log = log
@@ -58,7 +58,7 @@ class ResultHandler(object):
             write_file.write('\n')
             write_file.write('Genome Size: {:d}\n'.format(individual_size))
             write_file.write('Inputs: {:s}\n'.format(str(input_space)))
-            write_file.write('Outputs: {:d}\n'.format(output_size))
+            write_file.write('Outputs: {:s}\n'.format(str(output_space)))
             write_file.write('\n')
             dash = '-' * 80
             write_file.write(dash + '\n')
