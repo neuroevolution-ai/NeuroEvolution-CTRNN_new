@@ -1,6 +1,5 @@
 from tools.experiment import Experiment
 from attr import evolve
-import glob
 import os
 from tools.helper import config_from_file, sample_from_design_space, config_from_dict
 import json
