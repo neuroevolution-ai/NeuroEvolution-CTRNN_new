@@ -80,7 +80,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
-                self.W[j, j] = -abs(self.W[j, j])
+                if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
+                    self.W[j, j] = -abs(self.W[j, j])
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
