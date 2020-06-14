@@ -36,6 +36,7 @@ def output_to_action(output, action_space):
         # for output type box, the data is already in the right format
         return output
 
+
 def walk_dict(node, callback_node, depth=0):
     for key, item in node.items():
         if isinstance(item, dict):
@@ -136,6 +137,14 @@ def normalized_compression_distance(a, b, a_len=None, b_len=None):
         b_len = len(compress(bytearray(b), 1))
     ab_len = len(compress(bytearray(a + b), 1))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
+
+
+def equal_elements_distance(a, b, a_len=None, b_len=None):
+    count = 0
+    for x, y in zip(a, b):
+        if x == y:
+            count += 1
+    return count
 
 
 def euklidian_distance(a, b, a_len=None, b_len=None):

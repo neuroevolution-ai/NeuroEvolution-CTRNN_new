@@ -1,4 +1,4 @@
-from tools.helper import euklidian_distance, normalized_compression_distance
+from tools.helper import euklidian_distance, normalized_compression_distance, equal_elements_distance
 import math
 
 from bz2 import compress
@@ -13,6 +13,17 @@ class TestNovelty:
         assert 1 == euklidian_distance([0, 0, 0], [1, 0, 0])
         assert math.sqrt(3) == euklidian_distance([0, 0, 0], [1, 1, 1])
         assert math.sqrt(3) == euklidian_distance([0, 0, 0], [1, 1, 1, 1, 2, 3, 4, 5, 3, 6, 7, 8])
+
+    def test_equal_elements_distance(self):
+        assert 0 == equal_elements_distance([1, 2], [3, 4])
+        assert 2 == equal_elements_distance([1, 1], [1, 1])
+
+        # position is important
+        assert 0 == equal_elements_distance([1, 2], [2, 1])
+
+        # when length is different, the longest will be cut off
+        assert 2 == equal_elements_distance([1, 1], [1, 1, 1, 1, 1, 1])
+        assert 2 == equal_elements_distance([1, 1, 1, 1, 1, 1], [1, 1])
 
     def test_normalized_compression_distance(self):
         a = [0, 1] * 1000
