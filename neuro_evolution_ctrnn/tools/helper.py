@@ -144,7 +144,8 @@ def equal_elements_distance(a, b, a_len=None, b_len=None):
     for x, y in zip(a, b):
         if x == y:
             count += 1
-    return count
+    # if the new individual is longer, count every new element as novelty
+    return len(a) - count
 
 
 def euklidian_distance(a, b, a_len=None, b_len=None):

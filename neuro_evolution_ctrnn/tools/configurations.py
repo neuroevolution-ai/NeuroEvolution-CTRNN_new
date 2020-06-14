@@ -82,6 +82,8 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     keep_seeds_fixed_during_generation: bool
     max_recorded_behaviors: int
     distance: str
+    novelty_nearest_k: int
+    recorded_behaviors_per_generation: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

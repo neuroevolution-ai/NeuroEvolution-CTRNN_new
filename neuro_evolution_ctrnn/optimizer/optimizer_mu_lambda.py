@@ -8,7 +8,7 @@ from functools import partial
 from optimizer.i_optimizer import IOptimizer
 from tools.configurations import OptimizerMuLambdaCfg
 from typing import Callable
-from tools.helper import get_checkpoint, normalized_compression_distance, euklidian_distance
+from tools.helper import get_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
 
 
 def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"):
@@ -112,6 +112,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.register("get_distance", euklidian_distance)
         elif conf.distance == "NCD":
             toolbox.register("get_distance", normalized_compression_distance)
+        elif conf.distance == "equal":
+            toolbox.register("get_distance", equal_elements_distance)
         else:
             raise RuntimeError("unknown configuration value for distance: " + str(conf.distance))
 

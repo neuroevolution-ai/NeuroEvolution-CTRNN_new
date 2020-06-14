@@ -15,7 +15,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     halloffame = toolbox.hof
 
     for gen in range(toolbox.initial_generation, ngen + 1):
-        toolbox.recorded_individuals.append(random.choice(population))
+        toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.recorded_behaviors_per_generation)
         extra = []
         if halloffame.items:
             extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
@@ -38,10 +38,12 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
 
         if results_recorded_orig:
+            results_copy, results = tee(results, 2)
             novelties = toolbox.map(calc_novelty,
-                                    results,
+                                    list(results_copy),
                                     [results_recorded_orig] * len(candidates),
-                                    [toolbox.get_distance] * len(candidates))
+                                    [toolbox.get_distance] * len(candidates),
+                                    [toolbox.conf.novelty_nearest_k] * len(candidates))
         else:
             novelties = [0] * len(candidates)
 
@@ -77,18 +79,22 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     return toolbox.logbook
 
 
-def calc_novelty(res, results_recorded, get_distance):
+def calc_novelty(res, results_recorded, get_distance, k):
     behavior_compressed = res[1]
     behavior = list(decompress(behavior_compressed))
-    min_distance = 10e20
+    dist_list = []
     for rec_res in results_recorded:
         recorded_behavior_compressed = rec_res[1]
         recorded_behavior = list(decompress(recorded_behavior_compressed))
         dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
                             b_len=len(recorded_behavior_compressed))
-        if dist < min_distance:
-            min_distance = dist
-    return min_distance
+        dist_list.append(dist)
+
+    dist_sum = 0
+    for nearest_neighbor in sorted(dist_list, reverse=True)[0:k]:
+        dist_sum += nearest_neighbor
+
+    return dist_sum / k
 
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
