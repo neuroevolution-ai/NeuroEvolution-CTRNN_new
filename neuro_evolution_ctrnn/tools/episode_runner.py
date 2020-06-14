@@ -7,6 +7,7 @@ from tools.dask_handler import get_current_worker
 from typing import List, Union
 from bz2 import BZ2Compressor
 from gym.spaces import Space, Discrete, Box, tuple
+from gym.envs.algorithmic.algorithmic_env import AlgorithmicEnv
 
 
 class EpisodeRunner(object):
@@ -40,15 +41,23 @@ class EpisodeRunner(object):
             while not done:
                 step_count += 1
                 action = brain.step(ob)
+                action = output_to_action(action, self.output_space)
+                ob, rew, done, info = env.step(action)
+
                 if self.conf.behavioral_interval \
                         and step_count * self.conf.behavioral_interval < self.conf.behavioral_max_length:
                     if step_count % self.conf.behavioral_interval == 0:
                         if self.conf.behavior_from_observation:
                             behavior_compressed += compressor.compress(bytearray(ob))
                         else:
-                            behavior_compressed += compressor.compress(bytearray(action))
-                action = output_to_action(action, self.output_space)
-                ob, rew, done, info = env.step(action)
+                            if isinstance(env.env, AlgorithmicEnv):
+                                # todo: turn this into an env-wrapper, that also returns "behavior" from step()
+                                inp_act, out_act, pred = action
+                                if out_act == 1:
+                                    behavior_compressed += compressor.compress(bytearray([pred]))
+                            else:
+                                behavior_compressed += compressor.compress(bytearray(action))
+
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and
                     # waste simulation time
