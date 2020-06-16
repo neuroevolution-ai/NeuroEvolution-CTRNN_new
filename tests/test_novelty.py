@@ -15,15 +15,17 @@ class TestNovelty:
         assert math.sqrt(3) == euklidian_distance([0, 0, 0], [1, 1, 1, 1, 2, 3, 4, 5, 3, 6, 7, 8])
 
     def test_equal_elements_distance(self):
-        assert 0 == equal_elements_distance([1, 2], [3, 4])
-        assert 2 == equal_elements_distance([1, 1], [1, 1])
+        assert 0 == equal_elements_distance([1, 1], [1, 1])
+        assert 2 == equal_elements_distance([1, 2], [3, 4])
 
         # position is important
-        assert 0 == equal_elements_distance([1, 2], [2, 1])
+        assert 2 == equal_elements_distance([1, 2], [2, 1])
 
-        # when length is different, the longest will be cut off
-        assert 2 == equal_elements_distance([1, 1], [1, 1, 1, 1, 1, 1])
-        assert 2 == equal_elements_distance([1, 1, 1, 1, 1, 1], [1, 1])
+        # when 2nd is longer, it will be cut off
+        assert 0 == equal_elements_distance([1, 1], [1, 1, 1, 1, 1, 1])
+
+        # when 1st is longer, it will count towards novelty
+        assert 4 == equal_elements_distance([1, 1, 1, 1, 1, 1], [1, 1])
 
     def test_normalized_compression_distance(self):
         a = [0, 1] * 1000

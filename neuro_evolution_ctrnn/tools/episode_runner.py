@@ -54,9 +54,20 @@ class EpisodeRunner(object):
                                 # todo: turn this into an env-wrapper, that also returns "behavior" from step()
                                 inp_act, out_act, pred = action
                                 if out_act == 1:
+                                    # in AlgorithmicEnvs the only relevant action happen
+                                    # when the agent tries to write something on the tape
                                     behavior_compressed += compressor.compress(bytearray([pred]))
                             else:
                                 behavior_compressed += compressor.compress(bytearray(action))
+                if str(self.env_id) == 'Reverse-v0':
+                    if done:
+                        if rew < 0:
+                            inp_act, out_act, pred = action
+                            rew -= 0.5 * abs(
+                                env.env.read_head_position + 2 - len(env.env.target) - env.env.write_head_position
+                            )
+                            if env.env.MOVEMENTS[inp_act] != 'left':
+                                rew -= 1
 
                 if str(self.env_id).startswith("BipedalWalker"):
                     # simple speedup for bad agents, because some agents just stand still indefinitely and

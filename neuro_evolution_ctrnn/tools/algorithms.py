@@ -80,6 +80,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
 
 def calc_novelty(res, results_recorded, get_distance, k):
+    """calculate the average distance to the k nearest neighbors"""
     behavior_compressed = res[1]
     behavior = list(decompress(behavior_compressed))
     dist_list = []
@@ -91,7 +92,7 @@ def calc_novelty(res, results_recorded, get_distance, k):
         dist_list.append(dist)
 
     dist_sum = 0
-    for nearest_neighbor in sorted(dist_list, reverse=True)[0:k]:
+    for nearest_neighbor in sorted(dist_list, reverse=False)[0:k]:
         dist_sum += nearest_neighbor
 
     return dist_sum / k

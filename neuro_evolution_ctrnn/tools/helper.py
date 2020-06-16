@@ -15,9 +15,17 @@ from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunner
 
 
 def make_env(env_id: str):
-    env = gym.make(env_id)
-    if env_id.startswith("QbertNoFrameskip"):
-        env = AtariPreprocessing(env, screen_size=16, scale_obs=True)
+    if env_id == "Reverse-v0":
+        env = gym.make(env_id)
+        env.env.last = 15
+        env.env.min_length = 7
+        logging.info("creating env with last: "+str(env.env.last))
+    elif env_id.startswith("QbertNoFrameskip"):
+        logging.info("creating env AtariPreprocessing")
+        env = AtariPreprocessing(gym.make(env_id), screen_size=16, scale_obs=True)
+    else:
+        env = gym.make(env_id)
+
     return env
 
 
