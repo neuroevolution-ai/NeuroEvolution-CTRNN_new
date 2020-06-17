@@ -14,6 +14,7 @@ class LSTM(IBrain):
         super().__init__(input_space, output_space, individual, config)
 
         self.config = config
+        self.input_space = input_space
 
         self.input_size = self._size_from_space(input_space)
         self.output_size = self._size_from_space(output_space)
@@ -114,6 +115,10 @@ class LSTMPyTorch(nn.Module, LSTM):
             )
 
     def step(self, ob: np.ndarray):
+
+        if self.config.normalize_input:
+            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+
         with torch.no_grad():
             # Input requires the form (seq_len, batch, input_size)
             out, self.hidden = self.lstm(torch.from_numpy(ob.astype(np.float32)).view(1, 1, -1), self.hidden)
@@ -209,6 +214,10 @@ class LSTMNumPy(LSTM):
         return 1 / (1 + np.exp(-x))
 
     def step(self, ob: np.ndarray):
+
+        if self.config.normalize_input:
+            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+
         x = ob.astype(np.float32)
 
         # The input for the i-th layer is the (i-1)-th hidden feature or if i==0 the input
