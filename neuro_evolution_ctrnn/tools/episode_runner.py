@@ -18,9 +18,16 @@ class EpisodeRunner(object):
         self.env_id = env_template.spec.id
         self.env_handler = EnvHandler(self.conf)
 
+
     def eval_fitness(self, individual, seed):
         if self.conf.reuse_env:
-            env = get_current_worker().env
+            try:
+                env = get_current_worker().env
+            except:
+                if hasattr(self, "env"):
+                    env = self.env
+                else:
+                    self.env = env =  self.env_handler.make_env(self.env_id)
         else:
             env = self.env_handler.make_env(self.env_id)
         set_random_seeds(seed, env)

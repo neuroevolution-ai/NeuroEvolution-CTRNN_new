@@ -13,6 +13,7 @@
   "brain": {
     "type": "CTRNN",
     "number_neurons": 20,
+    "use_bias": false,
     "delta_t": 0.05,
     "neuron_activation": "relu",
     "neuron_activation_inplace": true,

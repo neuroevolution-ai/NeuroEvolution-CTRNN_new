@@ -32,6 +32,7 @@
   },
   "brain": {
     "type": "CTRNN",
+    "use_bias": false,
     "number_neurons": [5, 7, 10],
     "delta_t": [0.1, 0.25, 0.5, 1.0],
     "neuron_activation": ["tanh", "relu"],

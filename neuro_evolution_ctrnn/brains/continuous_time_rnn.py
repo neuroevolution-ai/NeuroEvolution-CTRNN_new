@@ -96,6 +96,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
             ob = ob.flatten()
 
+        if self.config.use_bias:
+            ob = np.r_[ob, [1]]
+
         # Differential equation
         if self.config.neuron_activation == "relu":
             y_ = np.maximum(0, self.y)
@@ -140,6 +143,10 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             individual_size += 2
         elif config.optimize_state_boundaries == "fixed":
             individual_size += 0
+
+        if config.use_bias:
+            individual_size += config.number_neurons
+
         return individual_size
 
     @classmethod
@@ -151,6 +158,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             logging.warning("masks are already present in class")
         # todo: also store masks in checkpoints and hof.
         v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
+        if config.use_bias:
+            v_mask = np.c_[v_mask, np.ones(config.number_neurons, dtype=bool)]
+
         w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                     config.w_mask_param)
         t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)

@@ -36,6 +36,7 @@
     "neuron_activation": "tanh",
     "neuron_activation_inplace": true,
     "delta_t": 0.5,
+    "use_bias": false,
     "normalize_input": true,
     "normalize_input_target": 5,
     "optimize_state_boundaries": "global",

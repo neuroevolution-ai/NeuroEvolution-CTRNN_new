@@ -1,8 +1,8 @@
 {
-  "environment": "Reverse-v0",
+  "environment": "LunarLander-v2",
   "random_seed": 0,
-  "number_generations": 1000,
-  "use_worker_processes": true,
+  "number_generations": 5,
+  "use_worker_processes": false,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
@@ -21,7 +21,7 @@
     "mu_mixed_base": 0,
     "mu_novel": 5,
     "extra_from_hof": 2,
-    "lambda_": 300,
+    "lambda_": 50,
     "mutpb": 0.8,
     "include_parents_in_next_generation": true,
     "keep_seeds_fixed_during_generation": true,
@@ -35,6 +35,7 @@
     "number_neurons": 20,
     "neuron_activation": "relu",
     "neuron_activation_inplace": false,
+    "use_bias": true,
     "delta_t": 0.5,
     "normalize_input": false,
     "normalize_input_target": 3,
