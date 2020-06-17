@@ -111,7 +111,7 @@ class ReverseWrapper(Wrapper):
         if done:
             if rew < 0:
                 inp_act, out_act, pred = action
-                dist = abs(len(self.unwrapped.target)-2 -self.unwrapped.read_head_position - self.unwrapped.write_head_position
+                dist = abs(len(self.unwrapped.target)-0 -self.unwrapped.read_head_position - self.unwrapped.write_head_position
                 )
                 if dist > 0:
                     rew -= 1. * dist
