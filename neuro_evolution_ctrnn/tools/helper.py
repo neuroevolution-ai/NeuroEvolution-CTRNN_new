@@ -7,26 +7,11 @@ import os
 import logging
 from typing import Type
 from bz2 import compress
-from gym.wrappers.atari_preprocessing import AtariPreprocessing
 import gym
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
     IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg
 
-
-def make_env(env_id: str):
-    if env_id == "Reverse-v0":
-        env = gym.make(env_id)
-        env.env.last = 15
-        env.env.min_length = 7
-        logging.info("creating env with last: "+str(env.env.last))
-    elif env_id.startswith("QbertNoFrameskip"):
-        logging.info("creating env AtariPreprocessing")
-        env = AtariPreprocessing(gym.make(env_id), screen_size=16, scale_obs=True)
-    else:
-        env = gym.make(env_id)
-
-    return env
 
 
 def output_to_action(output, action_space):

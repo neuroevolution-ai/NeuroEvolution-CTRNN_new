@@ -14,9 +14,10 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, make_env, output_to_action
+from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
+from tools.env_handler import EnvHandler
 
 
 # from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
@@ -47,7 +48,8 @@ class Experiment(object):
         self._setup()
 
     def _setup(self):
-        env = make_env(self.config.environment)
+        env_handler = EnvHandler(self.config.episode_runner)
+        env = env_handler.make_env(self.config.environment)
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
@@ -100,7 +102,7 @@ class Experiment(object):
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
         if self.config.episode_runner.reuse_env:
-            DaskHandler.init_workers_with_env(self.env_template.spec.id)
+            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
