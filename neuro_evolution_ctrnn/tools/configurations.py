@@ -18,7 +18,6 @@ class IEpisodeRunnerCfg(abc.ABC):
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class StandardEpisodeRunnerCfg(IEpisodeRunnerCfg):
-    number_fitness_runs: int
     keep_env_seed_fixed_during_generation: bool
 
 

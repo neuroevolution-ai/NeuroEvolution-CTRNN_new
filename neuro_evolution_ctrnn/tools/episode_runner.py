@@ -116,4 +116,4 @@ class MemoryEpisodeRunner(IEpisodeRunner):
                 if done:
                     break
 
-        return fitness_current / self.config.number_fitness_runs
+        return fitness_current / self.config.number_fitness_runs,

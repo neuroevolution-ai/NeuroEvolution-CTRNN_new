@@ -1,17 +1,17 @@
 {
-  "environment": "Qbert-ram-v0",
+  "environment": "Reacher-v2",
   "random_seed": 0,
-  "number_generations": 3,
+  "number_generations": 2500,
   "optimizer": {
     "type": "CMA_ES",
-    "population_size": 3,
+    "population_size": 200,
     "sigma": 1.0,
     "checkpoint_frequency": 10
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 5,
-    "delta_t": 1.00,
+    "number_neurons": 10,
+    "delta_t": 0.05,
     "normalize_input": false,
     "normalize_input_target": 2,
     "optimize_state_boundaries": "per_neuron",
@@ -28,9 +28,12 @@
     "t_mask_param": 4
   },
   "episode_runner": {
-    "type": "Standard",
-    "number_fitness_runs": 1,
+    "type": "Memory",
+    "number_fitness_runs": 50,
     "reuse_env": true,
-    "keep_env_seed_fixed_during_generation": false
+    "observation_frames": 20,
+    "memory_frames": 20,
+    "action_frames": 50,
+    "observation_mask": [4, 5, 8, 9, 10]
   }
 }
