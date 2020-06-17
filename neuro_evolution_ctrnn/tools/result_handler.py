@@ -3,6 +3,7 @@ import json
 import pickle
 from tools.helper import walk_dict
 import numpy as np
+import subprocess
 
 
 class ResultHandler(object):
@@ -14,6 +15,9 @@ class ResultHandler(object):
         self.result_hof = None
         self.result_log = None
         self.result_time_elapsed = None
+
+        self.git_head = subprocess.check_output(["git", "rev-parse", "--verify", "HEAD"])
+        self.git_diff = subprocess.check_output(["git", "diff", "HEAD"])
 
     def check_path(self):
         # checking before hand is not pythonic, but problems would a lot of processing time go to waste
@@ -42,6 +46,9 @@ class ResultHandler(object):
         with open(os.path.join(self.result_path, 'Log.pkl'), 'wb') as pk_file:
             pickle.dump(log, pk_file)
 
+        with open(os.path.join(self.result_path, 'git.diff'), 'wb') as diff_file:
+            diff_file.write(self.git_diff)
+
         with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
             def write(key, value, depth, is_leaf):
                 pad = ""
@@ -59,6 +66,7 @@ class ResultHandler(object):
             write_file.write('Genome Size: {:d}\n'.format(individual_size))
             write_file.write('Inputs: {:s}\n'.format(str(input_space)))
             write_file.write('Outputs: {:s}\n'.format(str(output_space)))
+            write_file.write('Commit: {:s}\n'.format(str(self.git_head.decode("utf-8") )))
             write_file.write('\n')
             dash = '-' * 80
             write_file.write(dash + '\n')
