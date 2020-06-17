@@ -3,6 +3,7 @@ from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg
 import logging
 from tools.dask_handler import get_current_worker
+from tools.env_handler import EnvHandler
 
 
 class EpisodeRunner(object):
@@ -15,12 +16,13 @@ class EpisodeRunner(object):
         self.input_space = input_space
         self.output_space = output_space
         self.env_id = env_template.spec.id
+        self.env_handler = EnvHandler(self.conf)
 
     def eval_fitness(self, individual, seed):
         if self.conf.reuse_env:
             env = get_current_worker().env
         else:
-            env = gym.make(self.env_id)
+            env = self.env_handler.make_env(self.env_id)
         set_random_seeds(seed, env)
         fitness_total = 0
         for i in range(self.conf.number_fitness_runs):

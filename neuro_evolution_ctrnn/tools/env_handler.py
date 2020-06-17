@@ -55,10 +55,10 @@ class BehaviorWrapper(Wrapper):
         self.step_count = 0
 
     def reset(self, **kwargs):
-        super(BehaviorWrapper, self).reset(**kwargs)
         self.compressed_behavior = b''
         self.compressor = BZ2Compressor(1)
         self.step_count = 0
+        return super(BehaviorWrapper, self).reset(**kwargs)
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
@@ -84,8 +84,8 @@ class Box2DWalkerWrapper(Wrapper):
         self.consecutive_non_movement = 0
 
     def reset(self, **kwargs):
-        super(Box2DWalkerWrapper, self).reset(**kwargs)
         self.consecutive_non_movement = 0
+        return super(Box2DWalkerWrapper, self).reset(**kwargs)
 
     def step(self, action):
         ob, rew, done, info = super(Box2DWalkerWrapper, self).step(action)
@@ -111,8 +111,9 @@ class ReverseWrapper(Wrapper):
         if done:
             if rew < 0:
                 inp_act, out_act, pred = action
-                dist = abs(len(self.unwrapped.target)-2 -self.unwrapped.read_head_position - self.unwrapped.write_head_position
-                )
+                dist = abs(len(
+                    self.unwrapped.target) - 2 - self.unwrapped.read_head_position - self.unwrapped.write_head_position
+                           )
                 if dist > 0:
                     rew -= 1. * dist
                 if self.unwrapped.MOVEMENTS[inp_act] != 'left':

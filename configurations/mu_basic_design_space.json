@@ -26,7 +26,9 @@
     "keep_seeds_fixed_during_generation": true,
     "mutation_learned": [true, false],
     "distance": ["NCD", "euclid"],
-    "max_recorded_behaviors": [1, 10, 25]
+    "max_recorded_behaviors": [1, 10, 25],
+    "novelty_nearest_k": 5,
+    "recorded_behaviors_per_generation": 2
   },
   "brain": {
     "type": "CTRNN",
