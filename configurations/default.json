@@ -1,7 +1,7 @@
 {
   "environment": "Ant-v2",
   "random_seed": 0,
-  "number_generations": 50,
+  "number_generations": 250,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
@@ -14,8 +14,8 @@
     "extra_from_hof": 5,
     "lambda_": 500,
     "mutpb": 0.8,
-    "distance": "NCD",
-    "max_recorded_behaviors": 100,
+    "distance": "euclid",
+    "max_recorded_behaviors": 20,
     "recorded_behaviors_per_generation": 5,
     "novelty_nearest_k": 5,
     "novelty_weight": 1
@@ -48,8 +48,8 @@
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,
     "reuse_env": true,
-    "behavioral_interval": 1,
-    "behavioral_max_length": 300,
+    "behavioral_interval": 20,
+    "behavioral_max_length": 10,
     "behavior_from_observation": true
   }
 }

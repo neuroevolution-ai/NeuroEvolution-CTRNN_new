@@ -1,6 +1,5 @@
 import gym
 import logging
-from gym.envs.algorithmic.algorithmic_env import AlgorithmicEnv
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import EpisodeRunnerCfg
 
@@ -63,7 +62,8 @@ class BehaviorWrapper(Wrapper):
         return super(BehaviorWrapper, self).reset(**kwargs)
 
     def _record(self, data):
-        self.compressed_behavior += self.compressor.compress(bytearray(data))
+        data_bytes = np.array(data).astype(np.float16).tobytes()
+        self.compressed_behavior += self.compressor.compress(data_bytes)
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
@@ -73,12 +73,10 @@ class BehaviorWrapper(Wrapper):
                 and self.step_count % self.behavioral_interval == 0:
 
             if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
-                # this is a mujoco simulation
-                # model = self.env.unwrapped.model
-                # mass = model.body_mass
-                # xpos = model.data.xipos
-                # pos = (np.sum(mass * xpos, 0) / np.sum(mass))
-                self._record(self.env.unwrapped.model.stat.center)
+
+                # since float16.max is only around 65500, we need to make it a little smaller
+                data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
+                self._record(data)
             elif self.env.spec.id.endswith("NoFrameskip-v4"):
                 # this is an atari env
                 # noinspection PyProtectedMember
