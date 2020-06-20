@@ -52,8 +52,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             ind.fitness.values = [fitness]
             ind.novelty = nov
 
+        toolbox.shape_fitness(candidates)
+
         set_random_seeds(seed_after_map, env=None)
-        novel_candidates = toolbox.select(candidates, toolbox.conf.mu_mixed_base, fit_attr="novelty")
 
         # drop recorded_individuals, when there are too many
         overfill = len(toolbox.recorded_individuals) - toolbox.conf.max_recorded_behaviors
@@ -63,9 +64,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         if halloffame is not None:
             halloffame.update(offspring)
 
-        population[:] = toolbox.select(candidates, toolbox.conf.mu) + \
-                        toolbox.select(novel_candidates, toolbox.conf.mu_mixed) + \
-                        toolbox.select(candidates, toolbox.conf.mu_novel, fit_attr="novelty")
+        population[:] = toolbox.select(candidates, toolbox.conf.mu, fit_attr="shaped_fitness")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
         toolbox.logbook.record(gen=gen, nevals=nevals, **record)

@@ -116,7 +116,8 @@ class Experiment(object):
         print("Done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env = make_env(self.config.environment)
+        env_handler = EnvHandler(self.config.episode_runner)
+        env = env_handler.make_env(self.config.environment)
         env.render()
         if hasattr(self.config.optimizer, "mutation_learned"):
             # sometimes there are also optimizing strategies encoded in the genome. These parameters

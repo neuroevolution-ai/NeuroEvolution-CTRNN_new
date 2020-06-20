@@ -48,37 +48,36 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         mate_list = [
             tools.cxOnePoint,
             tools.cxTwoPoint,
-            partial(tools.cxUniform, indpb=self.conf.mate_indpb)
-        ]
-
-        mut_list = [
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_1,
-                    indpb=self.conf.mutation_Gaussian_indpb_1),
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_2,
-                    indpb=self.conf.mutation_Gaussian_indpb_2)
         ]
 
         def mate(ind1, ind2):
             return random.choice(mate_list)(ind1, ind2)
 
-        def mutate(ind1):
-            return random.choice(mut_list)(ind1)
-
         def fct_mutation_learned(ind1):
             # need to clip in up-direction because too large numbers create overflows
-            # need to clip below to avoid stagnations, which happens when a top individuals
+            # need to clip below to avoid stagnation, which happens when a top individuals
             # mutates bad strategy parameters
             ind1[-1] = np.clip(ind1[-1], -3, 3)
             ind1[-2] = np.clip(ind1[-2], -3, 3)
-
             sigma = 2 ** ind1[-1]
-            indpb = 4 ** (ind1[-2] - 2)
+            indpb = 2 ** (ind1[-2] - 3)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
+        def shape_fitness(population):
+            novel_counter = 0
+            for ind in sorted(population, key=lambda x: x.novelty):
+                ind.novelty_rank = novel_counter
+                novel_counter += 1
+
+            fitness_counter = 0
+            for ind in sorted(population, key=lambda x: x.fitness.values[0]):
+                ind.fitness_rank = fitness_counter
+                fitness_counter += 1
+
+            for ind in population:
+                ind.shaped_fitness = self.conf.novelty_weight * ind.novelty_rank + ind.fitness_rank
+
+        toolbox.register("shape_fitness", shape_fitness)
         toolbox.register("mate", mate)
         toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
                          mutation_learned=self.conf.mutation_learned)
@@ -103,7 +102,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
-            toolbox.population = self.toolbox.population(n=self.conf.mu + self.conf.mu_mixed + self.conf.mu_novel)
+            toolbox.population = self.toolbox.population(n=self.conf.mu)
             toolbox.logbook = self.create_logbook()
             toolbox.recorded_individuals = []
             toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)

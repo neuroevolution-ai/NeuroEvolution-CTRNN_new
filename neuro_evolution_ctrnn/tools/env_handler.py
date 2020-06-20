@@ -7,6 +7,7 @@ from tools.configurations import EpisodeRunnerCfg
 from gym import Wrapper
 from bz2 import BZ2Compressor
 from typing import Union, Iterable
+import numpy as np
 
 
 class EnvHandler:
@@ -26,7 +27,8 @@ class EnvHandler:
             env.env.min_length = 7
             logging.info("creating env with min_length " + str(
                 env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
-        if env_id.startswith("QbertNoFrameskip"):
+
+        if env.spec.id.endswith("NoFrameskip-v4"):
             logging.info("wrapping env in AtariPreprocessing")
             env = AtariPreprocessing(env, screen_size=16, scale_obs=True)
 
@@ -60,16 +62,31 @@ class BehaviorWrapper(Wrapper):
         self.step_count = 0
         return super(BehaviorWrapper, self).reset(**kwargs)
 
+    def _record(self, data):
+        self.compressed_behavior += self.compressor.compress(bytearray(data))
+
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
 
         if self.behavioral_interval \
                 and self.step_count * self.behavioral_interval < self.behavioral_max_length \
                 and self.step_count % self.behavioral_interval == 0:
-            if self.behavior_from_observation:
-                self.compressed_behavior += self.compressor.compress(bytearray(ob))
+
+            if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
+                # this is a mujoco simulation
+                # model = self.env.unwrapped.model
+                # mass = model.body_mass
+                # xpos = model.data.xipos
+                # pos = (np.sum(mass * xpos, 0) / np.sum(mass))
+                self._record(self.env.unwrapped.model.stat.center)
+            elif self.env.spec.id.endswith("NoFrameskip-v4"):
+                # this is an atari env
+                # noinspection PyProtectedMember
+                self._record(self.env.unwrapped._get_ram())
+            elif self.behavior_from_observation:
+                self._record(ob)
             else:
-                self.behavior_compressed += self.compressor.compress(bytearray(action))
+                self._record(action)
         return ob, rew, done, info
 
     def get_compressed_behavior(self):
