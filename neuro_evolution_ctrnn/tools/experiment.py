@@ -133,18 +133,19 @@ class Experiment(object):
                                      individual=individual,
                                      config=self.config.brain)
 
-            brain_vis = brain_vis_handler.launch_new_visualization(brain)
             for i in range(rounds_per_individual):
                 fitness_current = 0
                 ob = env.reset()
                 done = False
                 if neuron_vis:
                     brain_vis = brain_vis_handler.launch_new_visualization(brain)
+                else:
+                    brain_vis = None
                 step_count = 0
                 while not done:
                     step_count += 1
                     action = brain.step(ob)
-                    if neuron_vis:
+                    if brain_vis:
                         brain_vis.process_update(in_values=ob, out_values=action)
                     action = output_to_action(action, self.output_space)
                     ob, rew, done, info = env.step(action)

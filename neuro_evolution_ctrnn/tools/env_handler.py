@@ -54,37 +54,47 @@ class BehaviorWrapper(Wrapper):
         self.compressed_behavior = b''
         self.compressor = BZ2Compressor(1)
         self.step_count = 0
+        self.aggregate = None
 
     def reset(self, **kwargs):
         self.compressed_behavior = b''
         self.compressor = BZ2Compressor(1)
         self.step_count = 0
+        self.aggregate = None
         return super(BehaviorWrapper, self).reset(**kwargs)
 
     def _record(self, data):
-        data_bytes = np.array(data).astype(np.float16).tobytes()
-        self.compressed_behavior += self.compressor.compress(data_bytes)
+        if self.aggregate is None:
+            self.aggregate = np.array(data)
+            self.aggregate.fill(0)
+
+        self.aggregate += np.array(data) / self.behavioral_interval
+
+        if self.behavioral_interval \
+                and self.step_count * self.behavioral_interval < self.behavioral_max_length:
+
+            if self.step_count % self.behavioral_interval == 0:
+                data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
+                self.compressed_behavior += self.compressor.compress(data_bytes)
+                self.aggregate.fill(0)
+
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
 
-        if self.behavioral_interval \
-                and self.step_count * self.behavioral_interval < self.behavioral_max_length \
-                and self.step_count % self.behavioral_interval == 0:
+        if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
 
-            if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
-
-                # since float16.max is only around 65500, we need to make it a little smaller
-                data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
-                self._record(data)
-            elif self.env.spec.id.endswith("NoFrameskip-v4"):
-                # this is an atari env
-                # noinspection PyProtectedMember
-                self._record(self.env.unwrapped._get_ram())
-            elif self.behavior_from_observation:
-                self._record(ob)
-            else:
-                self._record(action)
+            # since float16.max is only around 65500, we need to make it a little smaller
+            data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
+            self._record(data)
+        elif self.env.spec.id.endswith("NoFrameskip-v4"):
+            # this is an atari env
+            # noinspection PyProtectedMember
+            self._record(self.env.unwrapped._get_ram())
+        elif self.behavior_from_observation:
+            self._record(ob)
+        else:
+            self._record(action)
         return ob, rew, done, info
 
     def get_compressed_behavior(self):
