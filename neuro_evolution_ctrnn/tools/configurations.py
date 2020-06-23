@@ -7,6 +7,8 @@ import abc
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
+    normalize_input: bool
+    normalize_input_target: float
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -36,8 +38,6 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_state_boundaries: str
     set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
-    normalize_input: bool
-    normalize_input_target: float
     clipping_range_min: float
     clipping_range_max: float
     v_mask: str
@@ -57,6 +57,12 @@ class LayeredNNCfg(IBrainCfg):
     cppn_hidden_size2: int
     use_biases: bool
     indirect_encoding: bool
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LSTMCfg(IBrainCfg):
+    lstm_num_layers: int
+    use_biases: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

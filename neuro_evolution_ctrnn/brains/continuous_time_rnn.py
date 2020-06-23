@@ -84,13 +84,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
         if self.config.normalize_input:
-            for idx, item in enumerate(ob):
-                if isinstance(self.input_space, Box):
-                    if self.input_space.bounded_below[idx] and self.input_space.bounded_above[idx]:
-                        ob[idx] = self._normalize(ob[idx], self.input_space.low[idx],
-                                                  self.input_space.high[idx]) * self.config.normalize_input_target
-                else:
-                    raise NotImplementedError("normalize_input is only defined for input-type Box")
+            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
 
         # Differential equation
         # value = alpha * np.tanh(self.y) + (1-alpha) * np.sin(self.y)
