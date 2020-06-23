@@ -3,8 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from brains.i_brain import IBrain
-from i_brain import ConfigClass
+from brains.i_brain import IBrain, ConfigClass
 from tools.configurations import LSTMCfg
 
 
