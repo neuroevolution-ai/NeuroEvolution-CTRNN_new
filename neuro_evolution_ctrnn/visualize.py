@@ -83,7 +83,8 @@ if args.memory:
     env = gym.make(config.environment)
     episode_runner = MemoryEpisodeRunner(config=config.episode_runner, brain_conf=config.brain, discrete_actions=False,
                                          brain_class=LSTMNumPy, input_space=env.observation_space,
-                                         output_space=env.action_space, env_template=env, render=True)
+                                         output_space=env.action_space, env_template=env, render=True,
+                                         record_directory=directory)
 
     individual = hall_of_fame[0:1][0]
     episode_runner.eval_fitness(individual, config.random_seed)

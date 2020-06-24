@@ -1,9 +1,12 @@
 import numpy as np
 import gym
+from gym import wrappers
 from tools.helper import set_random_seeds
 from tools.configurations import IEpisodeRunnerCfg, StandardEpisodeRunnerCfg, MemoryExperimentCfg, IBrainCfg
 from tools.dask_handler import get_current_worker
 from brains.i_brain import IBrain
+
+import os
 
 
 class IEpisodeRunner:
@@ -64,9 +67,10 @@ class EpisodeRunner(IEpisodeRunner):
 
 class MemoryEpisodeRunner(IEpisodeRunner):
     def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
-                 output_space, env_template, render=False):
+                 output_space, env_template, render=False, record_directory=None):
         super().__init__(config, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
         self.render = render
+        self.record_directory = record_directory
 
     def eval_fitness(self, individual, seed):
         if self.config.reuse_env and not self.render:
@@ -75,6 +79,7 @@ class MemoryEpisodeRunner(IEpisodeRunner):
             env = gym.make(self.env_id)
 
         if self.render:
+            env = wrappers.Monitor(env, os.path.join(self.record_directory, "video"), force=False)
             env.render()
 
         set_random_seeds(seed, env)
