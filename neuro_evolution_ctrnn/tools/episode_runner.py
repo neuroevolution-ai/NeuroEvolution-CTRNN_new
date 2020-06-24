@@ -67,20 +67,14 @@ class EpisodeRunner(IEpisodeRunner):
 
 class MemoryEpisodeRunner(IEpisodeRunner):
     def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
-                 output_space, env_template, render=False, record_directory=None):
+                 output_space, env_template):
         super().__init__(config, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
-        self.render = render
-        self.record_directory = record_directory
 
     def eval_fitness(self, individual, seed):
-        if self.config.reuse_env and not self.render:
+        if self.config.reuse_env:
             env = get_current_worker().env
         else:
             env = gym.make(self.env_id)
-
-        if self.render:
-            env = wrappers.Monitor(env, os.path.join(self.record_directory, "video"), force=False)
-            env.render()
 
         set_random_seeds(seed, env)
         fitness_current = 0
@@ -93,13 +87,14 @@ class MemoryEpisodeRunner(IEpisodeRunner):
             #     env.seed(configuration_data["random_seed_for_environment"] + i)
 
             ob = env.reset()
-            max_episode_steps = self.config.observation_frames + self.config.memory_frames + self.config.action_frames
+            env._max_episode_steps = self.config.observation_frames + self.config.memory_frames + self.config.action_frames
 
             # Create brain
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_conf)
             output_size = IBrain._size_from_space(self.output_space)
             t = 0
-            for _ in range(max_episode_steps):
+            done = False
+            while not done:
 
                 # Perform step of the brain simulation
                 action = brain.step(ob)
@@ -121,11 +116,5 @@ class MemoryEpisodeRunner(IEpisodeRunner):
                     fitness_current += rew
 
                 t += 1
-
-                if self.render:
-                    env.render()
-
-                if done:
-                    break
 
         return fitness_current / self.config.number_fitness_runs,
