@@ -13,7 +13,6 @@ from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunner
     IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg
 
 
-
 def output_to_action(output, action_space):
     if isinstance(action_space, gym.spaces.Discrete):
         return np.argmax(output)

@@ -126,7 +126,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         else:
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T.toarray()))
+        o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
         return o
 
     @classmethod

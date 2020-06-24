@@ -64,26 +64,16 @@ class IOptimizerCfg(abc.ABC):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
-    mate_indpb: float
-    mutation_Gaussian_sigma_1: float
-    mutation_Gaussian_sigma_2: float
-    mutation_Gaussian_indpb_1: float
-    mutation_Gaussian_indpb_2: float
     mutation_learned: bool
-    elitist_ratio: int
     tournsize: int
     mu: int
-    mu_mixed: int
-    mu_mixed_base: int
-    mu_novel: int
     lambda_: int
     mutpb: float
     extra_from_hof: int
-    include_parents_in_next_generation: float
-    keep_seeds_fixed_during_generation: bool
-    max_recorded_behaviors: int
+    novelty_weight: float
     distance: str
     novelty_nearest_k: int
+    max_recorded_behaviors: int
     recorded_behaviors_per_generation: int
 
 

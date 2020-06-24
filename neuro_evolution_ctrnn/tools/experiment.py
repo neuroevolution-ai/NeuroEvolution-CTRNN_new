@@ -101,7 +101,7 @@ class Experiment(object):
         start_time = time.time()
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-        if self.config.episode_runner.reuse_env:
+        if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
             DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
@@ -116,7 +116,8 @@ class Experiment(object):
         print("Done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env = make_env(self.config.environment)
+        env_handler = EnvHandler(self.config.episode_runner)
+        env = env_handler.make_env(self.config.environment)
         env.render()
         if hasattr(self.config.optimizer, "mutation_learned"):
             # sometimes there are also optimizing strategies encoded in the genome. These parameters
@@ -132,18 +133,19 @@ class Experiment(object):
                                      individual=individual,
                                      config=self.config.brain)
 
-            brain_vis = brain_vis_handler.launch_new_visualization(brain)
             for i in range(rounds_per_individual):
                 fitness_current = 0
                 ob = env.reset()
                 done = False
                 if neuron_vis:
                     brain_vis = brain_vis_handler.launch_new_visualization(brain)
+                else:
+                    brain_vis = None
                 step_count = 0
                 while not done:
                     step_count += 1
                     action = brain.step(ob)
-                    if neuron_vis:
+                    if brain_vis:
                         brain_vis.process_update(in_values=ob, out_values=action)
                     action = output_to_action(action, self.output_space)
                     ob, rew, done, info = env.step(action)
