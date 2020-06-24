@@ -10,7 +10,7 @@ from bz2 import compress
 import gym
 
 from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg
+    IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg, LSTMCfg
 
 
 def output_to_action(output, action_space):
