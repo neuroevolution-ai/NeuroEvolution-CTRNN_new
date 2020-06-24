@@ -43,10 +43,9 @@ class Experiment(object):
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 
         self.optimizer_class: Type[IOptimizer]
-        if self.config.optimizer.type == "CMA_ES":
         if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
-        elif self.config.optimizer.type == "MU_ES":
+        elif self.config.optimizer.type == 'MU_ES':
             self.optimizer_class = OptimizerMuPlusLambda
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
