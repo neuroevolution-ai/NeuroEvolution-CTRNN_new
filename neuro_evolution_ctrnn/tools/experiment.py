@@ -9,6 +9,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.layered_nn import LayeredNN
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
+from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -30,20 +31,25 @@ class Experiment(object):
         self.from_checkpoint = from_checkpoint
         self.config = configuration
         self.brain_class: Type[IBrain]
-        if self.config.brain.type == 'CTRNN':
+        if self.config.brain.type == "CTRNN":
             self.brain_class = ContinuousTimeRNN
-        elif self.config.brain.type == 'LNN':
+        elif self.config.brain.type == "LNN":
             self.brain_class = LayeredNN
+        elif self.config.brain.type == "LSTM_PyTorch":
+            self.brain_class = LSTMPyTorch
+        elif self.config.brain.type == "LSTM_NumPy":
+            self.brain_class = LSTMNumPy
         else:
-            raise RuntimeError("Unknown neural_network_type: " + str(self.config.brain.type))
+            raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 
         self.optimizer_class: Type[IOptimizer]
+        if self.config.optimizer.type == "CMA_ES":
         if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
-        elif self.config.optimizer.type == 'MU_ES':
+        elif self.config.optimizer.type == "MU_ES":
             self.optimizer_class = OptimizerMuPlusLambda
         else:
-            raise RuntimeError("Unknown optimizer.type: " + str(self.config.optimizer.type))
+            raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
 
         self._setup()
 

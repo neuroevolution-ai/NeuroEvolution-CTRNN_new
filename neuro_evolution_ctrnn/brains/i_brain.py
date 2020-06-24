@@ -31,6 +31,18 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @staticmethod
+    def _normalize_input(ob, input_space, normalize_input_target):
+        for idx, item in enumerate(ob):
+            if isinstance(input_space, Box):
+                if input_space.bounded_below[idx] and input_space.bounded_above[idx]:
+                    ob[idx] = IBrain._normalize(ob[idx], input_space.low[idx],
+                                                input_space.high[idx]) * normalize_input_target
+            else:
+                raise NotImplementedError("normalize_input is only defined for input-type Box")
+
+        return ob
+
+    @staticmethod
     def _normalize(x, low, high):
         """scales a value x from interval [low,high] to interval [0,1]"""
         return ((x - low) / (high - low))

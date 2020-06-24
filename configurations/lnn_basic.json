@@ -12,6 +12,8 @@
   },
   "brain": {
     "type": "LNN",
+    "normalize_input": false,
+    "normalize_input_target": 2,
     "number_neurons_layer1": 2,
     "number_neurons_layer2": 2,
     "cppn_hidden_size1": 2,

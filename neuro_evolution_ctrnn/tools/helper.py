@@ -66,17 +66,19 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
     brain_cfg_class: Type[IBrainCfg]
-    if config_dict["brain"]["type"] == 'CTRNN':
+    if config_dict["brain"]["type"] == "CTRNN":
         brain_cfg_class = ContinuousTimeRNNCfg
-    elif config_dict["brain"]["type"] == 'LNN':
+    elif config_dict["brain"]["type"] == "LNN":
         brain_cfg_class = LayeredNNCfg
+    elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
+        brain_cfg_class = LSTMCfg
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
     optimizer_cfg_class: Type[IOptimizerCfg]
-    if config_dict["optimizer"]["type"] == 'CMA_ES':
+    if config_dict["optimizer"]["type"] == "CMA_ES":
         optimizer_cfg_class = OptimizerCmaEsCfg
-    elif config_dict["optimizer"]["type"] == 'MU_ES':
+    elif config_dict["optimizer"]["type"] == "MU_ES":
         optimizer_cfg_class = OptimizerMuLambdaCfg
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))

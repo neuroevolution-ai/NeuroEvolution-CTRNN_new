@@ -1,7 +1,7 @@
 import pytest
 import os
 from tools.helper import config_from_file
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg
+from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg
 from brains.layered_nn import LayeredNNCfg
 from gym.spaces import Box
 
@@ -26,5 +26,11 @@ def ctrnn_config(config: ExperimentCfg) -> ContinuousTimeRNNCfg:
 
 @pytest.fixture
 def lnn_config() -> LayeredNNCfg:
-    return LayeredNNCfg(type="LNN", number_neurons_layer1=2, number_neurons_layer2=2, cppn_hidden_size1=2,
-                        cppn_hidden_size2=2, use_biases=True, indirect_encoding=False)
+    return LayeredNNCfg(type="LNN", normalize_input=False, normalize_input_target=1, number_neurons_layer1=2,
+                        number_neurons_layer2=2, cppn_hidden_size1=2, cppn_hidden_size2=2, use_biases=True,
+                        indirect_encoding=False)
+
+@pytest.fixture
+def lstm_config() -> LSTMCfg:
+    return LSTMCfg(type="LSTM_PyTorch", lstm_num_layers=3, use_biases=True, normalize_input=False,
+                   normalize_input_target=1)
