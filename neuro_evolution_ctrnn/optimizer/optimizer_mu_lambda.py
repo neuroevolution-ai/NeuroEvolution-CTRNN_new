@@ -8,12 +8,12 @@ from functools import partial
 from optimizer.i_optimizer import IOptimizer
 from tools.configurations import OptimizerMuLambdaCfg
 from typing import Callable
-from tools.helper import get_checkpoint
+from tools.helper import get_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
 
 
-def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize):
-    return tools.selBest(individuals, int(k_elitist * mu)) + \
-           tools.selTournament(individuals, int(k_tournament * mu), tournsize=tournsize)
+def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"):
+    return tools.selBest(individuals, int(k_elitist * mu), fit_attr="fitness") + \
+           tools.selTournament(individuals, int(k_tournament * mu), tournsize=tournsize, fit_attr="fitness")
 
 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
@@ -22,18 +22,20 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerMuLambdaCfg, stats, map_func=map,
-                 hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
+    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerMuLambdaCfg, stats,
+                 map_func=map, from_checkoint=None):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
-                                                    hof, from_checkoint)
+                                                    from_checkoint)
         self.create_classes()
         self.toolbox = toolbox = base.Toolbox()
         self.conf = conf
-        self.hof = hof
         toolbox.stats = stats
 
         toolbox.register("map", map_func)
         toolbox.register("evaluate", eval_fitness)
+
+        if self.conf.mutation_learned:
+            individual_size += 2
 
         toolbox.register("indices", np.random.uniform,
                          -self.conf.initial_gene_range,
@@ -46,45 +48,48 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         mate_list = [
             tools.cxOnePoint,
             tools.cxTwoPoint,
-            partial(tools.cxUniform, indpb=self.conf.mate_indpb_1),
-            partial(tools.cxUniform, indpb=self.conf.mate_indpb_2)
-        ]
-
-        mut_list = [
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_1,
-                    indpb=self.conf.mutation_Gaussian_indpb_1),
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_2,
-                    indpb=self.conf.mutation_Gaussian_indpb_2),
-            partial(tools.mutGaussian,
-                    mu=0.0,
-                    sigma=self.conf.mutation_Gaussian_sigma_3,
-                    indpb=self.conf.mutation_Gaussian_indpb_3)
         ]
 
         def mate(ind1, ind2):
             return random.choice(mate_list)(ind1, ind2)
 
-        def mutate(ind1):
-            return random.choice(mut_list)(ind1)
+        def fct_mutation_learned(ind1):
+            # need to clip in up-direction because too large numbers create overflows
+            # need to clip below to avoid stagnation, which happens when a top individuals
+            # mutates bad strategy parameters
+            ind1[-1] = np.clip(ind1[-1], -3, 3)
+            ind1[-2] = np.clip(ind1[-2], -3, 3)
+            sigma = 2 ** ind1[-1]
+            indpb = 2 ** (ind1[-2] - 3)
+            return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
+        def shape_fitness(population):
+            novel_counter = 0
+            for ind in sorted(population, key=lambda x: x.novelty):
+                ind.novelty_rank = novel_counter
+                novel_counter += 1
+
+            fitness_counter = 0
+            for ind in sorted(population, key=lambda x: x.fitness.values[0]):
+                ind.fitness_rank = fitness_counter
+                fitness_counter += 1
+
+            for ind in population:
+                ind.shaped_fitness = self.conf.novelty_weight * ind.novelty_rank + ind.fitness_rank
+
+        toolbox.register("shape_fitness", shape_fitness)
         toolbox.register("mate", mate)
-        toolbox.register("mutate", mutate)
+        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
+                         mutation_learned=self.conf.mutation_learned)
 
-        toolbox.register("select",
-                         sel_elitist_tournament,
-                         k_elitist=int(self.conf.elitist_ratio),
-                         k_tournament=1.0 - int(
-                             self.conf.elitist_ratio),
-                         tournsize=self.conf.tournsize)
+        if self.conf.mutation_learned:
+            toolbox.register("mutate", fct_mutation_learned)
+        else:
+            toolbox.register("mutate", mutate)
+        toolbox.conf = conf
+        toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
+
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
-        toolbox.mu = int(self.conf.population_size * self.conf.mu)
-        toolbox.lambda_ = int(self.conf.population_size * self.conf.lambda_)
-        toolbox.cxpb = 1.0 - self.conf.mutpb
-        toolbox.mutpb = self.conf.mutpb
 
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
@@ -92,22 +97,24 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.initial_seed = cp["last_seed"]
             toolbox.population = cp["population"]
             toolbox.logbook = cp["logbook"]
-            self.hof = cp["halloffame"]
+            toolbox.recorded_individuals = cp["recorded_individuals"]
+            toolbox.hof = self.hof = cp["halloffame"]
         else:
-            toolbox.logbook = tools.Logbook()
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
-            toolbox.population = self.toolbox.population(n=int(self.conf.population_size))
-            toolbox.logbook = tools.Logbook()
-            toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
-            self.hof = hof
+            toolbox.population = self.toolbox.population(n=self.conf.mu)
+            toolbox.logbook = self.create_logbook()
+            toolbox.recorded_individuals = []
+            toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
+
+        if conf.distance == "euclid":
+            toolbox.register("get_distance", euklidian_distance)
+        elif conf.distance == "NCD":
+            toolbox.register("get_distance", normalized_compression_distance)
+        elif conf.distance == "equal":
+            toolbox.register("get_distance", equal_elements_distance)
+        else:
+            raise RuntimeError("unknown configuration value for distance: " + str(conf.distance))
 
     def train(self, number_generations) -> tools.Logbook:
-
-        return algorithms.eaMuPlusLambda(
-            toolbox=self.toolbox,
-            ngen=number_generations,
-            halloffame=self.hof,
-            include_parents_in_next_generation=self.conf.include_parents_in_next_generation
-        )
-#         return algorithms.eaGenerateUpdate(self.toolbox, ngen=number_generations, halloffame=self.hof)
+        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)

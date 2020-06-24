@@ -7,6 +7,9 @@ from typing import Callable, Union
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import multiprocessing
 
+from tools.configurations import EpisodeRunnerCfg
+from tools.env_handler import EnvHandler
+
 # This is used by the episode running to get the current worker's env
 get_current_worker = get_worker
 
@@ -39,13 +42,14 @@ class _EnvPlugin(WorkerPlugin):
     This WorkerPlugin initialized a gym-object and binds it to the worker whenever a new worker gets started
     """
 
-    def __init__(self, env_id):
+    def __init__(self, env_id, config: EpisodeRunnerCfg):
         self.env_id = env_id
+        self.env_handler = EnvHandler(config)
 
     def setup(self, worker: Worker):
         # called exactly once for every worker before it executes the first task
-        worker.env = gym.make(self.env_id)
         logging.info("creating new env for worker: " + str(worker))
+        worker.env = self.env_handler.make_env(self.env_id)
 
     def teardown(self, worker: Worker):
         pass
@@ -68,15 +72,17 @@ class DaskHandler:
         # And because lower the thread-count from the default, we must increase the number of workers
         cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
                                     silence_logs=worker_log_level,
-                                    n_workers=multiprocessing.cpu_count())
+                                    n_workers=multiprocessing.cpu_count(),
+                                    interface='lo')
         cls._client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')
+        logging.info("dask-dashboard available at port: " + str(cls._client.scheduler_info()['services']['dashboard']))
 
     @classmethod
-    def init_workers_with_env(cls, env_id: str):
+    def init_workers_with_env(cls, env_id: str, config: EpisodeRunnerCfg):
         if not cls._client:
             raise RuntimeError("Client not initialised. Please call init_dask before calling this method. ")
-        cls._client.register_worker_plugin(_EnvPlugin(env_id), name='env-plugin')
+        cls._client.register_worker_plugin(_EnvPlugin(env_id, config), name='env-plugin')
 
     @classmethod
     def stop_dask(cls):

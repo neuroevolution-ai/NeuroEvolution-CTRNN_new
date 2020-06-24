@@ -58,9 +58,9 @@ class TestCTRNN:
         bp = brain_param_simple
         brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                                   config=ctrnn_config)
-        assert np.array_equal(bp.V, brain.V)
-        assert np.array_equal(bp.W, brain.W)
-        assert np.array_equal(bp.T, brain.T)
+        assert np.array_equal(bp.V, brain.V.toarray())
+        assert np.array_equal(bp.W, brain.W.toarray())
+        assert np.array_equal(bp.T, brain.T.toarray())
         assert np.array_equal(bp.y0, brain.y0)
         assert np.array_equal(bp.y0, brain.y)
 
@@ -136,9 +136,6 @@ class TestCTRNN:
         with pytest.raises(AssertionError):
             ContinuousTimeRNN(input_space=box2d, output_space=box2d,
                               individual=ind[:-1], config=ctrnn_config)
-        with pytest.raises(AssertionError):
-            ContinuousTimeRNN(input_space=box2d, output_space=box2d,
-                              individual=np.append(ind, [1]), config=ctrnn_config)
 
     def test_get_individual_size(self, ctrnn_config):
         in_space = Box(-1, 1, shape=[3])

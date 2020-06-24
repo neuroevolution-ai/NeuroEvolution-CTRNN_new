@@ -16,7 +16,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: ConfigClass, stats, map_func=map,
-                 hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
+                 from_checkoint=None):
         pass
 
     @staticmethod
@@ -34,3 +34,25 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         Path(cp_base_path).mkdir(parents=True, exist_ok=True)
         logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
         toolbox.register("checkpoint", write_checkpoint, cp_base_path, checkpoint_frequency)
+
+    @staticmethod
+    def create_logbook():
+        logbook = tools.Logbook()
+        logbook.header = "gen", "nevals", "fitness", "novelty"
+        logbook.chapters["fitness"].header = "min", "avg", "std", "max"
+        logbook.chapters["novelty"].header = "min", "avg", "std", "max"
+        logbook.columns_len = [3, 3, 0, 0]
+        logbook.chapters["fitness"].columns_len = [8] * 4
+        logbook.chapters["novelty"].columns_len = [8] * 4
+        return logbook
+
+    @staticmethod
+    def strip_strategy_from_population(population, mutation_learned):
+        """Sometimes strategy parameters are learned along side brain parameters. In these caeses
+        the strategy parameters need to be stripped  from the population before sending the brain genomes to
+        the evaluation. """
+        if len(population) == 0:
+            return population
+        if mutation_learned:
+            return list(np.array(population)[:, :-2])
+        return population

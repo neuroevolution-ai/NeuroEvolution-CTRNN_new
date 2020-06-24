@@ -15,3 +15,8 @@ results
 .dmypy.json
 .lock
 dask-worker-space/
+/MUJOCO_LOG.TXT
+
+*.latex
+*.png
+/configurations/exp_design_space.json

@@ -8,15 +8,17 @@ from typing import Type
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.layered_nn import LayeredNN
 from brains.i_brain import IBrain
+from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds
+from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
+from tools.env_handler import EnvHandler
 
 
 # from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
@@ -40,9 +42,10 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 
-        if self.config.optimizer.type == "CMA_ES":
+        self.optimizer_class: Type[IOptimizer]
+        if self.config.optimizer.type == 'CMA_ES':
             self.optimizer_class = OptimizerCmaEs
-        elif self.config.optimizer.type == "MU_ES":
+        elif self.config.optimizer.type == 'MU_ES':
             self.optimizer_class = OptimizerMuPlusLambda
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
@@ -50,7 +53,8 @@ class Experiment(object):
         self._setup()
 
     def _setup(self):
-        env = gym.make(self.config.environment)
+        env_handler = EnvHandler(self.config.episode_runner)
+        env = env_handler.make_env(self.config.environment)
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
@@ -58,14 +62,6 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
-        if env.action_space.shape:
-            # e.g. box2d, mujoco
-            self.output_size = env.action_space.shape[0]
-            self.discrete_actions = False
-        else:
-            # e.g. lunarlander
-            self.output_size = env.action_space.n
-            self.discrete_actions = True
 
         self.brain_class.set_masks_globally(config=self.config.brain,
                                             input_space=self.input_space,
@@ -78,16 +74,25 @@ class Experiment(object):
 
         self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
                                        brain_conf=self.config.brain,
-                                       discrete_actions=self.discrete_actions, brain_class=self.brain_class,
+                                       action_space=self.output_space, brain_class=self.brain_class,
                                        input_space=self.input_space, output_space=self.output_space, env_template=env)
 
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
+        stats_novel = tools.Statistics(key=lambda ind: ind.novelty)
+        stats = tools.MultiStatistics(fitness=stats_fit, novelty=stats_novel)
+
+        stats.register("min", np.min)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
-        stats.register("min", np.min)
         stats.register("max", np.max)
+        if self.config.use_worker_processes:
+            map_func = DaskHandler.dask_map
+        else:
+            map_func = map
+            if self.config.episode_runner.reuse_env:
+                logging.warning("can't reuse env on workers without multithreading. ")
 
-        self.optimizer = self.optimizer_class(map_func=DaskHandler.dask_map,
+        self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
                                               stats=stats, from_checkoint=self.from_checkpoint)
@@ -101,48 +106,56 @@ class Experiment(object):
         start_time = time.time()
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-        if self.config.episode_runner.reuse_env:
-            DaskHandler.init_workers_with_env(self.env_template.spec.id)
+        if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
+            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
             hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
-            output_size=self.output_size,
+            output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
         DaskHandler.stop_dask()
         print("Done")
 
     def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env = gym.make(self.config.environment)
+        env_handler = EnvHandler(self.config.episode_runner)
+        env = env_handler.make_env(self.config.environment)
         env.render()
+        if hasattr(self.config.optimizer, "mutation_learned"):
+            # sometimes there are also optimizing strategies encoded in the genome. These parameters
+            # are not part of the brain and need to be removed from the genome before initializing the brain.
+            individuals = self.optimizer.strip_strategy_from_population(individuals,
+                                                                        self.config.optimizer.mutation_learned)
 
         for individual in individuals:
             set_random_seeds(self.config.random_seed, env)
+
             brain = self.brain_class(input_space=self.input_space,
                                      output_space=self.output_space,
                                      individual=individual,
                                      config=self.config.brain)
 
-            brain_vis = brain_vis_handler.launch_new_visualization(brain)
             for i in range(rounds_per_individual):
                 fitness_current = 0
                 ob = env.reset()
                 done = False
                 if neuron_vis:
                     brain_vis = brain_vis_handler.launch_new_visualization(brain)
-
+                else:
+                    brain_vis = None
+                step_count = 0
                 while not done:
+                    step_count += 1
                     action = brain.step(ob)
-                    if neuron_vis:
+                    if brain_vis:
                         brain_vis.process_update(in_values=ob, out_values=action)
-                    if self.discrete_actions:
-                        action = np.argmax(action)
+                    action = output_to_action(action, self.output_space)
                     ob, rew, done, info = env.step(action)
                     if slow_down:
                         time.sleep(slow_down / 1000.0)
                     fitness_current += rew
                     env.render()
-                print(fitness_current)
+                print("steps: " + str(step_count) + " \tReward: " + str(fitness_current))

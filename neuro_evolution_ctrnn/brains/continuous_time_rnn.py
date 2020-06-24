@@ -5,6 +5,7 @@ from gym.spaces import Space, Box, Discrete
 import logging
 import math
 from brains.i_brain import IBrain
+from scipy import sparse
 
 
 # noinspection PyPep8Naming
@@ -40,12 +41,12 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
         W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
         T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
-        self.V = np.zeros(self.v_mask.shape, float)
-        self.W = np.zeros(self.w_mask.shape, float)
-        self.T = np.zeros(self.t_mask.shape, float)
-        self.V[self.v_mask] = [element for element in individual[0:V_size]]
-        self.W[self.w_mask] = [element for element in individual[V_size:V_size + W_size]]
-        self.T[self.t_mask] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+        self.V = sparse.csr_matrix(self.v_mask, dtype=float)
+        self.W = sparse.csr_matrix(self.w_mask, dtype=float)
+        self.T = sparse.csr_matrix(self.t_mask, dtype=float)
+        self.V.data[:] = [element for element in individual[0:V_size]]
+        self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
+        self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
         index: int = V_size + W_size + T_size
 
@@ -79,16 +80,39 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
-                self.W[j][j] = -abs(self.W[j][j])
+                if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
+                    self.W[j, j] = -abs(self.W[j, j])
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
         if self.config.normalize_input:
-            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+            ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
+
+        if isinstance(self.input_space, Discrete):
+            ob_new = np.zeros(self.input_space.n)
+            ob_new[ob] = 1
+            ob = ob_new
+        else:
+            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+            ob = ob.flatten()
+
+        if self.config.use_bias:
+            ob = np.r_[ob, [1]]
 
         # Differential equation
-        # value = alpha * np.tanh(self.y) + (1-alpha) * np.sin(self.y)
-        dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
+        if self.config.neuron_activation == "relu":
+            y_ = np.maximum(0, self.y)
+        elif self.config.neuron_activation == "tanh":
+            y_ = np.tanh(self.y)
+        elif self.config.neuron_activation == "learned":
+            # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
+            raise NotImplementedError("learned activations are not yet implemented")
+        else:
+            raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+
+        if self.config.neuron_activation_inplace:
+            self.y = y_
+        dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
@@ -102,7 +126,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         else:
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, self.T))
+        o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
         return o
 
     @classmethod
@@ -119,6 +143,10 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             individual_size += 2
         elif config.optimize_state_boundaries == "fixed":
             individual_size += 0
+
+        if config.use_bias:
+            individual_size += config.number_neurons
+
         return individual_size
 
     @classmethod
@@ -130,6 +158,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             logging.warning("masks are already present in class")
         # todo: also store masks in checkpoints and hof.
         v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
+        if config.use_bias:
+            v_mask = np.c_[v_mask, np.ones(config.number_neurons, dtype=bool)]
+
         w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                     config.w_mask_param)
         t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)
@@ -145,7 +176,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                 raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
             base = mask_param
             indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
-            indices = [0] + indices
+            indices = indices
             result = np.zeros((n, m), dtype=bool)
 
             # when the matrix is rectangular, we need to fine a pseudo-diagonal instead an

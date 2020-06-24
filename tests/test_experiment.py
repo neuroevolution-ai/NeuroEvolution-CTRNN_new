@@ -1,6 +1,5 @@
 from tools.experiment import Experiment
 from attr import evolve
-import glob
 import os
 from tools.helper import config_from_file, sample_from_design_space, config_from_dict
 import json
@@ -26,7 +25,7 @@ class TestExperiment:
         accepted_results = [-99.11361202453168,  # result on bjoern's notebook
                             -98.95448135483025,  # result on bjoern's desktop
                             ]
-        assert experiment.result_handler.result_log[-1]["max"] in accepted_results
+        assert experiment.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
 
     def test_run_atari_setup(self, tmpdir, mocker, config):
         config = evolve(config, environment='Qbert-ram-v0')

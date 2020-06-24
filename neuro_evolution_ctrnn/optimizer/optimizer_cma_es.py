@@ -21,7 +21,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
     def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerCmaEsCfg, stats, map_func=map,
                  hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
         super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
-                                             hof, from_checkoint)
+                                              from_checkoint)
         self.toolbox = toolbox = base.Toolbox()
         self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats
@@ -38,7 +38,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.logbook = tools.Logbook()
-            toolbox.logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+            toolbox.logbook = self.create_logbook()
             toolbox.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
                                             lambda_=conf.population_size)
         toolbox.register("map", map_func)

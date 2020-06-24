@@ -16,6 +16,11 @@ class EpisodeRunnerCfg:
     number_fitness_runs: int
     keep_env_seed_fixed_during_generation: bool
     reuse_env: bool
+    behavioral_interval: int
+    behavioral_max_length: int
+    behavior_from_observation: bool
+    max_steps_per_run: int
+    max_steps_penalty: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -34,6 +39,9 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask: str
     t_mask_param: float
     parameter_perturbations: float
+    neuron_activation: str
+    neuron_activation_inplace: bool
+    use_bias: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -56,26 +64,23 @@ class LSTMCfg(IBrainCfg):
 class IOptimizerCfg(abc.ABC):
     type: str
     checkpoint_frequency: int
+    hof_size: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
-    population_size: int
     initial_gene_range: int
-    mate_indpb_1: float
-    mate_indpb_2: float
-    mutation_Gaussian_sigma_1: float
-    mutation_Gaussian_sigma_2: float
-    mutation_Gaussian_sigma_3: float
-    mutation_Gaussian_indpb_1: float
-    mutation_Gaussian_indpb_2: float
-    mutation_Gaussian_indpb_3: float
-    elitist_ratio: int
+    mutation_learned: bool
     tournsize: int
-    mu: float
-    lambda_: float
+    mu: int
+    lambda_: int
     mutpb: float
-    include_parents_in_next_generation: float
+    extra_from_hof: int
+    novelty_weight: float
+    distance: str
+    novelty_nearest_k: int
+    max_recorded_behaviors: int
+    recorded_behaviors_per_generation: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -93,3 +98,4 @@ class ExperimentCfg:
     episode_runner: EpisodeRunnerCfg
     optimizer: OptimizerCmaEsCfg
     raw_dict: dict
+    use_worker_processes: bool

@@ -6,10 +6,27 @@ import pickle
 import os
 import logging
 from typing import Type
+from bz2 import compress
+import gym
 
-from tools.configurations import \
-    ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, LSTMCfg, IBrainCfg,\
-    OptimizerMuLambdaCfg
+from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
+    IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg, LSTMCfg
+
+
+def output_to_action(output, action_space):
+    if isinstance(action_space, gym.spaces.Discrete):
+        return np.argmax(output)
+    elif isinstance(action_space, gym.spaces.tuple.Tuple):
+        index = 0
+        action_list = []
+        for space in action_space:
+            sub_output = output[index:index + space.n]
+            action_list.append(output_to_action(sub_output, space))
+            index += space.n
+        return action_list
+    else:
+        # for output type box, the data is already in the right format
+        return output
 
 
 def walk_dict(node, callback_node, depth=0):
@@ -58,6 +75,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     else:
         raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
+    optimizer_cfg_class: Type[IOptimizerCfg]
     if config_dict["optimizer"]["type"] == "CMA_ES":
         optimizer_cfg_class = OptimizerCmaEsCfg
     elif config_dict["optimizer"]["type"] == "MU_ES":
@@ -104,3 +122,30 @@ def set_random_seeds(seed, env):
     if env:
         env.seed(seed)
         env.action_space.seed(seed)
+
+
+def normalized_compression_distance(a, b, a_len=None, b_len=None):
+    if not a_len:
+        a_len = len(compress(bytearray(a), 1))
+    if not b_len:
+        b_len = len(compress(bytearray(b), 1))
+    ab_len = len(compress(bytearray(a + b), 1))
+    return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
+
+
+def equal_elements_distance(a, b, a_len=None, b_len=None):
+    count = 0
+    for x, y in zip(a, b):
+        if x == y:
+            count += 1
+    # if the new individual is longer, count every new element as novelty
+    return len(a) - count
+
+
+def euklidian_distance(a, b, a_len=None, b_len=None):
+    b = np.array(b).flatten()
+    a = np.array(a).flatten()
+    x = min(len(a), len(b))
+    b = b[:x]
+    a = a[:x]
+    return np.linalg.norm(a - b)

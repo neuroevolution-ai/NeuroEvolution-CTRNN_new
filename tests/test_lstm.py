@@ -1,4 +1,4 @@
-from lstm import LSTMPyTorch, LSTMNumPy
+from brains.lstm import LSTMPyTorch, LSTMNumPy
 from tools.configurations import LSTMCfg
 
 import numpy as np
