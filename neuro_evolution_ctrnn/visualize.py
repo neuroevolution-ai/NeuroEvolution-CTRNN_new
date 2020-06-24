@@ -15,6 +15,9 @@ import logging
 from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_file
+from tools.episode_runner import MemoryEpisodeRunner
+from brains.lstm import LSTMNumPy
+import gym
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -49,6 +52,8 @@ def parse_args(args=None):
     parser.add_argument('--style', metavar='int', type=str,
                         help='Which plot-style should be used? ',
                         default='seaborn-paper')
+
+    parser.add_argument('--memory', type=bool, default=False)
     return parser.parse_args(args)
 
 
@@ -66,12 +71,22 @@ with open(os.path.join(directory, 'Log.json'), 'r') as read_file_log:
 with open(os.path.join(directory, 'Configuration.json'), "r") as read_file:
     conf = json.load(read_file)
 
-if args.neuron_vis or args.hof:
+if args.neuron_vis and args.hof:
     experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
                             result_path="asdasd",
                             from_checkpoint=None)
     t = threading.Thread(target=experiment.visualize, args=[hall_of_fame[0:args.hof], BrainVisualizerHandler(), args.rounds, args.neuron_vis, args.slow_down])
     t.start()
+
+if args.memory:
+    config = config_from_file(os.path.join(directory, 'Configuration.json'))
+    env = gym.make(config.environment)
+    episode_runner = MemoryEpisodeRunner(config=config.episode_runner, brain_conf=config.brain, discrete_actions=False,
+                                         brain_class=LSTMNumPy, input_space=env.observation_space,
+                                         output_space=env.action_space, env_template=env, render=True)
+
+    individual = hall_of_fame[0:1][0]
+    episode_runner.eval_fitness(individual, config.random_seed)
 
 # Plot results
 if args.plot_save or args.plot:

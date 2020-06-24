@@ -64,14 +64,18 @@ class EpisodeRunner(IEpisodeRunner):
 
 class MemoryEpisodeRunner(IEpisodeRunner):
     def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, discrete_actions, brain_class, input_space,
-                 output_space, env_template):
+                 output_space, env_template, render=False):
         super().__init__(config, brain_conf, discrete_actions, brain_class, input_space, output_space, env_template)
+        self.render = render
 
     def eval_fitness(self, individual, seed):
-        if self.config.reuse_env:
+        if self.config.reuse_env and not self.render:
             env = get_current_worker().env
         else:
             env = gym.make(self.env_id)
+
+        if self.render:
+            env.render()
 
         set_random_seeds(seed, env)
         fitness_current = 0
@@ -112,6 +116,9 @@ class MemoryEpisodeRunner(IEpisodeRunner):
                     fitness_current += rew
 
                 t += 1
+
+                if self.render:
+                    env.render()
 
                 if done:
                     break
