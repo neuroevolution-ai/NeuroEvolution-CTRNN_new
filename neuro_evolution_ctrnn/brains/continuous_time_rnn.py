@@ -24,6 +24,12 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         cls.w_mask = w_mask
         cls.t_mask = t_mask
 
+    def learned_sparse(self, mat, percentile):
+        M = np.abs(mat.toarray())
+        p = np.percentile(a=M, q=percentile, interpolation='higher')
+        M[M < p] = 0
+        return sparse.csr_matrix(M, dtype=float)
+
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         super().__init__(input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
@@ -47,6 +53,15 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.V.data[:] = [element for element in individual[0:V_size]]
         self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
         self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+
+        if self.config.v_mask == 'learned':
+            self.V = self.learned_sparse(self.V, self.config.v_mask_param)
+
+        if self.config.w_mask == 'learned':
+            self.W = self.learned_sparse(self.W, self.config.w_mask_param)
+
+        if self.config.t_mask == 'learned':
+            self.T = self.learned_sparse(self.T, self.config.t_mask_param)
 
         index: int = V_size + W_size + T_size
 
@@ -197,6 +212,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             return result
 
         elif mask_type == "dense":
+            return np.ones((n, m), dtype=bool)
+        elif mask_type == "learned":
             return np.ones((n, m), dtype=bool)
         else:
             raise RuntimeError("unknown mask_type: " + str(mask_type))
