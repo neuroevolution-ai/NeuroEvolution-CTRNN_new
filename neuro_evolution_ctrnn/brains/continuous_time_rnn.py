@@ -133,7 +133,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.y = self.y + self.delta_t * dydt
 
         if self.config.parameter_perturbations:
-            self.y = np.random.normal(self.y, self.config.parameter_perturbations)
+            self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
 
         if self.config.optimize_state_boundaries == "legacy":
             for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
