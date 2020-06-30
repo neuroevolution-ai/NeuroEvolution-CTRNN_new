@@ -30,7 +30,8 @@ def lnn_config() -> LayeredNNCfg:
                         number_neurons_layer2=2, cppn_hidden_size1=2, cppn_hidden_size2=2, use_biases=True,
                         indirect_encoding=False)
 
+
 @pytest.fixture
 def lstm_config() -> LSTMCfg:
-    return LSTMCfg(type="LSTM_PyTorch", lstm_num_layers=3, use_biases=True, normalize_input=False,
-                   normalize_input_target=1)
+    return LSTMCfg(type="LSTM_PyTorch", normalize_input=False, normalize_input_target=1, lstm_num_layers=3,
+                   use_biases=True)

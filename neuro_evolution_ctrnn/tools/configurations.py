@@ -12,15 +12,28 @@ class IBrainCfg(abc.ABC):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class EpisodeRunnerCfg:
+class IEpisodeRunnerCfg(abc.ABC):
+    type: str
     number_fitness_runs: int
-    keep_env_seed_fixed_during_generation: bool
     reuse_env: bool
     behavioral_interval: int
     behavioral_max_length: int
     behavior_from_observation: bool
     max_steps_per_run: int
     max_steps_penalty: int
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class StandardEpisodeRunnerCfg(IEpisodeRunnerCfg):
+    keep_env_seed_fixed_during_generation: bool
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class MemoryExperimentCfg(IEpisodeRunnerCfg):
+    observation_frames: int
+    memory_frames: int
+    action_frames: int
+    observation_mask: [int]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -94,8 +107,8 @@ class ExperimentCfg:
     environment: str
     random_seed: int
     number_generations: int
-    brain: ContinuousTimeRNNCfg
-    episode_runner: EpisodeRunnerCfg
-    optimizer: OptimizerCmaEsCfg
+    brain: IBrainCfg
+    episode_runner: IEpisodeRunnerCfg
+    optimizer: IOptimizerCfg
     raw_dict: dict
     use_worker_processes: bool

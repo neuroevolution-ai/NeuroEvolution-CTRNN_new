@@ -11,7 +11,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
-from tools.episode_runner import EpisodeRunner
+from tools.episode_runner import EpisodeRunner, MemoryEpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
@@ -43,12 +43,20 @@ class Experiment(object):
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 
         self.optimizer_class: Type[IOptimizer]
-        if self.config.optimizer.type == 'CMA_ES':
+        if self.config.optimizer.type == "CMA_ES":
             self.optimizer_class = OptimizerCmaEs
-        elif self.config.optimizer.type == 'MU_ES':
+        elif self.config.optimizer.type == "MU_ES":
             self.optimizer_class = OptimizerMuPlusLambda
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
+
+        if self.config.episode_runner.type == "Standard":
+            self.episode_runner_class = EpisodeRunner
+        elif self.config.episode_runner.type == "Memory":
+            self.episode_runner_class = MemoryEpisodeRunner
+        else:
+            raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
+                               + str(self.config.episode_runner.type))
 
         self._setup()
 
@@ -72,10 +80,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = EpisodeRunner(conf=self.config.episode_runner,
-                                       brain_conf=self.config.brain,
-                                       action_space=self.output_space, brain_class=self.brain_class,
-                                       input_space=self.input_space, output_space=self.output_space, env_template=env)
+        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_conf=self.config.brain,
+                                       brain_class=self.brain_class, input_space=self.input_space,
+                                       output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         stats_novel = tools.Statistics(key=lambda ind: ind.novelty)

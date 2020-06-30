@@ -5,12 +5,14 @@ import copy
 import pickle
 import os
 import logging
+import torch
 from typing import Type
 from bz2 import compress
 import gym
 
-from tools.configurations import ExperimentCfg, OptimizerCmaEsCfg, EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg, \
-    IBrainCfg, OptimizerMuLambdaCfg, IOptimizerCfg, LSTMCfg
+from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
+                                  StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
+                                  LSTMCfg, IBrainCfg)
 
 
 def output_to_action(output, action_space):
@@ -83,8 +85,16 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
+    if config_dict["episode_runner"]["type"] == "Standard":
+        episode_runner_cfg_class = StandardEpisodeRunnerCfg
+    elif config_dict["episode_runner"]["type"] == "Memory":
+        episode_runner_cfg_class = MemoryExperimentCfg
+    else:
+        raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
+                           + str(config_dict["episode_runner"]["type"]))
+
     # turn json into nested class so python's type-hinting can do its magic
-    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
+    config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)
@@ -119,6 +129,7 @@ def set_random_seeds(seed, env):
 
     random.seed(seed)
     np.random.seed(seed)
+    torch.manual_seed(seed)
     if env:
         env.seed(seed)
         env.action_space.seed(seed)
