@@ -129,7 +129,7 @@ def normalized_compression_distance(a, b, a_len=None, b_len=None):
         a_len = len(compress(bytearray(a), 1))
     if not b_len:
         b_len = len(compress(bytearray(b), 1))
-    ab_len = len(compress(bytearray(a + b), 1))
+    ab_len = len(compress(bytearray(np.concatenate((a, b))), 1))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
 
 
