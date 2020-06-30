@@ -35,6 +35,7 @@
     "parameter_perturbations": [0.001, 0.0, 0.01]
   },
   "episode_runner": {
+    "type": "Standard",
     "keep_env_seed_fixed_during_generation": [true, false],
     "number_fitness_runs": [1, 2, 5],
     "reuse_env": true
