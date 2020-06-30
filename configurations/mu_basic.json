@@ -8,7 +8,6 @@
     "hof_size": 10,
     "checkpoint_frequency": 10,
     "initial_gene_range": 2,
-
     "tournsize": 7,
     "mu": 10,
     "extra_from_hof": 0,

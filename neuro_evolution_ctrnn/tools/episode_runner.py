@@ -7,12 +7,12 @@ from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 from brains.i_brain import IBrain
 
+
 class IEpisodeRunner:
-    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, action_space, brain_class, input_space,
-                 output_space, env_template):
+    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+                 env_template):
         self.config = config
         self.brain_conf = brain_conf
-        self.action_space = action_space
         self.brain_class = brain_class
         self.input_space = input_space
         self.output_space = output_space
@@ -23,9 +23,9 @@ class IEpisodeRunner:
 
 
 class EpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: StandardEpisodeRunnerCfg, brain_conf: IBrainCfg, action_space, brain_class, input_space,
-                 output_space, env_template):
-        super().__init__(config, brain_conf, action_space, brain_class, input_space, output_space, env_template)
+    def __init__(self, config: StandardEpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+                 env_template):
+        super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
         self.env_handler = EnvHandler(self.config)
 
     def eval_fitness(self, individual, seed):
@@ -36,7 +36,7 @@ class EpisodeRunner(IEpisodeRunner):
                 if hasattr(self, "env"):
                     env = self.env
                 else:
-                    self.env = env =  self.env_handler.make_env(self.env_id)
+                    self.env = env = self.env_handler.make_env(self.env_id)
         else:
             env = self.env_handler.make_env(self.env_id)
         set_random_seeds(seed, env)
@@ -58,9 +58,9 @@ class EpisodeRunner(IEpisodeRunner):
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, action_space, brain_class, input_space,
-                 output_space, env_template):
-        super().__init__(config, brain_conf, action_space, brain_class, input_space, output_space, env_template)
+    def __init__(self, config: MemoryExperimentCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+                 env_template):
+        super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed):
         if self.config.reuse_env:

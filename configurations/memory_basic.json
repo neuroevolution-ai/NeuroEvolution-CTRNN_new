@@ -2,15 +2,20 @@
   "environment": "Reacher-v2",
   "random_seed": 0,
   "number_generations": 2500,
+  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 200,
     "sigma": 1.0,
-    "checkpoint_frequency": 10
+    "checkpoint_frequency": 10,
+    "hof_size": 10
   },
   "brain": {
     "type": "CTRNN",
     "number_neurons": 10,
+    "neuron_activation": "relu",
+    "neuron_activation_inplace": false,
+    "use_bias": true,
     "delta_t": 0.05,
     "normalize_input": false,
     "normalize_input_target": 2,
@@ -31,6 +36,11 @@
     "type": "Memory",
     "number_fitness_runs": 50,
     "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "behavioral_interval": 10,
+    "behavioral_max_length": 100,
+    "behavior_from_observation": true,
     "observation_frames": 20,
     "memory_frames": 20,
     "action_frames": 50,

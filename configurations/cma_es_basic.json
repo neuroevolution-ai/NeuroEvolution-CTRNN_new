@@ -36,7 +36,7 @@
     "type": "Standard",
     "number_fitness_runs": 1,
     "reuse_env": true,
-    "keep_env_seed_fixed_during_generation": false
+    "keep_env_seed_fixed_during_generation": false,
     "behavioral_interval": 0,
     "behavioral_max_length": 0,
     "behavior_from_observation": false,
