@@ -19,7 +19,7 @@
     "delta_t": 0.05,
     "normalize_input": false,
     "normalize_input_target": 2,
-    "optimize_state_boundaries": "per_neuron",
+    "optimize_state_boundaries": "legacy",
     "clipping_range_max": 1.0,
     "clipping_range_min": -1.0,
     "optimize_y0": true,
