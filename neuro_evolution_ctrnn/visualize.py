@@ -17,75 +17,92 @@ from brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_file
 import numpy as np
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
+parser = argparse.ArgumentParser(description="Visualize Experiments")
 
-def parse_args(args=None):
-    parser = argparse.ArgumentParser(description='visualize CTRNN')
-    parser.add_argument('--dir', metavar='dir', type=str,
-                        help='path to the simulation result',
-                        default=os.path.join('..', 'CTRNN_Simulation_Results', 'data', '2020-05-26_10-51-17'))
+parser.add_argument("--dir", metavar="dir", type=str, help="Directory path to the simulation result",
+                    default=os.path.join("..", "CTRNN_Simulation_Results", "data", "2020-05-26_10-51-17"))
 
-    parser.add_argument('--plot', dest='plot', action='store_true')
-    parser.add_argument('--no-plot', dest='plot', action='store_false')
-    parser.set_defaults(plot=True)
+parser.add_argument("--plot", dest="plot", action="store_true")
 
-    parser.add_argument('--plot-novelty', dest='plot_novelty', action='store_true')
-    parser.add_argument('--no-plot-novelty', dest='plot_novelty', action='store_false')
-    parser.set_defaults(plot_novelty=False)
-    parser.add_argument('--plot-save', type=str,
-                        help='a filename where the plot should be saved',
-                        default=None)
+parser.add_argument("--plot-save", type=str, help="A filename where the plot should be saved", default=None)
 
-    parser.add_argument('--smooth', type=int,
-                        help='how strong should the lines be smoothed? (0 to disable)',
-                        default=0)
-    parser.add_argument('--neuron-vis', dest='neuron_vis', action='store_true')
-    parser.add_argument('--no-neuron-vis', dest='neuron_vis', action='store_false')
-    parser.set_defaults(neuron_vis=True)
+parser.add_argument("--plot-novelty", dest="plot_novelty", action="store_true")
 
-    parser.add_argument('--hof', type=int,
-                        help='show how many individuals in environment?',
-                        default=0)
-    parser.add_argument('--slow-down', type=int,
-                        help='Insert a pause between iteration (milliseconds)',
-                        default=0)
-    parser.add_argument('--rounds', metavar='int', type=int,
-                        help='how many rounds per individual?',
-                        default=1)
-    parser.add_argument('--style', metavar='int', type=str,
-                        help='Which plot-style should be used? ',
-                        default='seaborn-paper')
+parser.add_argument("--render", action="store_true")
 
-    return parser.parse_args(args)
+parser.add_argument("--record", action="store_true")
 
+parser.add_argument("--record-force", action="store_true")
 
-args = parse_args()
-directory = os.path.join(args.dir)
+parser.add_argument("--smooth", type=int, help="How strong should the lines be smoothed? (0 to disable)", default=0)
 
-with open(os.path.join(directory, 'HallOfFame.pickle'), "rb") as read_file_hof:
+parser.add_argument("--neuron-vis", dest="neuron_vis", action="store_true")
+
+parser.add_argument("--hof", type=int, help="How many individuals shall be visualized?", default=0)
+
+parser.add_argument("--slow-down", type=int, help="Insert a pause between the iterations in milliseconds", default=0)
+
+parser.add_argument("--rounds", metavar="int", type=int, help="How many episodes shall be conducted per individual?",
+                    default=1)
+
+parser.add_argument("--style", metavar="int", type=str, help="Which plot style should be used?",
+                    default="seaborn-paper")
+
+args = parser.parse_args()
+
+with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+    creator.create("Individual", list, typecode="b", fitness=creator.FitnessMax)
     hall_of_fame = pickle.load(read_file_hof)
-with open(os.path.join(directory, 'Log.pkl'), 'rb') as read_file_log:
+
+with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
     log = pickle.load(read_file_log)
 
-with open(os.path.join(directory, 'Configuration.json'), "r") as read_file:
+with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
     conf = json.load(read_file)
+    config = config_from_file(os.path.join(args.dir, "Configuration.json"))
 
-if args.neuron_vis or args.hof:
-    experiment = Experiment(configuration=config_from_file(os.path.join(directory, 'Configuration.json')),
-                            result_path="asdasd",
+if args.neuron_vis or args.hof or args.render or args.record:
+    experiment = Experiment(configuration=config,
+                            result_path="/tmp/not-used",
                             from_checkpoint=None)
-    t = threading.Thread(target=experiment.visualize,
-                         args=[hall_of_fame[0:args.hof], BrainVisualizerHandler(), args.rounds, args.neuron_vis,
-                               args.slow_down])
-    t.start()
+
+    if len(hall_of_fame) < args.hof:
+        raise RuntimeError(
+            "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(args.hof, len(hall_of_fame)))
+
+    individuals = hall_of_fame[0:args.hof]
+
+    if args.rounds > 1:
+        # If multiple episodes are used per individual then we need to have either different recording directories
+        # or simply overwrite the old recording (force=True)
+        record_force = True
+    else:
+        record_force = args.record_force
+
+    if hasattr(config.optimizer, "mutation_learned"):
+        # sometimes there are also optimizing strategies encoded in the genome. These parameters
+        # are not part of the brain and need to be removed from the genome before initializing the brain.
+        individuals = experiment.optimizer.strip_strategy_from_population(individuals,
+                                                                          config.optimizer.mutation_learned)
+
+    for i, individual in enumerate(individuals):
+        if args.record:
+            record = os.path.join(args.dir, "video_{}".format(i))
+            logging.info("Recording an individual to {}".format(record))
+        else:
+            record = None
+
+        t = threading.Thread(target=experiment.ep_runner.eval_fitness,
+                             args=[individual, config.random_seed, args.render, record, record_force, args.rounds,
+                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down])
+        t.start()
 
 
 # Plot results
-
 def my_plot(axis, *nargs, **kwargs, ):
     lst = list(nargs)
     if args.smooth:
