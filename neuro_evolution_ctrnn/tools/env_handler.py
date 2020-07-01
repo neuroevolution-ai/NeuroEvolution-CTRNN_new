@@ -1,4 +1,5 @@
 import gym
+import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import IEpisodeRunnerCfg
