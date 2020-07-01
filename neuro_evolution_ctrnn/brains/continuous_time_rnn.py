@@ -159,9 +159,6 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         elif config.optimize_state_boundaries == "fixed":
             individual_size += 0
 
-        if config.use_bias:
-            individual_size += config.number_neurons
-
         return individual_size
 
     @classmethod
