@@ -48,12 +48,12 @@ param = BrainParam(
                 [0, 0, 0, 1]]),
     W=np.array([[-1, 0, 0, 0],
                 [0, -1, 0, 0],
-                [0, 0, 1, 0],
+                [0, 0, 0, 0],
                 [0, 0, 0, -1]]),
     T=np.array([[0, 0, 1, 0],
                 [0, 0, -1, 1],
                 [0, 0, -1, 1],
-                [.5, .5, .5, -.5],
+                [2, 2, 2, -3],
                 [1, 0, 0, 0],
                 [0, 1, 0, 0]]).flatten(order='F'),
     y0=np.array([]), clip_min=np.array([]), clip_max=np.array([]))
@@ -61,21 +61,27 @@ param = BrainParam(
 ind = param_to_genom(param)
 
 env = experiment.env_template
-for i in range(400):
+for i in range(1):
     brain = ContinuousTimeRNN(input_space=experiment.input_space, output_space=experiment.output_space, individual=ind,
                               config=cfg_exp.brain)
     ob = env.reset()
-    # env.render()
+    env.unwrapped.input_data = [0, 1, 0, 1, 1]
+    env.unwrapped.target = env.unwrapped.target_from_input_data(env.unwrapped.input_data)
+
+    env.render()
     done = False
     fitness_current = 0
     while not done:
         brain_output = brain.step(ob)
         action = output_to_action(brain_output, experiment.output_space)
+        print("act: " + str(action))
         ob, rew, done, info = env.step(action)
         fitness_current += rew
         if rew < 0:
             print("error")
             env.render()
+
+        env.render()
     print('score: ' + str(fitness_current))
 
 # todo: use brain_vis to visualize this
