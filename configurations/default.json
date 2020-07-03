@@ -4,11 +4,16 @@
   "number_generations": 2,
   "use_worker_processes": true,
   "optimizer": {
-    "type": "CMA_ES",
-    "population_size": 10,
-    "sigma": 1.0,
-    "checkpoint_frequency": 0,
-    "hof_size": 5
+    "type": "MU_ES",
+    "hof_size": 6,
+    "checkpoint_frequency": 10,
+    "initial_gene_range": 2,
+    "mutation_learned": true,
+    "tournsize": 3,
+    "mu": 30,
+    "extra_from_hof": 2,
+    "lambda_": 60,
+    "mutpb": 0.8
   },
   "brain": {
     "type": "CTRNN",
@@ -48,5 +53,6 @@
     "recorded_behaviors_per_generation": 5,
     "novelty_nearest_k": 5,
     "novelty_weight": 0.2
+
   }
 }
