@@ -56,6 +56,7 @@ def parse_args(args=None):
     parser.add_argument('--style', metavar='int', type=str,
                         help='Which plot-style should be used? ',
                         default='seaborn-paper')
+
     return parser.parse_args(args)
 
 

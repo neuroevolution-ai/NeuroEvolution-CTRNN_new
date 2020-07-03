@@ -1,7 +1,7 @@
 import gym
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import EpisodeRunnerCfg
+from tools.configurations import IEpisodeRunnerCfg
 
 from gym import Wrapper
 from bz2 import BZ2Compressor
@@ -12,7 +12,7 @@ import numpy as np
 class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
-    def __init__(self, config: EpisodeRunnerCfg):
+    def __init__(self, config: IEpisodeRunnerCfg):
         self.conf = config
 
     def make_env(self, env_id: str):
@@ -71,7 +71,8 @@ class BehaviorWrapper(Wrapper):
             self.aggregate = np.array(data)
             self.aggregate.fill(0)
 
-        self.aggregate += np.array(data) / self.behavioral_interval
+        if self.behavioral_interval != 0:
+            self.aggregate += np.array(data) / self.behavioral_interval
 
         if self.step_count * self.behavioral_interval < self.behavioral_max_length:
             if self.step_count % self.behavioral_interval == 0:

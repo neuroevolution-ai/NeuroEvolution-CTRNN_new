@@ -7,7 +7,7 @@ from typing import Callable, Union
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import multiprocessing
 
-from tools.configurations import EpisodeRunnerCfg
+from tools.configurations import IEpisodeRunnerCfg
 from tools.env_handler import EnvHandler
 
 # This is used by the episode running to get the current worker's env
@@ -42,7 +42,7 @@ class _EnvPlugin(WorkerPlugin):
     This WorkerPlugin initialized a gym-object and binds it to the worker whenever a new worker gets started
     """
 
-    def __init__(self, env_id, config: EpisodeRunnerCfg):
+    def __init__(self, env_id, config: IEpisodeRunnerCfg):
         self.env_id = env_id
         self.env_handler = EnvHandler(config)
 
@@ -79,7 +79,7 @@ class DaskHandler:
         logging.info("dask-dashboard available at port: " + str(cls._client.scheduler_info()['services']['dashboard']))
 
     @classmethod
-    def init_workers_with_env(cls, env_id: str, config: EpisodeRunnerCfg):
+    def init_workers_with_env(cls, env_id: str, config: IEpisodeRunnerCfg):
         if not cls._client:
             raise RuntimeError("Client not initialised. Please call init_dask before calling this method. ")
         cls._client.register_worker_plugin(_EnvPlugin(env_id, config), name='env-plugin')

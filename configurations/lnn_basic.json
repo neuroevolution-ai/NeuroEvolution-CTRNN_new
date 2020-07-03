@@ -22,6 +22,7 @@
     "indirect_encoding": false
   },
   "episode_runner": {
+    "type": "Standard",
     "keep_env_seed_fixed_during_generation": false,
     "number_fitness_runs": 1,
     "reuse_env": false,

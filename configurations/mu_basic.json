@@ -47,8 +47,9 @@
     "behavior_from_observation": false
   },
   "episode_runner": {
-    "keep_env_seed_fixed_during_generation": true,
-    "number_fitness_runs": 3,
+    "type": "Standard",
+    "keep_env_seed_fixed_during_generation": false,
+    "number_fitness_runs": 1,
     "reuse_env": true,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0
