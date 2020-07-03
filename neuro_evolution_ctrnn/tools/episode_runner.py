@@ -60,7 +60,7 @@ class EpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / self.conf.number_fitness_runs, compressed_behavior
+        return fitness_total / self.config.number_fitness_runs, compressed_behavior
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):
