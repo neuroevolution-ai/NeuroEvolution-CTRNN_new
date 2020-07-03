@@ -39,7 +39,7 @@ class PygameBrainVisualizer(object):
 
 
     def process_update(self, in_values, out_values):
-        Pygame.pygame(self)
+        Pygame.pygame(self, in_values, out_values)
         #Pyvis.pyvis(self)       # Browser
         #GraphTool.graphTool(self)      # PDF
         #Netwulf.netwulf(self)   # Browser

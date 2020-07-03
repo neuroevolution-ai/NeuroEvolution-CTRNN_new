@@ -6,13 +6,23 @@ class Matplotlib():
     def matplotlib(self):
         #G = nx.barabasi_albert_graph(100,m=1)
 
-        g = nx.Graph()
+        #g = nx.Graph()
 
         global brainSate
         brainSate = self.brain.y
         brainWeight = self.brain.W
         print(brainWeight)
 
+        G = nx.Graph()
+
+        G.add_nodes_from(brainSate)
+
+        def Convert(lst):
+            res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
+            return res_dct
+
+        dict = Convert(brainSate)
+        print(dict)
 
         arr = brainSate
         for i in range(0, 29):
@@ -32,12 +42,13 @@ class Matplotlib():
         # G.add_edge(1, 2, weight=1)
 
 
-        fig = plt.figure()
+        #fig = plt.figure()
         #nx.draw(g, with_labels=True, node_color="skyblue", node_size=300, edge_color="white")
-        nx.draw(g, pos2)
+        #nx.draw(g, pos2)
+        nx.draw(G)
         #nx.draw_networkx_nodes(g, pos2)
-        fig.set_facecolor("#eaeaea")
+        #fig.set_facecolor("#eaeaea")
         plt.show()
 
-        time.sleep(10)
+        time.sleep(1)
         return pos2
