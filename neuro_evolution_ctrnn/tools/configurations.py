@@ -83,7 +83,6 @@ class IOptimizerCfg(abc.ABC):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
-    mutation_learned: bool
     tournsize: int
     mu: int
     lambda_: int

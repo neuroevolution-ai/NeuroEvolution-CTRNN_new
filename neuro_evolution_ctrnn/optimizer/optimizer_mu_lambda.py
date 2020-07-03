@@ -34,8 +34,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox.register("map", map_func)
         toolbox.register("evaluate", eval_fitness)
 
-        if self.conf.mutation_learned:
-            individual_size += 2
+        # add two genes for strategy parameters used in mutate
+        individual_size += 2
 
         toolbox.register("indices", np.random.uniform,
                          -self.conf.initial_gene_range,
@@ -84,12 +84,9 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox.register("shape_fitness", shape_fitness)
         toolbox.register("mate", mate)
         toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=self.conf.mutation_learned)
+                         mutation_learned=True)
 
-        if self.conf.mutation_learned:
-            toolbox.register("mutate", fct_mutation_learned)
-        else:
-            toolbox.register("mutate", mutate)
+        toolbox.register("mutate", fct_mutation_learned)
         toolbox.conf = conf
         toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
 
