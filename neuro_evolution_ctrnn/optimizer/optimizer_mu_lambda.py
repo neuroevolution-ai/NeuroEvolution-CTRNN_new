@@ -64,10 +64,11 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
         def shape_fitness(population):
-            novel_counter = 0
-            for ind in sorted(population, key=lambda x: x.novelty):
-                ind.novelty_rank = novel_counter
-                novel_counter += 1
+            if conf.novelty:
+                novel_counter = 0
+                for ind in sorted(population, key=lambda x: x.novelty):
+                    ind.novelty_rank = novel_counter
+                    novel_counter += 1
 
             fitness_counter = 0
             for ind in sorted(population, key=lambda x: x.fitness.values[0]):
@@ -75,7 +76,10 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                 fitness_counter += 1
 
             for ind in population:
-                ind.shaped_fitness = self.conf.novelty_weight * ind.novelty_rank + ind.fitness_rank
+                if conf.novelty:
+                    ind.shaped_fitness = self.conf.novelty.novelty_weight * ind.novelty_rank + ind.fitness_rank
+                else:
+                    ind.shaped_fitness = ind.fitness_rank
 
         toolbox.register("shape_fitness", shape_fitness)
         toolbox.register("mate", mate)
@@ -103,18 +107,20 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.population = self.toolbox.population(n=self.conf.mu)
-            toolbox.logbook = self.create_logbook()
+            toolbox.logbook = self.create_logbook(conf)
             toolbox.recorded_individuals = []
             toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
-
-        if conf.distance == "euclid":
-            toolbox.register("get_distance", euklidian_distance)
-        elif conf.distance == "NCD":
-            toolbox.register("get_distance", normalized_compression_distance)
-        elif conf.distance == "equal":
-            toolbox.register("get_distance", equal_elements_distance)
+        if conf.novelty:
+            if conf.novelty.distance == "euclid":
+                toolbox.register("get_distance", euklidian_distance)
+            elif conf.novelty.distance == "NCD":
+                toolbox.register("get_distance", normalized_compression_distance)
+            elif conf.novelty.distance == "equal":
+                toolbox.register("get_distance", equal_elements_distance)
+            else:
+                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
         else:
-            raise RuntimeError("unknown configuration value for distance: " + str(conf.distance))
+            toolbox.register("get_distance", lambda *args: 0)
 
     def train(self, number_generations) -> tools.Logbook:
         return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)

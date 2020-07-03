@@ -78,8 +78,11 @@ class Experiment(object):
                                        input_space=self.input_space, output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
-        stats_novel = tools.Statistics(key=lambda ind: ind.novelty)
-        stats = tools.MultiStatistics(fitness=stats_fit, novelty=stats_novel)
+        if self.config.episode_runner.novelty:
+            stats_novel = tools.Statistics(key=lambda ind: ind.novelty)
+            stats = tools.MultiStatistics(fitness=stats_fit, novelty=stats_novel)
+        else:
+            stats = tools.MultiStatistics(fitness=stats_fit)
 
         stats.register("min", np.min)
         stats.register("avg", np.mean)

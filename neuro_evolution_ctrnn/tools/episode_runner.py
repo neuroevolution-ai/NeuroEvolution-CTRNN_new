@@ -18,7 +18,6 @@ class EpisodeRunner(object):
         self.env_id = env_template.spec.id
         self.env_handler = EnvHandler(self.conf)
 
-
     def eval_fitness(self, individual, seed):
         if self.conf.reuse_env:
             try:
@@ -27,7 +26,7 @@ class EpisodeRunner(object):
                 if hasattr(self, "env"):
                     env = self.env
                 else:
-                    self.env = env =  self.env_handler.make_env(self.env_id)
+                    self.env = env = self.env_handler.make_env(self.env_id)
         else:
             env = self.env_handler.make_env(self.env_id)
         set_random_seeds(seed, env)
@@ -45,4 +44,10 @@ class EpisodeRunner(object):
                 fitness_current += rew
             fitness_total += fitness_current
 
-        return fitness_total / self.conf.number_fitness_runs, env.get_compressed_behavior(),
+        compressed_behavior = None
+        if hasattr(env, 'get_compressed_behavior'):
+            # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
+            if callable(env.get_compressed_behavior):
+                compressed_behavior = env.get_compressed_behavior()
+                
+        return fitness_total / self.conf.number_fitness_runs, compressed_behavior
