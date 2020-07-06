@@ -68,7 +68,7 @@ class BehaviorWrapper(Wrapper):
 
     def _record(self, data):
         if self.aggregate is None:
-            self.aggregate = np.array(data)
+            self.aggregate = np.array(data, dtype=np.float32)
             self.aggregate.fill(0)
 
         if self.behavioral_interval != 0:
