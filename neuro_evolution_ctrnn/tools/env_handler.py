@@ -2,6 +2,7 @@ import gym
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import IEpisodeRunnerCfg
+from tools.atari_wrappers import EpisodicLifeEnv
 
 from gym import Wrapper
 from bz2 import BZ2Compressor
@@ -30,6 +31,9 @@ class EnvHandler:
         if env.spec.id.endswith("NoFrameskip-v4"):
             logging.info("wrapping env in AtariPreprocessing")
             env = AtariPreprocessing(env, screen_size=16, scale_obs=True)
+
+            logging.info("wrapping env in EpisodicLifeEnv")
+            env = EpisodicLifeEnv(env)
 
         if env_id == "Reverse-v0":
             logging.info("wrapping env in ReverseWrapper")
