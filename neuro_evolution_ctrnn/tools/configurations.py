@@ -2,6 +2,7 @@
 from typing import List
 import attr
 import abc
+import typing
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -12,15 +13,26 @@ class IBrainCfg(abc.ABC):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class NoveltyCfg:
+    novelty_weight: float
+    distance: str
+    novelty_nearest_k: int
+    max_recorded_behaviors: int
+    recorded_behaviors_per_generation: int
+
+    behavioral_interval: int
+    behavioral_max_length: int
+    behavior_from_observation: bool
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class IEpisodeRunnerCfg(abc.ABC):
     type: str
     number_fitness_runs: int
     reuse_env: bool
-    behavioral_interval: int
-    behavioral_max_length: int
-    behavior_from_observation: bool
     max_steps_per_run: int
     max_steps_penalty: int
+    novelty: typing.Optional[NoveltyCfg]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -78,22 +90,17 @@ class IOptimizerCfg(abc.ABC):
     type: str
     checkpoint_frequency: int
     hof_size: int
+    novelty: typing.Optional[NoveltyCfg]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
-    mutation_learned: bool
     tournsize: int
     mu: int
     lambda_: int
     mutpb: float
     extra_from_hof: int
-    novelty_weight: float
-    distance: str
-    novelty_nearest_k: int
-    max_recorded_behaviors: int
-    recorded_behaviors_per_generation: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

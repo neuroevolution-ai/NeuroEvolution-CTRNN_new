@@ -39,9 +39,12 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        logging.info("wrapping env in BehaviorWrapper")
-        env = BehaviorWrapper(env, self.conf.behavior_from_observation, self.conf.behavioral_interval,
-                              self.conf.behavioral_max_length)
+        if self.conf.novelty:
+            logging.info("wrapping env in BehaviorWrapper")
+            env = BehaviorWrapper(env,
+                                  self.conf.novelty.behavior_from_observation,
+                                  self.conf.novelty.behavioral_interval,
+                                  self.conf.novelty.behavioral_max_length)
         return env
 
 
@@ -58,7 +61,7 @@ class BehaviorWrapper(Wrapper):
 
     def reset(self, **kwargs):
         self.compressed_behavior = b''
-        self.compressor = BZ2Compressor(1)
+        self.compressor = BZ2Compressor(2)
         self.step_count = 0
         self.aggregate = None
         return super(BehaviorWrapper, self).reset(**kwargs)
@@ -71,9 +74,7 @@ class BehaviorWrapper(Wrapper):
         if self.behavioral_interval != 0:
             self.aggregate += np.array(data) / self.behavioral_interval
 
-        if self.behavioral_interval \
-                and self.step_count * self.behavioral_interval < self.behavioral_max_length:
-
+        if self.step_count * self.behavioral_interval < self.behavioral_max_length:
             if self.step_count % self.behavioral_interval == 0:
                 data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
                 self.compressed_behavior += self.compressor.compress(data_bytes)

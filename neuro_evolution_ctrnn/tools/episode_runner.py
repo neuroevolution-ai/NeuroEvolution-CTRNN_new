@@ -54,7 +54,13 @@ class EpisodeRunner(IEpisodeRunner):
                 fitness_current += rew
             fitness_total += fitness_current
 
-        return fitness_total / self.config.number_fitness_runs, env.get_compressed_behavior(),
+        compressed_behavior = None
+        if hasattr(env, 'get_compressed_behavior'):
+            # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
+            if callable(env.get_compressed_behavior):
+                compressed_behavior = env.get_compressed_behavior()
+
+        return fitness_total / self.config.number_fitness_runs, compressed_behavior
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):

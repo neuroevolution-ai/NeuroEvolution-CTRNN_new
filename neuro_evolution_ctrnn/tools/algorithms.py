@@ -15,7 +15,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     halloffame = toolbox.hof
 
     for gen in range(toolbox.initial_generation, ngen + 1):
-        toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.recorded_behaviors_per_generation)
+        if toolbox.conf.novelty:
+            toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.novelty.recorded_behaviors_per_generation)
         extra = []
         if halloffame.items:
             extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
@@ -29,13 +30,16 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         seed_after_map: int = random.randint(1, 10000)
         seed_for_generation = random.randint(1, 10000)
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
-        seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
         nevals = len(candidates) + len(toolbox.recorded_individuals)
 
         brain_genomes = toolbox.strip_strategy_from_population(candidates)
         brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
         results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
-        results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
+        if toolbox.conf.novelty:
+            seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
+            results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
+        else:
+            results_recorded_orig = None
 
         if results_recorded_orig:
             results_copy, results = tee(results, 2)
@@ -43,7 +47,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                                     list(results_copy),
                                     [results_recorded_orig] * len(candidates),
                                     [toolbox.get_distance] * len(candidates),
-                                    [toolbox.conf.novelty_nearest_k] * len(candidates))
+                                    [toolbox.conf.novelty.novelty_nearest_k] * len(candidates))
         else:
             novelties = [0] * len(candidates)
 
@@ -56,10 +60,11 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
         set_random_seeds(seed_after_map, env=None)
 
-        # drop recorded_individuals, when there are too many
-        overfill = len(toolbox.recorded_individuals) - toolbox.conf.max_recorded_behaviors
-        if overfill > 0:
-            toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
+        if toolbox.conf.novelty:
+            # drop recorded_individuals, when there are too many
+            overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
+            if overfill > 0:
+                toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
         if halloffame is not None:
             halloffame.update(offspring)
