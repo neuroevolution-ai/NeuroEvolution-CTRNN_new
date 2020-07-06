@@ -12,13 +12,7 @@
     "mu": [5, 10, 20],
     "extra_from_hof": [0, 1, 5],
     "lambda_": [80],
-    "mutpb": [0.90, 0.8, 0.5],
-    "mutation_learned": [true, false],
-    "distance": ["NCD", "euclid"],
-    "max_recorded_behaviors": [1, 10, 25],
-    "novelty_nearest_k": 5,
-    "recorded_behaviors_per_generation": 2,
-    "novelty_weight": [0,0.2,0.5,1.0,2.0]
+    "mutpb": [0.90, 0.8, 0.5]
   },
   "brain": {
     "type": "CTRNN",
@@ -42,14 +36,21 @@
     "t_mask_param": [2, 8, 1.5],
     "parameter_perturbations": [0.0, 0.001, 0.01, 0.1]
   },
+  "novelty": {
+    "distance": ["NCD", "euclid"],
+    "max_recorded_behaviors": [1, 10, 25],
+    "novelty_nearest_k": 5,
+    "recorded_behaviors_per_generation": 2,
+    "novelty_weight": [0,0.2,0.5,1.0,2.0],
+    "behavioral_interval": 10,
+    "behavioral_max_length": 100,
+    "behavior_from_observation": true
+  },
   "episode_runner": {
     "type": "Standard",
     "keep_env_seed_fixed_during_generation": false,
     "number_fitness_runs": 1,
     "reuse_env": true,
-    "behavioral_interval": 0,
-    "behavioral_max_length": 0,
-    "behavior_from_observation": false,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0
   }

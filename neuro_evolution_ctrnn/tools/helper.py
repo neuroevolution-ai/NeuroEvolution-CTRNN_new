@@ -12,7 +12,7 @@ import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
-                                  LSTMCfg, IBrainCfg)
+                                  LSTMCfg, IBrainCfg, NoveltyCfg)
 
 
 def output_to_action(output, action_space):
@@ -93,6 +93,15 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
                            + str(config_dict["episode_runner"]["type"]))
 
+    if 'novelty' in config_dict:
+        novelty_cfg = NoveltyCfg(**config_dict['novelty'])
+        del config_dict['novelty']
+        config_dict["optimizer"]["novelty"] = novelty_cfg
+        config_dict["episode_runner"]["novelty"] = novelty_cfg
+    else:
+        config_dict["optimizer"]["novelty"] = None
+        config_dict["episode_runner"]["novelty"] = None
+
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
@@ -140,7 +149,7 @@ def normalized_compression_distance(a, b, a_len=None, b_len=None):
         a_len = len(compress(bytearray(a), 1))
     if not b_len:
         b_len = len(compress(bytearray(b), 1))
-    ab_len = len(compress(bytearray(np.concatenate((a, b))), 1))
+    ab_len = len(compress(bytearray(np.concatenate((a, b))), 2))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
 
 

@@ -36,14 +36,20 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         toolbox.register("checkpoint", write_checkpoint, cp_base_path, checkpoint_frequency)
 
     @staticmethod
-    def create_logbook():
+    def create_logbook(conf: IOptimizerCfg):
         logbook = tools.Logbook()
-        logbook.header = "gen", "nevals", "fitness", "novelty"
         logbook.chapters["fitness"].header = "min", "avg", "std", "max"
-        logbook.chapters["novelty"].header = "min", "avg", "std", "max"
-        logbook.columns_len = [3, 3, 0, 0]
         logbook.chapters["fitness"].columns_len = [8] * 4
-        logbook.chapters["novelty"].columns_len = [8] * 4
+
+        if conf.novelty:
+            logbook.header = "gen", "nevals", "fitness", "novelty"
+            logbook.columns_len = [3, 3, 0, 0]
+            logbook.chapters["novelty"].header = "min", "avg", "std", "max"
+            logbook.chapters["novelty"].columns_len = [8] * 4
+        else:
+            logbook.columns_len = [3, 3, 0]
+            logbook.header = "gen", "nevals", "fitness"
+
         return logbook
 
     @staticmethod

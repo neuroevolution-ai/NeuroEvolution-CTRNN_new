@@ -45,9 +45,6 @@
     "keep_env_seed_fixed_during_generation": [true, false],
     "number_fitness_runs": [1, 2, 5],
     "reuse_env": true,
-    "behavioral_interval": 0,
-    "behavioral_max_length": 0,
-    "behavior_from_observation": false,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0
   }
