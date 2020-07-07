@@ -19,7 +19,6 @@ class NoveltyCfg:
     novelty_nearest_k: int
     max_recorded_behaviors: int
     recorded_behaviors_per_generation: int
-
     behavioral_interval: int
     behavioral_max_length: int
     behavior_from_observation: bool
