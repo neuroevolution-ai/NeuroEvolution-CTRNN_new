@@ -1,6 +1,5 @@
 import numpy as np
 import time
-import gym
 from deap import tools
 import logging
 from typing import Type
@@ -80,9 +79,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_conf=self.config.brain,
-                                       brain_class=self.brain_class, input_space=self.input_space,
-                                       output_space=self.output_space, env_template=env)
+        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner, brain_conf=self.config.brain,
+                                                   brain_class=self.brain_class, input_space=self.input_space,
+                                                   output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         if self.config.episode_runner.novelty:
