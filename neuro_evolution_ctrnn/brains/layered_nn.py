@@ -2,21 +2,71 @@ import torch
 import numpy as np
 import torch.nn as nn
 from brains.i_brain import IBrain
-from tools.configurations import LayeredNNCfg
+from i_brain import ConfigClass
+from tools.configurations import FeedForwardCfg
 from gym.spaces import Space, Discrete, Box
 
 
-class LayeredNN(nn.Module, IBrain[LayeredNNCfg]):
+class FeedForward(IBrain[FeedForwardCfg]):
 
-    def __init__(self, input_space, output_space, individual, config: LayeredNNCfg):
+    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
+        super().__init__(input_space, output_space, individual, config)
+
+        self.input_size = self._size_from_space(input_space)
+        self.output_size = self._size_from_space(output_space)
+        self.config = config
+
+        # If the check fails the program aborts
+        self._check_hidden_layers(config.hidden_layers)
+
+        self.hidden_layers = config.hidden_layers
+        self.weights = []
+        self.biases = []
+
+    def step(self, ob: np.ndarray):
+        pass
+
+    @staticmethod
+    def _check_hidden_layers(hidden_layers):
+        try:
+            assert len(hidden_layers) > 0
+            assert all(hidden_layers) > 0
+        except AssertionError:
+            # TODO check if this line break works with .format
+            raise RuntimeError(
+                "Error with the chosen hidden layer list {}. It must be at least of size 1 and have elements which are "
+                "larger than 0.".format(hidden_layers))
+
+    @classmethod
+    def get_individual_size(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
+        input_size = cls._size_from_space(input_space)
+        output_size = cls._size_from_space(output_space)
+
+        cls._check_hidden_layers(config.hidden_layers)
+
+        individual_size = 0
+        last_layer = input_size
+
+        for hidden_layer in config.hidden_layers:
+            individual_size += last_layer * hidden_layer
+            last_layer = hidden_layer
+
+        individual_size += last_layer * output_size
+
+        if config.use_biases:
+            individual_size += sum(config.hidden_layers) + output_size
+
+        return individual_size
+
+
+class LayeredNN(nn.Module, IBrain[FeedForwardCfg]):
+
+    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
         super(LayeredNN, self).__init__()
         assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
                                                            output_space=output_space)
         input_size = self._size_from_space(input_space)
         output_size = self._size_from_space(output_space)
-
-        self.hidden_size1 = config.number_neurons_layer1
-        self.hidden_size2 = config.number_neurons_layer2
 
         self.fc1 = nn.Linear(input_size, self.hidden_size1, bias=config.use_biases)
         self.tanh1 = nn.Tanh()
@@ -147,3 +197,51 @@ class LayeredNN(nn.Module, IBrain[LayeredNNCfg]):
                 individual_size += hidden_size1 + hidden_size2 + output_size
 
         return individual_size
+
+
+class FeedForwardNumPy(FeedForward):
+
+    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
+        super().__init__(input_space, output_space, individual, config)
+
+        last_layer = self.input_size
+        current_index = 0
+
+        for hidden_layer in self.hidden_layers + [self.output_size]:
+            current_size = last_layer * hidden_layer
+
+            current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
+            self.weights.append(current_weight.reshape([last_layer, hidden_layer]))
+
+            last_layer = hidden_layer
+            current_index += current_size
+
+        if config.use_biases:
+            for hidden_layer in self.hidden_layers + [self.output_size]:
+                self.biases.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
+
+                current_index += hidden_layer
+        else:
+            self.biases = [None for _ in self.hidden_layers + [self.output_size]]
+
+    def layer_step(self, a, layer_weights, bias):
+        x = np.dot(a, layer_weights)
+
+        if bias is not None:
+            x += bias
+
+        return x
+
+    def relu(self, x):
+        return np.maximum(0, x)
+
+    def tanh(self, x):
+        return np.tanh(x)
+
+    def step(self, ob):
+        x = ob
+        for weight, bias in zip(self.weights, self.biases):
+            x = self.layer_step(x, weight, bias)
+            x = self.tanh(x)
+
+        return x

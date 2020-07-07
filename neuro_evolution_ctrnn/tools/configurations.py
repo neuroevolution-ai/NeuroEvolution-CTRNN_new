@@ -69,12 +69,11 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class LayeredNNCfg(IBrainCfg):
-    number_neurons_layer1: int
-    number_neurons_layer2: int
+class FeedForwardCfg(IBrainCfg):
+    hidden_layers: [int]
     cppn_hidden_size1: int
     cppn_hidden_size2: int
-    use_biases: bool
+    use_biases: bool #TODO move into IBrainCfg
     indirect_encoding: bool
 
 
