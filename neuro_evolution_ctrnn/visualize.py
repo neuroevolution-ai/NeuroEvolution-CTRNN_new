@@ -14,7 +14,7 @@ import logging
 
 from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
-from tools.helper import config_from_file
+from tools.helper import config_from_dict
 import numpy as np
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
@@ -63,9 +63,13 @@ with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
 
 with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
     conf = json.load(read_file)
-    config = config_from_file(os.path.join(args.dir, "Configuration.json"))
 
-if args.neuron_vis or args.hof or args.render or args.record:
+
+if args.render or args.record:
+
+    conf["episode_runner"]["type"] = "Visualize"
+    config = config_from_dict(conf)
+
     experiment = Experiment(configuration=config,
                             result_path="/tmp/not-used",
                             from_checkpoint=None)
@@ -73,6 +77,8 @@ if args.neuron_vis or args.hof or args.render or args.record:
     if len(hall_of_fame) < args.hof:
         raise RuntimeError(
             "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(args.hof, len(hall_of_fame)))
+
+    args.hof = 1 if args.hof <= 0 else args.hof
 
     individuals = hall_of_fame[0:args.hof]
 
@@ -97,7 +103,7 @@ if args.neuron_vis or args.hof or args.render or args.record:
             record = None
 
         t = threading.Thread(target=experiment.ep_runner.eval_fitness,
-                             args=[individual, config.random_seed, args.render, record, record_force, args.rounds,
+                             args=[individual, config.random_seed, args.render, record, record_force,
                                    BrainVisualizerHandler(), args.neuron_vis, args.slow_down])
         t.start()
 
