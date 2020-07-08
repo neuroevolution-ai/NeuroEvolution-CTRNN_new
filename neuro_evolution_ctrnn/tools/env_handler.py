@@ -1,9 +1,7 @@
 import gym
-import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import IEpisodeRunnerCfg
-from tools.atari_wrappers import EpisodicLifeEnv
 
 from gym import Wrapper
 from bz2 import BZ2Compressor
@@ -31,10 +29,7 @@ class EnvHandler:
 
         if env.spec.id.endswith("NoFrameskip-v4"):
             logging.info("wrapping env in AtariPreprocessing")
-            env = AtariPreprocessing(env, screen_size=16, scale_obs=True)
-
-            logging.info("wrapping env in EpisodicLifeEnv")
-            env = EpisodicLifeEnv(env)
+            env = AtariPreprocessing(env, screen_size=16, scale_obs=True, terminal_on_life_loss=True)
 
         if env.spec.id.startswith("Qbert"):
             logging.info("wrapping env in QbertGlitchlessWrapper")
@@ -60,9 +55,8 @@ class EnvHandler:
 class QbertGlitchlessWrapper(Wrapper):
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(QbertGlitchlessWrapper, self).step(action)
-        if rew == 500:
+        if rew == 500 or rew == 525:
             logging.info("QbertGlitchlessWrapper removed reward to avoid glitch abuse")
-
             rew = 0
         return ob, rew, done, info
 
