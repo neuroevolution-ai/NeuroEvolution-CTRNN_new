@@ -1,5 +1,4 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
-from typing import List
 import attr
 import abc
 import typing
@@ -37,14 +36,6 @@ class IEpisodeRunnerCfg(abc.ABC):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class StandardEpisodeRunnerCfg(IEpisodeRunnerCfg):
     keep_env_seed_fixed_during_generation: bool
-
-
-@attr.s(slots=True, auto_attribs=True, frozen=True)
-class MemoryExperimentCfg(IEpisodeRunnerCfg):
-    observation_frames: int
-    memory_frames: int
-    action_frames: int
-    observation_mask: [int]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -109,6 +100,18 @@ class OptimizerCmaEsCfg(IOptimizerCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class IEnvAttributesCfg(abc.ABC):
+    pass
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
+    observation_frames: int
+    memory_frames: int
+    action_frames: int
+    observation_mask: [int]
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class ExperimentCfg:
     environment: str
     random_seed: int
@@ -118,3 +121,5 @@ class ExperimentCfg:
     optimizer: IOptimizerCfg
     raw_dict: dict
     use_worker_processes: bool
+    environment_attributes: IEnvAttributesCfg = None
+

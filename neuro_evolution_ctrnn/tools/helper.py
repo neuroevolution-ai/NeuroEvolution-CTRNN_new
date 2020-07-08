@@ -11,8 +11,8 @@ from bz2 import compress
 import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg)
+                                  StandardEpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
+                                  LSTMCfg, IBrainCfg, NoveltyCfg, IEnvAttributesCfg, ReacherMemoryEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):
@@ -87,20 +87,35 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
 
     if config_dict["episode_runner"]["type"] == "Standard":
         episode_runner_cfg_class = StandardEpisodeRunnerCfg
-    elif config_dict["episode_runner"]["type"] == "Memory":
-        episode_runner_cfg_class = MemoryExperimentCfg
+    # elif config_dict["episode_runner"]["type"] == "Memory":
+    #     episode_runner_cfg_class = MemoryExperimentCfg
     else:
         raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
                            + str(config_dict["episode_runner"]["type"]))
 
-    if 'novelty' in config_dict:
-        novelty_cfg = NoveltyCfg(**config_dict['novelty'])
-        del config_dict['novelty']
+    if "novelty" in config_dict:
+        novelty_cfg = NoveltyCfg(**config_dict["novelty"])
+        del config_dict["novelty"]
         config_dict["optimizer"]["novelty"] = novelty_cfg
         config_dict["episode_runner"]["novelty"] = novelty_cfg
     else:
         config_dict["optimizer"]["novelty"] = None
         config_dict["episode_runner"]["novelty"] = None
+
+    if config_dict["environment"] == "ReacherMemory-v0":
+        try:
+            environment_attributes = ReacherMemoryEnvAttributesCfg(**config_dict["environment_attributes"])
+        except KeyError:
+            raise RuntimeError(
+                "When using environment '{}' you must provide the environment attributes from the config class"
+                " 'ReacherMemoryEnvAttributesCfg'.".format(config_dict["environment"]))
+        except TypeError:
+            raise RuntimeError(
+                "Missing or false value for the environment attributes for environment:"
+                " '{}'. Please use the attributes stated in the"
+                " 'ReacherMemoryEnvAttributesCfg' class.".format(config_dict["environment"]))
+
+        config_dict["environment_attributes"] = environment_attributes
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))

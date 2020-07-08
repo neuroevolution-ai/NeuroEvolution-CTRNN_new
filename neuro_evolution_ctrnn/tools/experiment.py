@@ -49,7 +49,7 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
 
-        if self.config.episode_runner.type == "Standard" or self.config.episode_runner.type == "Memory":
+        if self.config.episode_runner.type == "Standard":
             self.episode_runner_class = TrainEpisodeRunner
         elif self.config.episode_runner.type == "Visualize":
             self.episode_runner_class = VisualizeEpisodeRunner
