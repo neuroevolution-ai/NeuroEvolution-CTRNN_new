@@ -79,9 +79,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner, brain_conf=self.config.brain,
-                                                   brain_class=self.brain_class, input_space=self.input_space,
-                                                   output_space=self.output_space, env_template=env)
+        self.ep_runner = self.episode_runner_class(config=self.config, brain_class=self.brain_class,
+                                                   input_space=self.input_space, output_space=self.output_space,
+                                                   env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         if self.config.episode_runner.novelty:
@@ -116,7 +116,7 @@ class Experiment(object):
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
         if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
+            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(

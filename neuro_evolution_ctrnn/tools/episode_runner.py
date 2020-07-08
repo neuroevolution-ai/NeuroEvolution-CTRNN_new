@@ -2,16 +2,14 @@ from gym import wrappers
 import time
 
 from tools.helper import set_random_seeds, output_to_action
-from tools.configurations import EpisodeRunnerCfg, IBrainCfg
+from tools.configurations import ExperimentCfg
 from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 
 
 class IEpisodeRunner:
-    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
+    def __init__(self, config: ExperimentCfg, brain_class, input_space, output_space, env_template):
         self.config = config
-        self.brain_conf = brain_conf
         self.brain_class = brain_class
         self.input_space = input_space
         self.output_space = output_space
@@ -19,7 +17,7 @@ class IEpisodeRunner:
         self.env_handler = EnvHandler(self.config)
 
     def _get_env(self, record=False, record_force=False):
-        if self.config.reuse_env:
+        if self.config.episode_runner.reuse_env:
             try:
                 env = get_current_worker().env
             except:
@@ -40,20 +38,17 @@ class IEpisodeRunner:
 
 
 class TrainEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
-        super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
+    def __init__(self, config: ExperimentCfg, brain_class, input_space, output_space, env_template):
+        super().__init__(config, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed, *args, **kwargs):
         env = self._get_env()
         set_random_seeds(seed, env)
         fitness_total = 0
 
-        number_fitness_runs = self.config.number_fitness_runs
-
-        for i in range(number_fitness_runs):
+        for i in range(self.config.episode_runner.number_fitness_runs):
             fitness_current = 0
-            brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_conf)
+            brain = self.brain_class(self.input_space, self.output_space, individual, self.config.brain)
 
             set_random_seeds(seed + i, env)
             ob = env.reset()
@@ -76,26 +71,22 @@ class TrainEpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / self.config.number_fitness_runs, compressed_behavior
+        return fitness_total / self.config.episode_runner.number_fitness_runs, compressed_behavior
 
 
 class VisualizeEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
-        super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
+    def __init__(self, config: ExperimentCfg, brain_class, input_space, output_space, env_template):
+        super().__init__(config, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, test=None, *args, **kwargs):
+                     neuron_vis=False, slow_down=0, *args, **kwargs):
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
 
-        number_fitness_runs = self.config.number_fitness_runs
-
-        for i in range(number_fitness_runs):
+        for i in range(self.config.episode_runner.number_fitness_runs):
             fitness_current = 0
-            brain = self.brain_class(self.input_space, self.output_space, individual,
-                                     self.brain_conf)
+            brain = self.brain_class(self.input_space, self.output_space, individual, self.config.brain)
 
             if render:
                 env.render()
@@ -112,11 +103,12 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
             while not done:
                 brain_output = brain.step(ob)
 
+                action = output_to_action(brain_output, self.output_space)
+
+                ob, rew, done, info = env.step(action)
+
                 if brain_vis:
                     brain_vis.process_update(in_values=ob, out_values=action)
-
-                action = output_to_action(brain_output, self.output_space)
-                ob, rew, done, info = env.step(action)
 
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
@@ -134,4 +126,4 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_beIhavior()
 
-        return fitness_total / self.config.number_fitness_runs, compressed_behavior
+        return fitness_total / self.config.episode_runner.number_fitness_runs, compressed_behavior
