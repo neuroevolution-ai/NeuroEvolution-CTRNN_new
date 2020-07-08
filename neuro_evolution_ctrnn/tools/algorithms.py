@@ -19,7 +19,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.novelty.recorded_behaviors_per_generation)
         extra = []
         if halloffame.items:
-            extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
+            # extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
+            extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
+
         offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
 
         if include_parents_in_next_generation:
