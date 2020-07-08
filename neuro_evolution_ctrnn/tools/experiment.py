@@ -10,7 +10,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
-from tools.episode_runner import EpisodeRunner, MemoryEpisodeRunner
+from tools.episode_runner import TrainEpisodeRunner, VisualizeEpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
@@ -49,10 +49,10 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
 
-        if self.config.episode_runner.type == "Standard":
-            self.episode_runner_class = EpisodeRunner
-        elif self.config.episode_runner.type == "Memory":
-            self.episode_runner_class = MemoryEpisodeRunner
+        if self.config.episode_runner.type == "Standard" or self.config.episode_runner.type == "Memory":
+            self.episode_runner_class = TrainEpisodeRunner
+        elif self.config.episode_runner.type == "Visualize":
+            self.episode_runner_class = VisualizeEpisodeRunner
         else:
             raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
                                + str(self.config.episode_runner.type))
