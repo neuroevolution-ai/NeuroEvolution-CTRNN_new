@@ -2,7 +2,7 @@ import gym
 import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import IEpisodeRunnerCfg
+from tools.configurations import IEpisodeRunnerCfg, MemoryExperimentCfg
 from tools.atari_wrappers import EpisodicLifeEnv
 
 from gym import Wrapper
@@ -15,11 +15,25 @@ class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
     def __init__(self, config: IEpisodeRunnerCfg):
-        self.conf = config
+        self.config = config
 
     def make_env(self, env_id: str):
 
-        env = gym.make(env_id)
+        if env_id == "ReacherMemory-v0":
+            try:
+                assert isinstance(self.config, MemoryExperimentCfg)
+            except AssertionError:
+                print("For using the {} environment please use the MemoryEpisodeRunner",
+                      "in the configuration.".format(env_id))
+
+            env = gym.make(
+                env_id,
+                observation_frames=self.config.observation_frames,
+                memory_frames=self.config.memory_frames,
+                action_frames=self.config.action_frames,
+                observation_mask=self.config.observation_mask)
+        else:
+            env = gym.make(env_id)
 
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the
@@ -48,12 +62,12 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        if self.conf.novelty:
+        if self.config.novelty:
             logging.info("wrapping env in BehaviorWrapper")
             env = BehaviorWrapper(env,
-                                  self.conf.novelty.behavior_from_observation,
-                                  self.conf.novelty.behavioral_interval,
-                                  self.conf.novelty.behavioral_max_length)
+                                  self.config.novelty.behavior_from_observation,
+                                  self.config.novelty.behavioral_interval,
+                                  self.config.novelty.behavioral_max_length)
         return env
 
 
