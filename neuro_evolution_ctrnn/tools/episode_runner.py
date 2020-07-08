@@ -7,6 +7,7 @@ from tools.configurations import IEpisodeRunnerCfg, StandardEpisodeRunnerCfg, Me
 from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 from brains.i_brain import IBrain
+import logging
 
 
 class IEpisodeRunner:
@@ -62,36 +63,32 @@ class EpisodeRunner(IEpisodeRunner):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual,
                                      self.brain_conf)
-
             if render:
                 env.render()
-
             ob = env.reset()
-
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain)
             else:
                 brain_vis = None
 
+            t = 0
             done = False
-
             while not done:
                 brain_output = brain.step(ob)
-
                 if brain_vis:
                     brain_vis.process_update(in_values=ob, out_values=action)
-
                 action = output_to_action(brain_output, self.output_space)
                 ob, rew, done, info = env.step(action)
+                fitness_current += rew
+                t += 1
 
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
-
-                fitness_current += rew
-
                 if render:
                     env.render()
 
+            if render:
+                logging.info("steps: " + str(t) + " \tfitness: " + str(fitness_current))
             fitness_total += fitness_current
 
         compressed_behavior = None
