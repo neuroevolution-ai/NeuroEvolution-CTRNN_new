@@ -88,6 +88,9 @@ if args.neuron_vis or args.hof or args.render or args.record:
         # are not part of the brain and need to be removed from the genome before initializing the brain.
         individuals = experiment.optimizer.strip_strategy_from_population(individuals,
                                                                           config.optimizer.mutation_learned)
+    elif config.optimizer.type == "MU_ES":
+        # later version of don't have the "mutation_learned" option anymore and instead always use that option
+        individuals = experiment.optimizer.strip_strategy_from_population(individuals, True)
 
     for i, individual in enumerate(individuals):
         if args.record:
@@ -95,11 +98,9 @@ if args.neuron_vis or args.hof or args.render or args.record:
             logging.info("Recording an individual to {}".format(record))
         else:
             record = None
+        experiment.ep_runner.eval_fitness(individual, config.random_seed, args.render, record, record_force, args.rounds,
+                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down)
 
-        t = threading.Thread(target=experiment.ep_runner.eval_fitness,
-                             args=[individual, config.random_seed, args.render, record, record_force, args.rounds,
-                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down])
-        t.start()
 
 
 # Plot results
