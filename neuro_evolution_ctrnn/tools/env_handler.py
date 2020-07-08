@@ -2,7 +2,7 @@ import gym
 import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import IEpisodeRunnerCfg, MemoryExperimentCfg
+from tools.configurations import ExperimentCfg, ReacherMemoryEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
 
 from gym import Wrapper
@@ -14,24 +14,23 @@ import numpy as np
 class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
-    def __init__(self, config: IEpisodeRunnerCfg):
+    def __init__(self, config: ExperimentCfg):
         self.config = config
 
     def make_env(self, env_id: str):
-
         if env_id == "ReacherMemory-v0":
             try:
-                assert isinstance(self.config, MemoryExperimentCfg)
+                assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg)
             except AssertionError:
-                print("For using the {} environment please use the MemoryEpisodeRunner",
-                      "in the configuration.".format(env_id))
+                raise RuntimeError("For the environment 'ReacherMemory-v0' one must provide the"
+                                   "ReacherMemoryEnvAttributesCfg (config.environment_attributes)")
 
             env = gym.make(
                 env_id,
-                observation_frames=self.config.observation_frames,
-                memory_frames=self.config.memory_frames,
-                action_frames=self.config.action_frames,
-                observation_mask=self.config.observation_mask)
+                observation_frames=self.config.environment_attributes.observation_frames,
+                memory_frames=self.config.environment_attributes.memory_frames,
+                action_frames=self.config.environment_attributes.action_frames,
+                observation_mask=self.config.environment_attributes.observation_mask)
         else:
             env = gym.make(env_id)
 
@@ -62,12 +61,12 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        if self.config.novelty:
+        if self.config.episode_runner.novelty:
             logging.info("wrapping env in BehaviorWrapper")
             env = BehaviorWrapper(env,
-                                  self.config.novelty.behavior_from_observation,
-                                  self.config.novelty.behavioral_interval,
-                                  self.config.novelty.behavioral_max_length)
+                                  self.config.episode_runner.novelty.behavior_from_observation,
+                                  self.config.episode_runner.novelty.behavioral_interval,
+                                  self.config.episode_runner.novelty.behavioral_max_length)
         return env
 
 

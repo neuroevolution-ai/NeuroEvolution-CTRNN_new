@@ -60,7 +60,7 @@ class Experiment(object):
         self._setup()
 
     def _setup(self):
-        env_handler = EnvHandler(self.config.episode_runner)
+        env_handler = EnvHandler(self.config)
         env = env_handler.make_env(self.config.environment)
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
@@ -128,43 +128,3 @@ class Experiment(object):
             individual_size=self.individual_size)
         DaskHandler.stop_dask()
         print("Done")
-
-    def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env_handler = EnvHandler(self.config.episode_runner)
-        env = env_handler.make_env(self.config.environment)
-        env.render()
-        if hasattr(self.config.optimizer, "mutation_learned"):
-            # sometimes there are also optimizing strategies encoded in the genome. These parameters
-            # are not part of the brain and need to be removed from the genome before initializing the brain.
-            individuals = self.optimizer.strip_strategy_from_population(individuals,
-                                                                        self.config.optimizer.mutation_learned)
-
-        for individual in individuals:
-            set_random_seeds(self.config.random_seed, env)
-
-            brain = self.brain_class(input_space=self.input_space,
-                                     output_space=self.output_space,
-                                     individual=individual,
-                                     config=self.config.brain)
-
-            for i in range(rounds_per_individual):
-                fitness_current = 0
-                ob = env.reset()
-                done = False
-                if neuron_vis:
-                    brain_vis = brain_vis_handler.launch_new_visualization(brain)
-                else:
-                    brain_vis = None
-                step_count = 0
-                while not done:
-                    step_count += 1
-                    action = brain.step(ob)
-                    if brain_vis:
-                        brain_vis.process_update(in_values=ob, out_values=action)
-                    action = output_to_action(action, self.output_space)
-                    ob, rew, done, info = env.step(action)
-                    if slow_down:
-                        time.sleep(slow_down / 1000.0)
-                    fitness_current += rew
-                    env.render()
-                print("steps: " + str(step_count) + " \tReward: " + str(fitness_current))

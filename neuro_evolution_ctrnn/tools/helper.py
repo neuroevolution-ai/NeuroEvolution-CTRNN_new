@@ -11,8 +11,8 @@ from bz2 import compress
 import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  StandardEpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg, IEnvAttributesCfg, ReacherMemoryEnvAttributesCfg)
+                                  EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
+                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):
@@ -85,14 +85,6 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     else:
         raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
-    if config_dict["episode_runner"]["type"] == "Standard":
-        episode_runner_cfg_class = StandardEpisodeRunnerCfg
-    # elif config_dict["episode_runner"]["type"] == "Memory":
-    #     episode_runner_cfg_class = MemoryExperimentCfg
-    else:
-        raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
-                           + str(config_dict["episode_runner"]["type"]))
-
     if "novelty" in config_dict:
         novelty_cfg = NoveltyCfg(**config_dict["novelty"])
         del config_dict["novelty"]
@@ -118,7 +110,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         config_dict["environment_attributes"] = environment_attributes
 
     # turn json into nested class so python's type-hinting can do its magic
-    config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
+    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)

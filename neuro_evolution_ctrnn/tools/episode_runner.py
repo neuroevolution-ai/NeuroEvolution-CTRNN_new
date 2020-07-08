@@ -2,13 +2,13 @@ from gym import wrappers
 import time
 
 from tools.helper import set_random_seeds, output_to_action
-from tools.configurations import IEpisodeRunnerCfg, IBrainCfg
+from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 
 
 class IEpisodeRunner:
-    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
         self.config = config
         self.brain_conf = brain_conf
@@ -40,7 +40,7 @@ class IEpisodeRunner:
 
 
 class TrainEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
         super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
 
@@ -55,7 +55,7 @@ class TrainEpisodeRunner(IEpisodeRunner):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_conf)
 
-            set_random_seeds(i, env)
+            set_random_seeds(seed + i, env)
             ob = env.reset()
 
             done = False
@@ -80,12 +80,12 @@ class TrainEpisodeRunner(IEpisodeRunner):
 
 
 class VisualizeEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: IEpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
+    def __init__(self, config: EpisodeRunnerCfg, brain_conf: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
         super().__init__(config, brain_conf, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, test=None):
+                     neuron_vis=False, slow_down=0, test=None, *args, **kwargs):
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0

@@ -24,18 +24,14 @@ class NoveltyCfg:
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class IEpisodeRunnerCfg(abc.ABC):
+class EpisodeRunnerCfg(abc.ABC):
     type: str
     number_fitness_runs: int
     reuse_env: bool
     max_steps_per_run: int
     max_steps_penalty: int
-    novelty: typing.Optional[NoveltyCfg]
-
-
-@attr.s(slots=True, auto_attribs=True, frozen=True)
-class StandardEpisodeRunnerCfg(IEpisodeRunnerCfg):
     keep_env_seed_fixed_during_generation: bool
+    novelty: typing.Optional[NoveltyCfg]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -103,6 +99,7 @@ class OptimizerCmaEsCfg(IOptimizerCfg):
 class IEnvAttributesCfg(abc.ABC):
     pass
 
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
@@ -117,7 +114,7 @@ class ExperimentCfg:
     random_seed: int
     number_generations: int
     brain: IBrainCfg
-    episode_runner: IEpisodeRunnerCfg
+    episode_runner: EpisodeRunnerCfg
     optimizer: IOptimizerCfg
     raw_dict: dict
     use_worker_processes: bool
