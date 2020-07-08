@@ -36,6 +36,10 @@ class EnvHandler:
             logging.info("wrapping env in EpisodicLifeEnv")
             env = EpisodicLifeEnv(env)
 
+        if env.spec.id.startswith("Qbert"):
+            logging.info("wrapping env in QbertGlitchlessWrapper")
+            env = QbertGlitchlessWrapper(env)
+
         if env_id == "Reverse-v0":
             logging.info("wrapping env in ReverseWrapper")
             env = ReverseWrapper(env)
@@ -51,6 +55,16 @@ class EnvHandler:
                                   self.conf.novelty.behavioral_interval,
                                   self.conf.novelty.behavioral_max_length)
         return env
+
+
+class QbertGlitchlessWrapper(Wrapper):
+    def step(self, action: Union[int, Iterable[int]]):
+        ob, rew, done, info = super(QbertGlitchlessWrapper, self).step(action)
+        if rew == 500:
+            logging.info("QbertGlitchlessWrapper removed reward to avoid glitch abuse")
+
+            rew = 0
+        return ob, rew, done, info
 
 
 class BehaviorWrapper(Wrapper):
