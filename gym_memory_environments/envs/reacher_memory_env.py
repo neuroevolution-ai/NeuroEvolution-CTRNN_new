@@ -5,8 +5,6 @@ from gym.envs.mujoco import ReacherEnv
 class ReacherMemoryEnv(ReacherEnv):
 
     def __init__(self, observation_frames, memory_frames, action_frames, observation_mask):
-        super().__init__()
-
         assert observation_frames > 0 and memory_frames > 0 and action_frames > 0
 
         self.observation_frames = observation_frames
@@ -15,6 +13,8 @@ class ReacherMemoryEnv(ReacherEnv):
         self.observation_mask = observation_mask
 
         self.t = 0
+
+        super().__init__()
 
     def step(self, action):
 
