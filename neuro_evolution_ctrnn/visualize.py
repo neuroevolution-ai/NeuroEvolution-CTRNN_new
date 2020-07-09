@@ -104,7 +104,7 @@ if args.render or args.record:
 
         t = threading.Thread(target=experiment.ep_runner.eval_fitness,
                              args=[individual, config.random_seed, args.render, record, record_force,
-                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down])
+                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds])
         t.start()
 
 
