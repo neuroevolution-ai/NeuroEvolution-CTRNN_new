@@ -19,18 +19,16 @@ class EnvHandler:
 
     def make_env(self, env_id: str):
         if env_id == "ReacherMemory-v0":
-            try:
-                assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg)
-            except AssertionError:
-                raise RuntimeError("For the environment 'ReacherMemory-v0' one must provide the"
-                                   "ReacherMemoryEnvAttributesCfg (config.environment_attributes)")
+
+            assert (isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg),
+                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"
+                    " (config.environment_attributes)")
 
             env = gym.make(
                 env_id,
                 observation_frames=self.config.environment_attributes.observation_frames,
                 memory_frames=self.config.environment_attributes.memory_frames,
-                action_frames=self.config.environment_attributes.action_frames,
-                observation_mask=self.config.environment_attributes.observation_mask)
+                action_frames=self.config.environment_attributes.action_frames)
         else:
             env = gym.make(env_id)
 

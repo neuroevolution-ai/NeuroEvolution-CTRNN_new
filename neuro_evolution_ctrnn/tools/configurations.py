@@ -105,7 +105,6 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
     memory_frames: int
     action_frames: int
-    observation_mask: [int]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

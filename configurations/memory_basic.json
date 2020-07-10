@@ -3,8 +3,7 @@
   "environment_attributes": {
     "observation_frames": 20,
     "memory_frames": 20,
-    "action_frames": 50,
-    "observation_mask": [4, 5, 8, 9, 10]
+    "action_frames": 50
   },
   "random_seed": 0,
   "number_generations": 2500,
