@@ -68,6 +68,21 @@ Wenn du willst, dass der results-ordner im IDE
 angezeigt wird, kannst du einfach einen softlink darauf ins repo legen: 
 `cd NeuroEvolution-CTRNN && ln -s ../CTRNN_Simulation_Results results`
 
+## visualizer
+Tastaturbefehle:
+* [f] - Neuronen größer
+* [d] - Neuronen kleiner
+* [r] - Gewichte dicker
+* [e] - Gewichte Dünner
+* [w] - Negativen Gewichte ein- und ausblenden
+* [t] - Negativen Gewichte ein- und ausblenden
+* [z] - Direction der Gewichte einblenden
+
+Maus:
+* [Hover] - Anzeigen der Neuronen
+* [Click auf Neuron, an eine neue Position ziehen, los lassen] - Neuronen bewegen 
+
+
 ## troubleshooting
 
 

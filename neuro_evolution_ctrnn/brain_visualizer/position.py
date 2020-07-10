@@ -3,8 +3,7 @@ import json
 from json import JSONEncoder
 import os
 import numpy
-import matplotlib.pyplot as plt
-import time
+
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
@@ -12,7 +11,7 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
-class Position():
+class Positions():
     def getGraphPositions(self, w, h):
         brainState = self.brain.y
         brainWeight = self.brain.W
@@ -53,24 +52,10 @@ class Position():
         # print(z)
         # print(G.edges(data=True))
 
-        # arrray = {0: (-0.2728846, 0.74711038), 1: (-0.31891225, 0.66547815), 2: (0.17179, 0.92973358),
-        #           3: (1., -0.2231467), 4: (0.38143834, -0.8415738), 5: (-0.60921009, 0.50518079),
-        #           6: (-0.37992527, -0.65073305), 7: (0.04851295, -0.24817101),
-        #           8: (-0.08354904, -0.74049539), 9: (0.67633978, 0.42055284), 10: (0.5041357, -0.49892226),
-        #           11: (0.34567744, 0.64230415), 12: (-0.5994108, 0.56297205),
-        #           13: (-0.13769502, -0.12910191), 14: (0.49246168, 0.73320535), 15: (0.7950964, 0.49450273),
-        #           16: (0.63158082, -0.84052595), 17: (0.62863304, 0.49440121),
-        #           18: (-0.73856454, -0.41477315), 19: (-0.69630721, 0.65250366),
-        #           20: (-0.11833097, -0.41475844), 21: (-0.36507268, -0.23317927),
-        #           22: (0.46646422, -0.7360597), 23: (-0.67845279, -0.42695827),
-        #           24: (-0.78669895, -0.09019501), 25: (-0.24630579, -0.73455162),
-        #           26: (0.97569744, 0.39554758), 27: (0.24129693, -0.72899607),
-        #           28: (-0.67049509, 0.41776016), 29: (-0.65730965, 0.290889)}
-
         ######### Create initial Pose and write to Json file; If pose already in file, just read it
         fpath = "position.json"
         if os.path.isfile(fpath) and os.path.getsize(fpath) == 0:
-            numpyData = nx.spring_layout(G, k=3, weight="myweight", iterations=100)
+            numpyData = nx.spring_layout(G, k=5, weight="myweight", iterations=100)
             with open("position.json", "w") as write_file:
                 json.dump(numpyData, write_file, cls=NumpyArrayEncoder)
                 write_file.close()
@@ -87,8 +72,52 @@ class Position():
         # pos ist ein Dictionary mit Werten in einem Koordintensystem mit Ursprung in der Mitte und Achsenlängen von -1 bis 1
         #pos = nx.spring_layout(G, pos=initialPosDict, weight="myweight")
         # pos2 ist ein Dictionary mit Werten in einem Koordintensystem mit Ursprung in der Mitte und Achsenlängen von 0 bis h/2-100; h = höhe des Bildschirms
-        pos2 = nx.spring_layout(G, pos=initialPosDict, weight="myweight", scale=h / 2 - 100)
+        pos2 = nx.spring_layout(G, k=2, pos=initialPosDict, weight="myweight", scale=h / 2 - 50)
 
-        #TODO: Dictionary für pos erstellen, dass man diese Zeiel pos_y1 = int(position1[1] + (h / 2)) nichtmehr braucht sondern die Werte direkt drin stehen
 
-        return pos2
+        graphPositionsDict = {}
+        for each in pos2:
+            position0 = pos2[each]
+            pos_x0 = int(position0[0] + (w / 2))
+            if pos_x0 > (w/2):
+                pos_x0 = pos_x0 + 50
+            if pos_x0 < (w/2):
+                pos_x0 = pos_x0 - 50
+            pos_y0 = int(position0[1] + (h / 2)) + 60
+            graphPositionsDict[each] = [pos_x0, pos_y0]
+
+        return graphPositionsDict
+
+
+    def clearJSON(self):
+        open("position.json", "w").close()
+        print("exiting")
+
+
+    def getInputOutputPositions(self, numberNeurons, inputOrOutput):
+        PositionsDict = {}
+        if inputOrOutput == "input":
+            x = ((1 * self.w) / 12)
+            x2 = ((1 * self.w) / 18)
+            x3 = ((2 * self.w) / 18)
+        elif inputOrOutput == "output":
+            x = ((11 * self.w) / 12)
+            x2 = ((16 * self.w) / 18)
+            x3 = ((17 * self.w) / 18)
+
+        for i in range(numberNeurons):
+            if ((self.h - 100) / (numberNeurons * (self.neuronRadius*2))) > 1:
+                x_pos = x
+                y_pos = (50 + (self.h / 2)) - ((numberNeurons * (self.neuronRadius))) + (i * (self.neuronRadius*2))
+                PositionsDict[i] = [x_pos, y_pos]
+            else:
+                if i % 2:  # ungerade
+                    x_pos = x2
+                    y_pos = (50 + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
+                    PositionsDict[i] = [x_pos, y_pos]
+                else:  # gerade
+                    x_pos = x3
+                    y_pos = (50 + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
+                    PositionsDict[i] = [x_pos, y_pos]
+        return PositionsDict
+
