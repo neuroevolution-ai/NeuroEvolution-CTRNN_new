@@ -125,6 +125,6 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
         if hasattr(env, 'get_compressed_behavior'):
             # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
             if callable(env.get_compressed_behavior):
-                compressed_behavior = env.get_compressed_beIhavior()
+                compressed_behavior = env.get_compressed_behavior()
 
         return fitness_total / rounds, compressed_behavior
