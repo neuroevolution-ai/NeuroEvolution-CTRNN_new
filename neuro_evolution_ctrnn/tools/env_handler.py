@@ -49,17 +49,43 @@ class EnvHandler:
                                   self.conf.novelty.behavior_from_observation,
                                   self.conf.novelty.behavioral_interval,
                                   self.conf.novelty.behavioral_max_length)
+
+        if self.conf.max_steps_per_run:
+            logging.info("wrapping env in MaxStepWrapper")
+            env = MaxStepWrapper(env, max_steps=self.conf.max_steps_per_run, penalty=self.conf.max_steps_penalty)
+
         return env
+
+
+class MaxStepWrapper(Wrapper):
+    def __init__(self, env, max_steps, penalty):
+        super().__init__(env)
+        self.steps = 0
+        self.max_steps = max_steps
+        self.penalty = penalty
+
+    def reset(self, **kwargs):
+        self.steps = 0
+        return super(MaxStepWrapper, self).reset(**kwargs)
+
+    def step(self, action: Union[int, Iterable[int]]):
+        self.steps += 1
+        ob, rew, done, info = super(MaxStepWrapper, self).step(action)
+        if self.steps > self.max_steps:
+            logging.info("step limit reached")
+            done = True
+            rew += self.penalty
+        return ob, rew, done, info
 
 
 class QbertGlitchlessWrapper(Wrapper):
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(QbertGlitchlessWrapper, self).step(action)
         if rew == 500 or rew == 525:
-            logging.info("QbertGlitchlessWrapper removed reward to avoid luring enemy into abyss")
+            logging.info("remove reward to avoid luring enemy into abyss")
             rew = 0
         if rew == 300 or rew == 325:
-            logging.info("QbertGlitchlessWrapper removed reward from fruit to avoid repetitive behavior")
+            logging.info("removed reward from fruit to avoid repetitive behavior")
             rew = 0
         return ob, rew, done, info
 
