@@ -66,6 +66,7 @@ class PygameBrainVisualizer(object):
         self.weightsDirection = False
         self.weightVal = (-2)
         self.neuronRadius = 30
+        self.neuronText = True
 
 
 
@@ -98,7 +99,11 @@ class PygameBrainVisualizer(object):
         else:
             text = str(self.weightVal)
         textSurface = myfont.render("Weights [e,r] : " + text, False, self.numColor)
-        self.screen.blit(textSurface, (((3*self.w / 4) - 80), 23))
+        self.screen.blit(textSurface, (((3*self.w / 4) - 80), 14))
+        textSurface = myfont.render("Values [g] : " + str(self.neuronText), False, self.numColor)
+        self.screen.blit(textSurface, (((3*self.w / 4) - 80), 32))
+
+
 
         ##### Number Neurons
         numberInputNeurons = len(in_values)
@@ -177,14 +182,25 @@ class PygameBrainVisualizer(object):
             if event.type == MOUSEBUTTONUP and clickedNeuron != None:
                 Events.changeNeuronPos(self, clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    Positions.clearJSON(self)
+                    sys.exit()
                 if event.key == pygame.K_e:
                     self.weightVal = self.weightVal - 1
                 if event.key == pygame.K_r:
                     self.weightVal = self.weightVal + 1
                 if event.key == pygame.K_d:
-                    self.neuronRadius= self.neuronRadius - 5
+                    if self.neuronRadius > 5:
+                        self.neuronRadius= self.neuronRadius - 5
+                        print(self.neuronRadius)
                 if event.key == pygame.K_f:
                     self.neuronRadius = self.neuronRadius + 5
+                if event.key == pygame.K_g:
+                    if self.neuronText:
+                        self.neuronText = False
+                    else:
+                        self.neuronText = True
                 if event.key == pygame.K_t:
                     if self.positiveWeights:
                         self.positiveWeights = False
@@ -200,6 +216,13 @@ class PygameBrainVisualizer(object):
                         self.weightsDirection = False
                     else:
                         self.weightsDirection = True
+                if event.key == pygame.K_SPACE:
+                    pause = True
+                    pygame.event.clear(KEYDOWN)
+                    while pause:
+                        for event in pygame.event.get():
+                            if event.key == pygame.K_c:
+                                pause = False
 
         # Updates the content of the window
         pygame.display.flip()

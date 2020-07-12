@@ -14,7 +14,7 @@ class Weights():
                     pos_x1 = int(position1[0])
                     pos_y1 = int(position1[1])
 
-                    if direction:
+                    if direction and not output:
                         pygame.draw.line(self.screen, self.grey, (pos_x0, pos_y0), (pos_x1 - 7, pos_y1 + 7), int(weight) + self.weightVal)
                         pygame.draw.line(self.screen, self.grey, (pos_x0, pos_y0), (pos_x1 + 7, pos_y1 - 7), int(weight) + self.weightVal)
                     elif direction and output:

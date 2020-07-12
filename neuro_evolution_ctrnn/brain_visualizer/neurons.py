@@ -33,4 +33,5 @@ class Neurons():
 
             # Draw Circle and Text
             pygame.draw.circle(self.screen, interpolierteFarbe, (pos_x, pos_y), radius)
-            self.screen.blit(textSurface, ((pos_x - 16), (pos_y - 7)))
+            if self.neuronText == True:
+                self.screen.blit(textSurface, ((pos_x - 16), (pos_y - 7)))

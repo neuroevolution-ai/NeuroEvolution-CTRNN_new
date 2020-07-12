@@ -72,11 +72,14 @@ angezeigt wird, kannst du einfach einen softlink darauf ins repo legen:
 Tastaturbefehle:
 * [f] - Neuronen größer
 * [d] - Neuronen kleiner
+* [g] - Werte ein- und ausblenden
 * [r] - Gewichte dicker
 * [e] - Gewichte Dünner
 * [w] - Negativen Gewichte ein- und ausblenden
 * [t] - Negativen Gewichte ein- und ausblenden
 * [z] - Direction der Gewichte einblenden
+* [space] - Pause
+* [c] - Ende der Pause
 
 Maus:
 * [Hover] - Anzeigen der Neuronen

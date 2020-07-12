@@ -35,7 +35,8 @@ class Events():
                 neuron = i
                 return neuron
 
-
     def changeNeuronPos(self, neuron, mousePose, graphPositionsDict):
         graphPositionsDict[neuron] = (mousePose[0], mousePose[1])
+
+
 
