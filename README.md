@@ -80,6 +80,7 @@ Tastaturbefehle:
 * [z] - Direction der Gewichte einblenden
 * [space] - Pause
 * [c] - Ende der Pause
+* [esc] - Beenden
 
 Maus:
 * [Hover] - Anzeigen der Neuronen
