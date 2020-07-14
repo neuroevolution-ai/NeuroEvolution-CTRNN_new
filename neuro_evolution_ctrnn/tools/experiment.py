@@ -116,7 +116,7 @@ class Experiment(object):
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
         if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config)
+            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(

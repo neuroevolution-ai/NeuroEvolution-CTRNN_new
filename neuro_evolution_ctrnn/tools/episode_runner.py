@@ -83,12 +83,14 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
         super().__init__(config, brain_config, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, rounds=1, *args, **kwargs):
+                     neuron_vis=False, slow_down=0, rounds=None, *args, **kwargs):
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
 
-        for i in range(rounds):
+        number_of_rounds = self.config.number_fitness_runs if rounds is not None else rounds
+
+        for i in range(number_of_rounds):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
 
@@ -131,4 +133,4 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / rounds, compressed_behavior
+        return fitness_total / number_of_rounds, compressed_behavior
