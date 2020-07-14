@@ -88,7 +88,7 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
         set_random_seeds(seed, env)
         fitness_total = 0
 
-        number_of_rounds = self.config.number_fitness_runs if rounds is not None else rounds
+        number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
 
         for i in range(number_of_rounds):
             fitness_current = 0
