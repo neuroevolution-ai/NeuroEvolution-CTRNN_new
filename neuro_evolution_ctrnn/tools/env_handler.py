@@ -2,7 +2,7 @@ import gym
 import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import ExperimentCfg, ReacherMemoryEnvAttributesCfg
+from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
 
 from gym import Wrapper
@@ -14,7 +14,7 @@ import numpy as np
 class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
-    def __init__(self, config: ExperimentCfg):
+    def __init__(self, config: EpisodeRunnerCfg):
         self.config = config
 
     def make_env(self, env_id: str):
@@ -59,12 +59,12 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        if self.config.episode_runner.novelty:
+        if self.config.novelty:
             logging.info("wrapping env in BehaviorWrapper")
             env = BehaviorWrapper(env,
-                                  self.config.episode_runner.novelty.behavior_from_observation,
-                                  self.config.episode_runner.novelty.behavioral_interval,
-                                  self.config.episode_runner.novelty.behavioral_max_length)
+                                  self.config.novelty.behavior_from_observation,
+                                  self.config.novelty.behavioral_interval,
+                                  self.config.novelty.behavioral_max_length)
         return env
 
 

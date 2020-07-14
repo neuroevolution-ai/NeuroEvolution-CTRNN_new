@@ -60,7 +60,7 @@ class Experiment(object):
         self._setup()
 
     def _setup(self):
-        env_handler = EnvHandler(self.config)
+        env_handler = EnvHandler(self.config.episode_runner)
         env = env_handler.make_env(self.config.environment)
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
@@ -79,9 +79,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = self.episode_runner_class(config=self.config, brain_class=self.brain_class,
-                                                   input_space=self.input_space, output_space=self.output_space,
-                                                   env_template=env)
+        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner, brain_config=self.config.brain,
+                                                   brain_class=self.brain_class, input_space=self.input_space,
+                                                   output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         if self.config.episode_runner.novelty:
@@ -99,7 +99,7 @@ class Experiment(object):
         else:
             map_func = map
             if self.config.episode_runner.reuse_env:
-                logging.warning("can't reuse env on workers without multithreading. ")
+                logging.warning("Cannot reuse an environment on workers without multithreading.")
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,

@@ -75,7 +75,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
         brain_cfg_class = LSTMCfg
     else:
-        raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
+        raise RuntimeError("Unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
     optimizer_cfg_class: Type[IOptimizerCfg]
     if config_dict["optimizer"]["type"] == "CMA_ES":
@@ -83,7 +83,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     elif config_dict["optimizer"]["type"] == "MU_ES":
         optimizer_cfg_class = OptimizerMuLambdaCfg
     else:
-        raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
+        raise RuntimeError("Unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
     if "novelty" in config_dict:
         novelty_cfg = NoveltyCfg(**config_dict["novelty"])
