@@ -95,19 +95,8 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         config_dict["episode_runner"]["novelty"] = None
 
     if config_dict["environment"] == "ReacherMemory-v0":
-        try:
-            environment_attributes = ReacherMemoryEnvAttributesCfg(**config_dict["environment_attributes"])
-        except KeyError:
-            raise RuntimeError(
-                "When using environment '{}' you must provide the environment attributes from the config class"
-                " 'ReacherMemoryEnvAttributesCfg'.".format(config_dict["environment"]))
-        except TypeError:
-            raise RuntimeError(
-                "Missing or false value for the environment attributes for environment:"
-                " '{}'. Please use the attributes stated in the"
-                " 'ReacherMemoryEnvAttributesCfg' class.".format(config_dict["environment"]))
-
-        config_dict["environment_attributes"] = environment_attributes
+        config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
+            **config_dict["episode_runner"]["environment_attributes"])
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
