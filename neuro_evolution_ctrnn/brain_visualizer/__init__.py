@@ -119,14 +119,6 @@ class PygameBrainVisualizer(object):
         ##### Dictionary Output Neurons
         outputPositionsDict = Positions.getInputOutputPositions(self, numberOutputNeurons, "output")
 
-
-        # draw split lines
-        # pygame.draw.line(self.screen, (255, 255, 255), ((w/6), 0), ((w/6), h), 1)
-        # pygame.draw.line(self.screen, (255, 255, 255), (((5*w)/6), 0), (((5*w)/6), h), 1)
-        #pygame.draw.line(self.screen, (255, 255, 255), (0, 60), (self.w, 60), 1)
-        # pygame.draw.aaline(self.screen, (255, 255, 255), (0, 40), (self.w, 40), 3)
-
-
         ########## Weights
         # TODO: checken ob directions so stimmen
         ##### n-1 Linien pro Neuron ; Input zu Neuron

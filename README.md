@@ -69,22 +69,11 @@ angezeigt wird, kannst du einfach einen softlink darauf ins repo legen:
 `cd NeuroEvolution-CTRNN && ln -s ../CTRNN_Simulation_Results results`
 
 ## visualizer
-Tastaturbefehle:
-* [f] - Neuronen größer
-* [d] - Neuronen kleiner
-* [g] - Werte ein- und ausblenden
-* [r] - Gewichte dicker
-* [e] - Gewichte Dünner
-* [w] - Negativen Gewichte ein- und ausblenden
-* [t] - Negativen Gewichte ein- und ausblenden
-* [z] - Direction der Gewichte einblenden
-* [space] - Pause
-* [c] - Ende der Pause
-* [esc] - Beenden
+Wenn pygame nicht über pip installiert werden kann, dann mit dem apt-Paketmanager versuchen:
+``sudo apt-get install python-pygame``
 
-Maus:
-* [Hover] - Anzeigen der Neuronen
-* [Click auf Neuron, an eine neue Position ziehen, los lassen] - Neuronen bewegen 
+#####Interaktion
+Anzeige kann via Tastatur und Maus angepasst werden.
 
 
 ## troubleshooting
@@ -95,5 +84,3 @@ Maus:
 solution: `export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so)`
 
 https://github.com/openai/mujoco-py/issues/268#issuecomment-595177264
-
-
