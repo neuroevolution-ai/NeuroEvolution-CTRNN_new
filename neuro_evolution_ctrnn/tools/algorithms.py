@@ -16,7 +16,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         if toolbox.conf.novelty:
-            toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+            toolbox.recorded_individuals += random.choices(population,
+                                                           k=toolbox.conf.novelty.recorded_behaviors_per_generation)
         extra = []
         if halloffame.items:
             # extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
@@ -114,19 +115,32 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         population: Collection = toolbox.generate()
         seed_after_map: int = random.randint(1, 10000)
         seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(population))
-        finesses: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
-        for ind, fit in zip(population, finesses):
+
+        fitness: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
+
+        for ind, fit in zip(population, fitness):
             ind.fitness.values = fit
             ind.novelty = 0
+
         # reseed because workers seem to affect the global state
         # also this must happen AFTER fitness-values have been processes, because futures
         set_random_seeds(seed_after_map, env=None)
+
         if halloffame is not None:
             halloffame.update(population)
+
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, nevals=len(population), **record)
+
+        ep_runner_time_list = [x[2] for x in fitness]
+
+        toolbox.logbook.record(gen=gen, nevals=len(population), ep_runner_mean_time=np.mean(ep_runner_time_list),
+                               ep_runner_std_time=np.std(ep_runner_time_list),
+                               ep_runner_max_time=np.max(ep_runner_time_list),
+                               ep_runner_min_time=np.min(ep_runner_time_list), **record)
+
         print(toolbox.logbook.stream)
+
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
                                          logbook=toolbox.logbook, last_seed=seed_after_map, strategy=toolbox.strategy))

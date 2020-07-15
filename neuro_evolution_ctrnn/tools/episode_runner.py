@@ -45,9 +45,11 @@ class TrainEpisodeRunner(IEpisodeRunner):
         super().__init__(config, brain_config, brain_class, input_space, output_space, env_template)
 
     def eval_fitness(self, individual, seed, *args, **kwargs):
+        time_s = time.time()
         env = self._get_env()
         set_random_seeds(seed, env)
         fitness_total = 0
+        timesteps_total = 0
 
         for i in range(self.config.number_fitness_runs):
             fitness_current = 0
@@ -63,6 +65,7 @@ class TrainEpisodeRunner(IEpisodeRunner):
 
                 action = output_to_action(brain_output, self.output_space)
                 ob, rew, done, info = env.step(action)
+                timesteps_total += 1
 
                 fitness_current += rew
 
@@ -74,7 +77,9 @@ class TrainEpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / self.config.number_fitness_runs, compressed_behavior
+        time_e = (time.time() - time_s) / timesteps_total
+
+        return fitness_total / self.config.number_fitness_runs, compressed_behavior, time_e
 
 
 class VisualizeEpisodeRunner(IEpisodeRunner):
@@ -84,9 +89,11 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
                      neuron_vis=False, slow_down=0, rounds=None, *args, **kwargs):
+        time_s = time.time()
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
+        timesteps_total = 0
 
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
 
@@ -114,6 +121,8 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
 
                 ob, rew, done, info = env.step(action)
 
+                timesteps_total += 1
+
                 if brain_vis:
                     brain_vis.process_update(in_values=ob, out_values=action)
 
@@ -133,4 +142,6 @@ class VisualizeEpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / number_of_rounds, compressed_behavior
+        time_e = (time.time() - time_s) / timesteps_total
+
+        return fitness_total / number_of_rounds, compressed_behavior, time_e
