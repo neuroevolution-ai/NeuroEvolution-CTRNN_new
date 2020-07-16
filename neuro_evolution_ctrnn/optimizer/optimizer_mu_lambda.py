@@ -22,7 +22,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerMuLambdaCfg, stats,
+    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed:int, conf: OptimizerMuLambdaCfg, stats,
                  map_func=map, from_checkoint=None):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
                                                     from_checkoint)
@@ -102,7 +102,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.hof = self.hof = cp["halloffame"]
         else:
             toolbox.initial_generation = 0
-            toolbox.initial_seed = None
+            toolbox.initial_seed = random_seed
             toolbox.population = self.toolbox.population(n=self.conf.mu)
             toolbox.logbook = self.create_logbook(conf)
             toolbox.recorded_individuals = []

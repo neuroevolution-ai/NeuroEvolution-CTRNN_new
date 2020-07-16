@@ -104,7 +104,7 @@ class Experiment(object):
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkoint=self.from_checkpoint)
+                                              stats=stats, from_checkoint=self.from_checkpoint, random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,

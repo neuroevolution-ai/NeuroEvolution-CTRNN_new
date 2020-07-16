@@ -28,9 +28,13 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             candidates = population + offspring
         else:
             candidates = offspring
+        if toolbox.initial_seed:
+            seed_after_map: int = random.randint(1, 10000)
+            seed_for_generation = random.randint(1, 10000)
+        else:
+            seed_after_map = 0
+            seed_for_generation = 0
 
-        seed_after_map: int = random.randint(1, 10000)
-        seed_for_generation = random.randint(1, 10000)
         seeds_for_evaluation = np.ones(len(candidates), dtype=np.int64) * seed_for_generation
         nevals = len(candidates) + len(toolbox.recorded_individuals)
 

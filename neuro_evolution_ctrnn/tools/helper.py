@@ -102,6 +102,13 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         config_dict["optimizer"]["novelty"] = None
         config_dict["episode_runner"]["novelty"] = None
 
+    if config_dict['random_seed'] < 0:
+        seed = random.randint(1, 10000)
+        logging.info("setting random seed to "+ str(seed))
+        logging.info("if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
+                     "set random_seed to a positive integer.")
+        config_dict['random_seed'] = seed
+
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
@@ -131,6 +138,7 @@ def set_random_seeds(seed, env):
     if not seed:
         return
 
+    logging.info("setting random seed: " +str(seed))
     if type(seed) != int:
         # env.seed only accepts native integer and not np.int32/64
         # so we need to extract the int before passing it to env.seed()
