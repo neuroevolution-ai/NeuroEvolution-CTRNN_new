@@ -53,7 +53,7 @@ class EpisodeRunner(IEpisodeRunner):
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
-
+        steps_total = 0
         number_fitness_runs = self.config.number_fitness_runs
 
         if rounds_per_individual:
@@ -90,6 +90,7 @@ class EpisodeRunner(IEpisodeRunner):
             if render:
                 logging.info("steps: " + str(t) + " \tfitness: " + str(fitness_current))
             fitness_total += fitness_current
+            steps_total += t
 
         compressed_behavior = None
         if hasattr(env, 'get_compressed_behavior'):
@@ -97,7 +98,7 @@ class EpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / self.config.number_fitness_runs, compressed_behavior
+        return fitness_total / self.config.number_fitness_runs, compressed_behavior, steps_total
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):

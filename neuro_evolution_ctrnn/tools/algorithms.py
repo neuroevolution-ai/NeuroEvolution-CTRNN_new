@@ -58,9 +58,10 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             novelties = [0] * len(candidates)
 
         for ind, res, nov in zip(candidates, results, novelties):
-            fitness, behavior_compressed = res
+            fitness, behavior_compressed, steps = res
             ind.fitness.values = [fitness]
             ind.novelty = nov
+            ind.steps = steps
 
         toolbox.shape_fitness(candidates)
 

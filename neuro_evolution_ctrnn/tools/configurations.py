@@ -100,6 +100,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     lambda_: int
     mutpb: float
     extra_from_hof: int
+    efficiency_weight: float
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

@@ -22,7 +22,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed:int, conf: OptimizerMuLambdaCfg, stats,
+    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
+                 stats,
                  map_func=map, from_checkoint=None):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
                                                     from_checkoint)
@@ -70,16 +71,23 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                     ind.novelty_rank = novel_counter
                     novel_counter += 1
 
+            if conf.efficiency_weight:
+                efficiency_counter = 0
+                for ind in sorted(population, key=lambda x: -x.steps):
+                    ind.efficiency_rank = efficiency_counter
+                    efficiency_counter += 1
+
             fitness_counter = 0
             for ind in sorted(population, key=lambda x: x.fitness.values[0]):
                 ind.fitness_rank = fitness_counter
                 fitness_counter += 1
 
             for ind in population:
+                ind.shaped_fitness = ind.fitness_rank
                 if conf.novelty:
-                    ind.shaped_fitness = self.conf.novelty.novelty_weight * ind.novelty_rank + ind.fitness_rank
-                else:
-                    ind.shaped_fitness = ind.fitness_rank
+                    ind.shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
+                if conf.efficiency_weight:
+                    ind.shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank
 
         toolbox.register("shape_fitness", shape_fitness)
         toolbox.register("mate", mate)
