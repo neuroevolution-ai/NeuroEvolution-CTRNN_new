@@ -18,10 +18,11 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: OptimizerCmaEsCfg, stats, map_func=map,
+    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerCmaEsCfg, stats,
+                 map_func=map,
                  hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
-        super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, conf, stats, map_func,
-                                              from_checkoint)
+        super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
+                                             from_checkoint)
         self.toolbox = toolbox = base.Toolbox()
         self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats

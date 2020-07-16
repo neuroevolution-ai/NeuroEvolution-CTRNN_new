@@ -15,7 +15,7 @@ ConfigClass = TypeVar('ConfigClass', bound=IOptimizerCfg)
 class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
-    def __init__(self, eval_fitness: Callable, individual_size: int, conf: ConfigClass, stats, map_func=map,
+    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed:int, conf: ConfigClass, stats, map_func=map,
                  from_checkoint=None):
         pass
 
