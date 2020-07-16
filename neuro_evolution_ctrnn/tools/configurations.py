@@ -37,7 +37,6 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class EpisodeRunnerCfg(abc.ABC):
-    type: str
     number_fitness_runs: int
     reuse_env: bool
     max_steps_per_run: int

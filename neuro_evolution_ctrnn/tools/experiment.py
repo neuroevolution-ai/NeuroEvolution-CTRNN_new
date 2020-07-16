@@ -10,7 +10,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
-from tools.episode_runner import TrainEpisodeRunner, VisualizeEpisodeRunner
+from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
@@ -49,14 +49,6 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
 
-        if self.config.episode_runner.type == "Standard":
-            self.episode_runner_class = TrainEpisodeRunner
-        elif self.config.episode_runner.type == "Visualize":
-            self.episode_runner_class = VisualizeEpisodeRunner
-        else:
-            raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
-                               + str(self.config.episode_runner.type))
-
         self._setup()
 
     def _setup(self):
@@ -79,9 +71,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner, brain_config=self.config.brain,
-                                                   brain_class=self.brain_class, input_space=self.input_space,
-                                                   output_space=self.output_space, env_template=env)
+        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
+                                       brain_class=self.brain_class, input_space=self.input_space,
+                                       output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         if self.config.episode_runner.novelty:

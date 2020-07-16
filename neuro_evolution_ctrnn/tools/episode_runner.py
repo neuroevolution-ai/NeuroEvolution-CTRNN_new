@@ -7,7 +7,7 @@ from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 
 
-class IEpisodeRunner:
+class EpisodeRunner:
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
         self.config = config
@@ -35,60 +35,8 @@ class IEpisodeRunner:
 
         return env
 
-    def eval_fitness(self, individual, seed, *args, **kwargs):
-        pass
-
-
-class TrainEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
-        super().__init__(config, brain_config, brain_class, input_space, output_space, env_template)
-
-    def eval_fitness(self, individual, seed, *args, **kwargs):
-        time_s = time.time()
-        env = self._get_env()
-        set_random_seeds(seed, env)
-        fitness_total = 0
-        timesteps_total = 0
-
-        for i in range(self.config.number_fitness_runs):
-            fitness_current = 0
-            brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
-
-            set_random_seeds(seed + i, env)
-            ob = env.reset()
-
-            done = False
-
-            while not done:
-                brain_output = brain.step(ob)
-
-                action = output_to_action(brain_output, self.output_space)
-                ob, rew, done, info = env.step(action)
-                timesteps_total += 1
-
-                fitness_current += rew
-
-            fitness_total += fitness_current
-
-        compressed_behavior = None
-        if hasattr(env, 'get_compressed_behavior'):
-            # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
-            if callable(env.get_compressed_behavior):
-                compressed_behavior = env.get_compressed_behavior()
-
-        time_e = (time.time() - time_s) / timesteps_total
-
-        return fitness_total / self.config.number_fitness_runs, compressed_behavior, time_e
-
-
-class VisualizeEpisodeRunner(IEpisodeRunner):
-    def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
-        super().__init__(config, brain_config, brain_class, input_space, output_space, env_template)
-
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, rounds=None, *args, **kwargs):
+                     neuron_vis=False, slow_down=0, rounds=None):
         time_s = time.time()
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)

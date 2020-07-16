@@ -1,10 +1,5 @@
 {
   "environment": "ReacherMemory-v0",
-  "environment_attributes": {
-    "observation_frames": 20,
-    "memory_frames": 20,
-    "action_frames": 50
-  },
   "random_seed": 0,
   "number_generations": 2500,
   "use_worker_processes": true,
@@ -38,7 +33,6 @@
     "t_mask_param": 4
   },
   "episode_runner": {
-    "type": "Standard",
     "number_fitness_runs": 50,
     "reuse_env": true,
     "keep_env_seed_fixed_during_generation": true,
