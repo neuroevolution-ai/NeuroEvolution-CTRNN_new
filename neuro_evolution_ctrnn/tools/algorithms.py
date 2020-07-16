@@ -57,11 +57,13 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         else:
             novelties = [0] * len(candidates)
 
+        total_steps = 0
         for ind, res, nov in zip(candidates, results, novelties):
             fitness, behavior_compressed, steps = res
             ind.fitness.values = [fitness]
             ind.novelty = nov
             ind.steps = steps
+            total_steps += steps
 
         toolbox.shape_fitness(candidates)
 
@@ -79,7 +81,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         population[:] = toolbox.select(candidates, toolbox.conf.mu, fit_attr="shaped_fitness")
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
-        toolbox.logbook.record(gen=gen, nevals=nevals, **record)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
@@ -119,10 +121,13 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         population: Collection = toolbox.generate()
         seed_after_map: int = random.randint(1, 10000)
         seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(population))
-        finesses: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
-        for ind, fit in zip(population, finesses):
-            ind.fitness.values = fit
+        result: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
+        total_steps=0
+        for ind, res in zip(population, result):
+            fitness, behavior_compressed, steps = res
+            ind.fitness.values = [fitness]
             ind.novelty = 0
+            total_steps += steps
         # reseed because workers seem to affect the global state
         # also this must happen AFTER fitness-values have been processes, because futures
         set_random_seeds(seed_after_map, env=None)
@@ -130,7 +135,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, nevals=len(population), **record)
+        toolbox.logbook.record(gen=gen, nevals=len(population), steps=total_steps, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
