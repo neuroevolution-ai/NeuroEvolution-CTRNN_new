@@ -41,7 +41,7 @@ class Positions():
             read_file.close()
         # print(decodedArray)
         initialPosDict = {}
-        for i in range(len(self.brain.W)):
+        for i in range(len(self.brain.W.todense())):
             value = decodedArray[str(i)]
             initialPosDict[i] = value
 

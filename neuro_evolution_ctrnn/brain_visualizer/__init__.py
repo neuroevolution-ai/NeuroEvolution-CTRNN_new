@@ -1,8 +1,8 @@
-from neuro_evolution_ctrnn.brain_visualizer.position import Positions
-from neuro_evolution_ctrnn.brain_visualizer.weights import Weights
-from neuro_evolution_ctrnn.brain_visualizer.neurons import Neurons
-from  neuro_evolution_ctrnn.brain_visualizer.color import Colour
-from neuro_evolution_ctrnn.brain_visualizer.events import Events
+from brain_visualizer.position import Positions
+from brain_visualizer.weights import Weights
+from brain_visualizer.neurons import Neurons
+from brain_visualizer.color import Colour
+from brain_visualizer.events import Events
 
 import pygame, sys
 from pygame.locals import *
@@ -106,7 +106,7 @@ class PygameBrainVisualizer(object):
 
         ##### Number Neurons
         numberInputNeurons = len(in_values)
-        numberNeurons = len(self.brain.W)
+        numberNeurons = len(self.brain.W.todense())
         numberOutputNeurons = len(out_values)
 
 

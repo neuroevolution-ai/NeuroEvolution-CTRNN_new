@@ -1,5 +1,5 @@
 import pygame
-from neuro_evolution_ctrnn.brain_visualizer.color import Colour
+from brain_visualizer.color import Colour
 
 class Neurons():
     def draw(self, myfont, positions, valueDict, minMax, hell, grau, grell, radius, matrix=False):
