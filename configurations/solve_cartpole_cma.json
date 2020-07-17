@@ -1,26 +1,43 @@
 {
   "environment": "CartPole-v0",
-  "neural_network_type": "CTRNN",
   "random_seed": 123,
   "number_generations": 100,
-  "trainer_type": "CMA_ES",
-  "trainer": {
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "CMA_ES",
     "population_size": 5,
-    "sigma": 1.0
+    "sigma": 1.0,
+    "checkpoint_frequency": 0,
+    "hof_size": 5
   },
   "brain": {
+    "type": "CTRNN",
     "normalize_input": true,
     "normalize_input_target": 100,
+    "neuron_activation": "tanh",
+    "neuron_activation_inplace": true,
     "number_neurons": 5,
+    "use_bias": false,
     "delta_t": 0.05,
     "optimize_state_boundaries": "legacy",
     "clipping_range_max": 1.0,
     "clipping_range_min": -1.0,
     "optimize_y0": true,
-    "set_principle_diagonal_elements_of_W_negative": true
+    "set_principle_diagonal_elements_of_W_negative": true,
+    "parameter_perturbations": 0.0,
+    "w_mask": "dense",
+    "w_mask_param": 4,
+    "v_mask": "dense",
+    "v_mask_param": 4,
+    "t_mask": "dense",
+    "t_mask_param": 4
   },
   "episode_runner": {
+    "type": "Standard",
     "keep_env_seed_fixed_during_generation": true,
-    "number_fitness_runs": 100
+    "number_fitness_runs": 100,
+    "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0
   }
 }

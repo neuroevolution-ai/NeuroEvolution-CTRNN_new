@@ -1,0 +1,140 @@
+@startuml
+participant batch_train.py << <<(P,#DDDDDD)process>>
+batch_train.py -> batch_train.py: load_design_space()
+loop Experiment
+batch_train.py -> batch_train.py: generate_config()
+create train.py  << (P,#DDDDFF) process >>
+batch_train.py -> train.py: start_process()
+activate train.py
+train.py -[hidden]> Experiment
+train.py -[hidden]> Optimizer
+create DaskHandler  <<(C,#DDFFDD) class>>
+train.py  --> DaskHandler: load_module()
+
+create Experiment
+train.py -> Experiment: __init()
+activate Experiment
+
+Experiment --> train.py
+deactivate Experiment
+
+train.py -> Experiment: setup()
+activate Experiment
+create Optimizer
+Experiment -> Optimizer: __init(dask_map)
+activate Optimizer
+return
+
+return
+train.py -> Experiment: run()
+activate Experiment
+
+Experiment -> DaskHandler: init_dask()
+activate DaskHandler
+create collections Worker <<(P,#DDDDDD)process>>
+DaskHandler --> Worker: start_process()
+
+Worker -[hidden]> EpRunner
+Worker -[hidden]> gym
+Worker -[hidden]> Brain
+create Brain_class <<(C,#DDFFDD)class>>
+Worker --> Brain_class: load_module()
+DaskHandler -> Worker: register(CreatorPlugin)
+Worker -> Worker: _EnvPlugin.setup()
+activate Worker
+DaskHandler --> Experiment
+deactivate DaskHandler
+
+Worker -> Optimizer: create_classes()
+activate Optimizer
+return
+Worker -> Brain_class:  set_class_state(masks)
+activate Brain_class
+return
+
+deactivate Worker
+
+Experiment -> DaskHandler: init_workers_with_env()
+activate DaskHandler
+DaskHandler -> Worker: register(EnvPlugin)
+
+return
+
+Worker -> Worker: _CreatorPlugin.setup()
+activate Worker
+create gym
+Worker -> gym: make()
+activate gym
+return
+deactivate Worker
+
+create EpRunner
+Experiment -> EpRunner: __init()
+activate EpRunner
+return
+Experiment -> Optimizer: train()
+
+loop number of Generations
+activate Optimizer
+
+Optimizer -> Optimizer: Strategy.generate()
+Optimizer -> DaskHandler: dask_map(eval_fitness, Individuals)
+activate DaskHandler
+DaskHandler --> DaskHandler: map(eval_fitness, Individuals)
+loop number of Individuals
+DaskHandler --> Worker: run(eval_fitness, Individual)
+activate Worker
+Worker -> EpRunner: eval_fitness(Individual)
+activate EpRunner
+EpRunner -> gym: reset()
+activate gym
+return
+create Brain
+EpRunner -> Brain: __init(Individual)
+loop until done
+EpRunner -> Brain: step()
+
+activate Brain
+Brain -> Brain_class: read_masks
+activate Brain_class
+return
+return
+EpRunner -> gym: step()
+activate gym
+return
+end
+destroy Brain
+
+return fitness
+return fitness
+
+end
+DaskHandler --> DaskHandler: gather(futures)
+return fitnesses
+Optimizer --> Optimizer: Strategy.update(fitnesses)
+end
+
+return results
+
+
+Experiment --> train.py: results
+deactivate Experiment
+deactivate Optimizer
+train.py --> train.py: save(results)
+train.py --> DaskHandler: stop_dask()
+activate DaskHandler
+DaskHandler --> Worker: stop()
+activate Worker
+return
+destroy Worker
+destroy gym
+destroy EpRunner
+destroy Brain_class
+return
+train.py --> batch_train.py
+destroy train.py
+destroy DaskHandler
+destroy Experiment
+destroy Optimizer
+end
+@enduml

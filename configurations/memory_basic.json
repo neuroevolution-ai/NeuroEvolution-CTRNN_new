@@ -1,0 +1,46 @@
+{
+  "environment": "Reacher-v2",
+  "random_seed": 0,
+  "number_generations": 2500,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 200,
+    "sigma": 1.0,
+    "checkpoint_frequency": 10,
+    "hof_size": 10
+  },
+  "brain": {
+    "type": "CTRNN",
+    "number_neurons": 10,
+    "neuron_activation": "relu",
+    "neuron_activation_inplace": false,
+    "use_bias": true,
+    "delta_t": 0.05,
+    "normalize_input": false,
+    "normalize_input_target": 2,
+    "optimize_state_boundaries": "legacy",
+    "clipping_range_max": 1.0,
+    "clipping_range_min": -1.0,
+    "optimize_y0": true,
+    "set_principle_diagonal_elements_of_W_negative": true,
+    "parameter_perturbations": 0.001,
+    "w_mask": "logarithmic",
+    "w_mask_param": 4,
+    "v_mask": "logarithmic",
+    "v_mask_param": 4,
+    "t_mask": "logarithmic",
+    "t_mask_param": 4
+  },
+  "episode_runner": {
+    "type": "Memory",
+    "number_fitness_runs": 50,
+    "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "observation_frames": 20,
+    "memory_frames": 20,
+    "action_frames": 50,
+    "observation_mask": [4, 5, 8, 9, 10]
+  }
+}

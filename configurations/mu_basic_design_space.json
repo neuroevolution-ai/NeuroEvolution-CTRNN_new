@@ -1,0 +1,57 @@
+{
+  "environment": "BipedalWalker-v3",
+  "random_seed": 0,
+  "number_generations": 50,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "MU_ES",
+    "hof_size": 10,
+    "checkpoint_frequency": 0,
+    "initial_gene_range": [0.5, 1, 2, 5],
+    "tournsize": [3, 5],
+    "mu": [5, 10, 20],
+    "extra_from_hof": [0, 1, 5],
+    "lambda_": [80],
+    "mutpb": [0.90, 0.8, 0.5]
+  },
+  "brain": {
+    "type": "CTRNN",
+    "use_bias": false,
+    "number_neurons": [5, 7, 10],
+    "delta_t": [0.1, 0.25, 0.5, 1.0],
+    "neuron_activation": ["tanh", "relu"],
+    "neuron_activation_inplace": [true, false],
+    "normalize_input": [true, false],
+    "normalize_input_target": [5, 10, 1],
+    "optimize_state_boundaries": ["fixed", "legacy", "global", "per_neuron"],
+    "clipping_range_max": 1.0,
+    "clipping_range_min": -1.0,
+    "optimize_y0": [true, false],
+    "set_principle_diagonal_elements_of_W_negative": [true, false],
+    "w_mask": "logarithmic",
+    "w_mask_param": [8, 2, 1.5],
+    "v_mask": "logarithmic",
+    "v_mask_param": [2, 1.5, 8],
+    "t_mask": "logarithmic",
+    "t_mask_param": [2, 8, 1.5],
+    "parameter_perturbations": [0.0, 0.001, 0.01, 0.1]
+  },
+  "novelty": {
+    "distance": ["NCD", "euclid"],
+    "max_recorded_behaviors": [1, 10, 25],
+    "novelty_nearest_k": 5,
+    "recorded_behaviors_per_generation": 2,
+    "novelty_weight": [0,0.2,0.5,1.0,2.0],
+    "behavioral_interval": 10,
+    "behavioral_max_length": 100,
+    "behavior_from_observation": true
+  },
+  "episode_runner": {
+    "type": "Standard",
+    "keep_env_seed_fixed_during_generation": false,
+    "number_fitness_runs": 1,
+    "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0
+  }
+}

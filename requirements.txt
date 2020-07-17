@@ -11,6 +11,11 @@ numpy
 nptyping
 pytest-mock
 git+git://github.com/numpy/numpy-stubs.git#egg=numpy-stubs
+attrs
+dask[distributed]
+torch
+pytest-parallel
+bokeh # for dash-dashboard
 pygame
 networkx
 
