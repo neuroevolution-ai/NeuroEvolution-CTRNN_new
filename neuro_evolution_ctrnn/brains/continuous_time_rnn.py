@@ -27,8 +27,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     def learned_sparse(self, mat, percentile):
         M = np.abs(mat.toarray())
         p = np.percentile(a=M, q=percentile, interpolation='higher')
-        M[M < p] = 0
-        return sparse.csr_matrix(M, dtype=float)
+        mat[M < p] = 0
+        return sparse.csr_matrix(mat, dtype=float)
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         super().__init__(input_space, output_space, individual, config)
