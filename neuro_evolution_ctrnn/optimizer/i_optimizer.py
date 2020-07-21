@@ -48,9 +48,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             logbook.chapters["novelty"].columns_len = [8] * 4
         else:
             logbook.columns_len = [3, 3, 0]
-            logbook.header = (
-            "gen", "nevals", "fitness", "ep_runner_mean_time", "ep_runner_std_time", "ep_runner_max_time",
-            "ep_runner_min_time")
+            logbook.header = ("gen", "nevals", "fitness")
 
         return logbook
 

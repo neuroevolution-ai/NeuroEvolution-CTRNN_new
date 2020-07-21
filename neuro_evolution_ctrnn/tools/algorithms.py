@@ -132,12 +132,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
 
-        ep_runner_time_list = [x[2] for x in fitness]
-
-        toolbox.logbook.record(gen=gen, nevals=len(population), ep_runner_mean_time=np.mean(ep_runner_time_list),
-                               ep_runner_std_time=np.std(ep_runner_time_list),
-                               ep_runner_max_time=np.max(ep_runner_time_list),
-                               ep_runner_min_time=np.min(ep_runner_time_list), **record)
+        toolbox.logbook.record(gen=gen, nevals=len(population), **record)
 
         print(toolbox.logbook.stream)
 

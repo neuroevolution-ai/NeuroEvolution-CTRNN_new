@@ -37,7 +37,6 @@ class EpisodeRunner:
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
                      neuron_vis=False, slow_down=0, rounds=None):
-        time_s = time.time()
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
@@ -90,6 +89,4 @@ class EpisodeRunner:
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        time_e = (time.time() - time_s) / timesteps_total
-
-        return fitness_total / number_of_rounds, compressed_behavior, time_e
+        return fitness_total / number_of_rounds, compressed_behavior
