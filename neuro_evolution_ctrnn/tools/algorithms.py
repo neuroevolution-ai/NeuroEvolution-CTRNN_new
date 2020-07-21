@@ -16,7 +16,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         if toolbox.conf.novelty:
-            toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+            toolbox.recorded_individuals += random.choices(population,
+                                                           k=toolbox.conf.novelty.recorded_behaviors_per_generation)
         extra = []
         if halloffame.items:
             # extra = random.choices(halloffame.items, k=toolbox.conf.extra_from_hof)
@@ -121,6 +122,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         population: Collection = toolbox.generate()
         seed_after_map: int = random.randint(1, 10000)
         seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(population))
+
         result: Iterable = toolbox.map(toolbox.evaluate, population, seeds_for_evaluation)
         total_steps=0
         for ind, res in zip(population, result):
@@ -128,15 +130,20 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             ind.fitness.values = [fitness]
             ind.novelty = 0
             total_steps += steps
+
         # reseed because workers seem to affect the global state
         # also this must happen AFTER fitness-values have been processes, because futures
         set_random_seeds(seed_after_map, env=None)
+
         if halloffame is not None:
             halloffame.update(population)
+
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
         toolbox.logbook.record(gen=gen, nevals=len(population), steps=total_steps, **record)
+
         print(toolbox.logbook.stream)
+
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
                                          logbook=toolbox.logbook, last_seed=seed_after_map, strategy=toolbox.strategy))

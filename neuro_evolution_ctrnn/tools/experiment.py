@@ -10,7 +10,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 # import brains.layered_nn as lnn
-from tools.episode_runner import EpisodeRunner, MemoryEpisodeRunner
+from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
@@ -49,14 +49,6 @@ class Experiment(object):
         else:
             raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
 
-        if self.config.episode_runner.type == "Standard":
-            self.episode_runner_class = EpisodeRunner
-        elif self.config.episode_runner.type == "Memory":
-            self.episode_runner_class = MemoryEpisodeRunner
-        else:
-            raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
-                               + str(self.config.episode_runner.type))
-
         self._setup()
 
     def _setup(self):
@@ -79,9 +71,9 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
 
-        self.ep_runner = self.episode_runner_class(config=self.config.episode_runner, brain_conf=self.config.brain,
-                                                   brain_class=self.brain_class, input_space=self.input_space,
-                                                   output_space=self.output_space, env_template=env)
+        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
+                                       brain_class=self.brain_class, input_space=self.input_space,
+                                       output_space=self.output_space, env_template=env)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness.values)
         if self.config.episode_runner.novelty:
@@ -99,7 +91,7 @@ class Experiment(object):
         else:
             map_func = map
             if self.config.episode_runner.reuse_env:
-                logging.warning("can't reuse env on workers without multithreading. ")
+                logging.warning("Cannot reuse an environment on workers without multithreading.")
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
@@ -128,43 +120,3 @@ class Experiment(object):
             individual_size=self.individual_size)
         DaskHandler.stop_dask()
         print("Done")
-
-    def visualize(self, individuals, brain_vis_handler, rounds_per_individual=1, neuron_vis=False, slow_down=0):
-        env_handler = EnvHandler(self.config.episode_runner)
-        env = env_handler.make_env(self.config.environment)
-        env.render()
-        if hasattr(self.config.optimizer, "mutation_learned"):
-            # sometimes there are also optimizing strategies encoded in the genome. These parameters
-            # are not part of the brain and need to be removed from the genome before initializing the brain.
-            individuals = self.optimizer.strip_strategy_from_population(individuals,
-                                                                        self.config.optimizer.mutation_learned)
-
-        for individual in individuals:
-            set_random_seeds(self.config.random_seed, env)
-
-            brain = self.brain_class(input_space=self.input_space,
-                                     output_space=self.output_space,
-                                     individual=individual,
-                                     config=self.config.brain)
-
-            for i in range(rounds_per_individual):
-                fitness_current = 0
-                ob = env.reset()
-                done = False
-                if neuron_vis:
-                    brain_vis = brain_vis_handler.launch_new_visualization(brain)
-                else:
-                    brain_vis = None
-                step_count = 0
-                while not done:
-                    step_count += 1
-                    action = brain.step(ob)
-                    if brain_vis:
-                        brain_vis.process_update(in_values=ob, out_values=action)
-                    action = output_to_action(action, self.output_space)
-                    ob, rew, done, info = env.step(action)
-                    if slow_down:
-                        time.sleep(slow_down / 1000.0)
-                    fitness_current += rew
-                    env.render()
-                print("steps: " + str(step_count) + " \tReward: " + str(fitness_current))

@@ -12,7 +12,8 @@
     "mu": 30,
     "extra_from_hof": 0,
     "lambda_": 600,
-    "mutpb": 0.8
+    "mutpb": 0.8,
+    "efficiency_weight": 0.0
   },
   "brain": {
     "type": "CTRNN",
@@ -37,7 +38,6 @@
     "parameter_perturbations": 0.01
   },
   "episode_runner": {
-    "type": "Standard",
     "keep_env_seed_fixed_during_generation": true,
     "number_fitness_runs": 1,
     "max_steps_per_run": 0,

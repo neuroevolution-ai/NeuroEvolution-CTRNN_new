@@ -1,0 +1,1 @@
+from gym_memory_environments.envs.reacher_memory_env import ReacherMemoryEnv

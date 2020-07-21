@@ -1,9 +1,9 @@
 import gym
+import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
+from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
-from tools.configurations import IEpisodeRunnerCfg
-
 from gym import Wrapper
 from bz2 import BZ2Compressor
 from typing import Union, Iterable
@@ -13,12 +13,23 @@ import numpy as np
 class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
-    def __init__(self, config: IEpisodeRunnerCfg):
-        self.conf = config
+    def __init__(self, config: EpisodeRunnerCfg):
+        self.config = config
 
     def make_env(self, env_id: str):
+        if env_id == "ReacherMemory-v0":
 
-        env = gym.make(env_id)
+            assert (isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg),
+                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"
+                    " (config.environment_attributes)")
+
+            env = gym.make(
+                env_id,
+                observation_frames=self.config.environment_attributes.observation_frames,
+                memory_frames=self.config.environment_attributes.memory_frames,
+                action_frames=self.config.environment_attributes.action_frames)
+        else:
+            env = gym.make(env_id)
 
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the
@@ -30,10 +41,11 @@ class EnvHandler:
 
         if env.spec.id.endswith("NoFrameskip-v4"):
             logging.info("wrapping env in AtariPreprocessing")
-            env = AtariPreprocessing(env, screen_size=16, scale_obs=True, terminal_on_life_loss=False)
-            # EpisodicLifeEnv behaves differently than terminal_on_life_loss
-            # with terminal_on_life_loss there is a reset after life less, while with EpisodicLifeEnv
-            # the next agent continues where the last agents died.
+
+            # terminal_on_life_loss behaves different than EpisodicLifeEnv
+            # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
+            # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
+            env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
             env = EpisodicLifeEnv(env)
 
         if env.spec.id.startswith("Qbert"):
@@ -48,16 +60,14 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        if self.conf.novelty:
+        if self.config.novelty:
             logging.info("wrapping env in BehaviorWrapper")
-            env = BehaviorWrapper(env,
-                                  self.conf.novelty.behavior_from_observation,
-                                  self.conf.novelty.behavioral_interval,
-                                  self.conf.novelty.behavioral_max_length)
+            env = BehaviorWrapper(env, self.config.novelty.behavior_from_observation,
+                                  self.config.novelty.behavioral_interval, self.config.novelty.behavioral_max_length)
 
-        if self.conf.max_steps_per_run:
+        if self.config.max_steps_per_run:
             logging.info("wrapping env in MaxStepWrapper")
-            env = MaxStepWrapper(env, max_steps=self.conf.max_steps_per_run, penalty=self.conf.max_steps_penalty)
+            env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
 
         return env
 
@@ -131,16 +141,15 @@ class BehaviorWrapper(Wrapper):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
 
         if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
-
             # since float16.max is only around 65500, we need to make it a little smaller
             data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
             self._record(data)
+        elif self.behavior_from_observation:
+            self._record(ob)
         elif self.env.spec.id.endswith("NoFrameskip-v4"):
             # this is an atari env
             # noinspection PyProtectedMember
             self._record(self.env.unwrapped._get_ram())
-        elif self.behavior_from_observation:
-            self._record(ob)
         else:
             self._record(action)
         return ob, rew, done, info
