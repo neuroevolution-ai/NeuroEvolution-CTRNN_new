@@ -2,7 +2,7 @@ import gym
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import IEpisodeRunnerCfg
-
+from tools.atari_wrappers import EpisodicLifeEnv
 from gym import Wrapper
 from bz2 import BZ2Compressor
 from typing import Union, Iterable
@@ -29,7 +29,12 @@ class EnvHandler:
 
         if env.spec.id.endswith("NoFrameskip-v4"):
             logging.info("wrapping env in AtariPreprocessing")
-            env = AtariPreprocessing(env, screen_size=16, scale_obs=True, terminal_on_life_loss=True)
+
+            # terminal_on_life_loss behaves different than EpisodicLifeEnv
+            # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
+            # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
+            env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
+            env = EpisodicLifeEnv(env)
 
         if env.spec.id.startswith("Qbert"):
             logging.info("wrapping env in QbertGlitchlessWrapper")
