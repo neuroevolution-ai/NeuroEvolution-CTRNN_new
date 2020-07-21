@@ -12,7 +12,8 @@
     "mu": [5, 10, 20],
     "extra_from_hof": [0, 1, 5],
     "lambda_": [80],
-    "mutpb": [0.90, 0.8, 0.5]
+    "mutpb": [0.90, 0.8, 0.5],
+    "efficiency_weight": 0.01
   },
   "brain": {
     "type": "CTRNN",

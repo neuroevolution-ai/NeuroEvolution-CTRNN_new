@@ -1,5 +1,6 @@
 from gym import wrappers
 import time
+import logging
 
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
@@ -40,7 +41,7 @@ class EpisodeRunner:
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
-        timesteps_total = 0
+        steps_total = 0
 
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
 
@@ -59,6 +60,7 @@ class EpisodeRunner:
             else:
                 brain_vis = None
 
+            t = 0
             done = False
 
             while not done:
@@ -68,7 +70,7 @@ class EpisodeRunner:
 
                 ob, rew, done, info = env.step(action)
 
-                timesteps_total += 1
+                t += 1
 
                 if brain_vis:
                     brain_vis.process_update(in_values=ob, out_values=action)
@@ -81,7 +83,11 @@ class EpisodeRunner:
                 if render:
                     env.render()
 
+            if render:
+                logging.info("steps: " + str(t) + " \tfitness: " + str(fitness_current))
+
             fitness_total += fitness_current
+            steps_total += t
 
         compressed_behavior = None
         if hasattr(env, 'get_compressed_behavior'):
@@ -89,4 +95,4 @@ class EpisodeRunner:
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / number_of_rounds, compressed_behavior
+        return fitness_total / number_of_rounds, compressed_behavior, steps_total

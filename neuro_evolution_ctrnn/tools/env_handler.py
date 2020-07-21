@@ -1,4 +1,5 @@
 import gym
+import pybullet_envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
@@ -61,12 +62,12 @@ class EnvHandler:
 
         if self.config.novelty:
             logging.info("wrapping env in BehaviorWrapper")
-            env = BehaviorWrapper(env, self.conf.novelty.behavior_from_observation,
-                                  self.conf.novelty.behavioral_interval, self.conf.novelty.behavioral_max_length)
+            env = BehaviorWrapper(env, self.config.novelty.behavior_from_observation,
+                                  self.config.novelty.behavioral_interval, self.config.novelty.behavioral_max_length)
 
-        if self.conf.max_steps_per_run:
+        if self.config.max_steps_per_run:
             logging.info("wrapping env in MaxStepWrapper")
-            env = MaxStepWrapper(env, max_steps=self.conf.max_steps_per_run, penalty=self.conf.max_steps_penalty)
+            env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
 
         return env
 
