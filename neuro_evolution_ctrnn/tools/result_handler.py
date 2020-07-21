@@ -38,7 +38,9 @@ class ResultHandler(object):
 
         print("output directory: " + str(self.result_path))
         with open(os.path.join(self.result_path, 'Configuration.json'), 'w') as outfile:
-            json.dump(self.config_raw, outfile)
+            # The indent attribute will pretty print the configuration
+            json.dump(self.config_raw, outfile, ensure_ascii=False, indent=4)
+
         with open(os.path.join(self.result_path, 'HallOfFame.pickle'), "wb") as fp:
             pickle.dump(hof, fp)
         with open(os.path.join(self.result_path, 'Log.json'), 'w') as outfile:

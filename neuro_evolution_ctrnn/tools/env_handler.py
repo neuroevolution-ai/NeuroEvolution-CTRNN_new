@@ -1,7 +1,7 @@
 import gym
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import IEpisodeRunnerCfg
+from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
 from gym import Wrapper
 from bz2 import BZ2Compressor
@@ -12,12 +12,23 @@ import numpy as np
 class EnvHandler:
     """this class creates and modifies openAI-Environment."""
 
-    def __init__(self, config: IEpisodeRunnerCfg):
-        self.conf = config
+    def __init__(self, config: EpisodeRunnerCfg):
+        self.config = config
 
     def make_env(self, env_id: str):
+        if env_id == "ReacherMemory-v0":
 
-        env = gym.make(env_id)
+            assert (isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg),
+                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"
+                    " (config.environment_attributes)")
+
+            env = gym.make(
+                env_id,
+                observation_frames=self.config.environment_attributes.observation_frames,
+                memory_frames=self.config.environment_attributes.memory_frames,
+                action_frames=self.config.environment_attributes.action_frames)
+        else:
+            env = gym.make(env_id)
 
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the
@@ -48,12 +59,10 @@ class EnvHandler:
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
-        if self.conf.novelty:
+        if self.config.novelty:
             logging.info("wrapping env in BehaviorWrapper")
-            env = BehaviorWrapper(env,
-                                  self.conf.novelty.behavior_from_observation,
-                                  self.conf.novelty.behavioral_interval,
-                                  self.conf.novelty.behavioral_max_length)
+            env = BehaviorWrapper(env, self.conf.novelty.behavior_from_observation,
+                                  self.conf.novelty.behavioral_interval, self.conf.novelty.behavioral_max_length)
 
         if self.conf.max_steps_per_run:
             logging.info("wrapping env in MaxStepWrapper")

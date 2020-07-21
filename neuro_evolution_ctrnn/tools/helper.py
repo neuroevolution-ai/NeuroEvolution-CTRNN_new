@@ -11,8 +11,8 @@ from bz2 import compress
 import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg)
+                                  EpisodeRunnerCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
+                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):
@@ -75,7 +75,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
         brain_cfg_class = LSTMCfg
     else:
-        raise RuntimeError("unknown neural_network_type: " + str(config_dict["brain"]["type"]))
+        raise RuntimeError("Unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
     optimizer_cfg_class: Type[IOptimizerCfg]
     if config_dict["optimizer"]["type"] == "CMA_ES":
@@ -83,19 +83,11 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     elif config_dict["optimizer"]["type"] == "MU_ES":
         optimizer_cfg_class = OptimizerMuLambdaCfg
     else:
-        raise RuntimeError("unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
+        raise RuntimeError("Unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
 
-    if config_dict["episode_runner"]["type"] == "Standard":
-        episode_runner_cfg_class = StandardEpisodeRunnerCfg
-    elif config_dict["episode_runner"]["type"] == "Memory":
-        episode_runner_cfg_class = MemoryExperimentCfg
-    else:
-        raise RuntimeError("Unknown EpisodeRunner type (config.episode_runner.type: "
-                           + str(config_dict["episode_runner"]["type"]))
-
-    if 'novelty' in config_dict:
-        novelty_cfg = NoveltyCfg(**config_dict['novelty'])
-        del config_dict['novelty']
+    if "novelty" in config_dict:
+        novelty_cfg = NoveltyCfg(**config_dict["novelty"])
+        del config_dict["novelty"]
         config_dict["optimizer"]["novelty"] = novelty_cfg
         config_dict["episode_runner"]["novelty"] = novelty_cfg
     else:
@@ -109,8 +101,13 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
                      "set random_seed to a positive integer.")
         config_dict['random_seed'] = seed
 
+    if config_dict["environment"] == "ReacherMemory-v0":
+        config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
+            **config_dict["episode_runner"]["environment_attributes"])
+
+
     # turn json into nested class so python's type-hinting can do its magic
-    config_dict["episode_runner"] = episode_runner_cfg_class(**(config_dict["episode_runner"]))
+    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
     config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
     config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
     return ExperimentCfg(**config_dict)

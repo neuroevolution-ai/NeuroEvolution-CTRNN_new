@@ -7,14 +7,13 @@ import matplotlib.pyplot as plt
 from deap import base
 from deap import creator
 import argparse
-import threading
 from operator import add, sub
 from scipy.ndimage.filters import gaussian_filter1d
 import logging
 
 from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
-from tools.helper import config_from_file
+from tools.helper import config_from_dict
 import numpy as np
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
@@ -63,9 +62,12 @@ with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
 
 with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
     conf = json.load(read_file)
-    config = config_from_file(os.path.join(args.dir, "Configuration.json"))
 
-if args.neuron_vis or args.hof or args.render or args.record:
+
+if args.render or args.record:
+
+    config = config_from_dict(conf)
+
     experiment = Experiment(configuration=config,
                             result_path="/tmp/not-used",
                             from_checkpoint=None)
@@ -73,6 +75,8 @@ if args.neuron_vis or args.hof or args.render or args.record:
     if len(hall_of_fame) < args.hof:
         raise RuntimeError(
             "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(args.hof, len(hall_of_fame)))
+
+    args.hof = 1 if args.hof <= 0 else args.hof
 
     individuals = hall_of_fame[0:args.hof]
 
@@ -98,10 +102,9 @@ if args.neuron_vis or args.hof or args.render or args.record:
             logging.info("Recording an individual to {}".format(record))
         else:
             record = None
-        experiment.ep_runner.eval_fitness(individual, config.random_seed, args.render, record, record_force, args.rounds,
-                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down)
 
-
+        experiment.ep_runner.eval_fitness(individual, config.random_seed, args.render, record, record_force,
+                                          BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds)
 
 # Plot results
 def my_plot(axis, *nargs, **kwargs, ):

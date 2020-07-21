@@ -8,7 +8,7 @@ import logging
 from tools.experiment import Experiment
 from tools.helper import config_from_file
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 
 def parse_args(args=None):
