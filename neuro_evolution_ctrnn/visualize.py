@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from deap import base
 from deap import creator
 import argparse
-import threading
 from operator import add, sub
 from scipy.ndimage.filters import gaussian_filter1d
 import logging
@@ -67,7 +66,6 @@ with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
 
 if args.render or args.record:
 
-    conf["episode_runner"]["type"] = "Visualize"
     config = config_from_dict(conf)
 
     experiment = Experiment(configuration=config,
@@ -102,10 +100,8 @@ if args.render or args.record:
         else:
             record = None
 
-        t = threading.Thread(target=experiment.ep_runner.eval_fitness,
-                             args=[individual, config.random_seed, args.render, record, record_force,
-                                   BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds])
-        t.start()
+        experiment.ep_runner.eval_fitness(individual, config.random_seed, args.render, record, record_force,
+                                          BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds)
 
 
 # Plot results
