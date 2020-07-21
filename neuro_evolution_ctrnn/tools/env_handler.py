@@ -131,16 +131,15 @@ class BehaviorWrapper(Wrapper):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
 
         if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
-
             # since float16.max is only around 65500, we need to make it a little smaller
             data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
             self._record(data)
+        elif self.behavior_from_observation:
+            self._record(ob)
         elif self.env.spec.id.endswith("NoFrameskip-v4"):
             # this is an atari env
             # noinspection PyProtectedMember
             self._record(self.env.unwrapped._get_ram())
-        elif self.behavior_from_observation:
-            self._record(ob)
         else:
             self._record(action)
         return ob, rew, done, info
