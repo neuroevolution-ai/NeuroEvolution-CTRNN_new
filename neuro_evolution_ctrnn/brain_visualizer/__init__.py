@@ -1,14 +1,12 @@
 from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
 from brain_visualizer.neurons import Neurons
-from brain_visualizer.color import Colour
 from brain_visualizer.events import Events
 import json
 
 import pygame, sys
 from pygame.locals import *
-import numpy
-import math
+
 
 class BrainVisualizerHandler(object):
     def __init__(self):
@@ -155,13 +153,13 @@ class PygameBrainVisualizer(object):
 
         ########## Weights
         ##### n-1 Linien pro Neuron ; Input zu Neuron
-        #Weights.drawNew(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        #Weights.draw(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
-        Weights.drawNew(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        Weights.draw(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Output
-        Weights.drawNew(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        Weights.draw(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
         Neurons.draw(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + 5 + self.weightVal, True)
