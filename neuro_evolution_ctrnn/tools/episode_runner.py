@@ -63,9 +63,9 @@ class EpisodeRunner(IEpisodeRunner):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual,
                                      self.brain_conf)
+            ob = env.reset()
             if render:
                 env.render()
-            ob = env.reset()
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain)
             else:
@@ -98,7 +98,7 @@ class EpisodeRunner(IEpisodeRunner):
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total , compressed_behavior, steps_total
+        return fitness_total / number_fitness_runs, compressed_behavior, steps_total
 
 
 class MemoryEpisodeRunner(IEpisodeRunner):
