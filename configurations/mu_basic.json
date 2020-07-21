@@ -13,7 +13,7 @@
     "extra_from_hof": 0,
     "lambda_": 100,
     "mutpb": 0.8,
-    "efficiency_weight": 0.01
+    "efficiency_weight": 0.0
   },
   "brain": {
     "type": "CTRNN",
