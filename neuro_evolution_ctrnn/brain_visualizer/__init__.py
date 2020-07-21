@@ -3,10 +3,12 @@ from brain_visualizer.weights import Weights
 from brain_visualizer.neurons import Neurons
 from brain_visualizer.color import Colour
 from brain_visualizer.events import Events
+import json
 
 import pygame, sys
 from pygame.locals import *
-
+import numpy
+import math
 
 class BrainVisualizerHandler(object):
     def __init__(self):
@@ -20,6 +22,15 @@ class BrainVisualizerHandler(object):
 class PygameBrainVisualizer(object):
     def __init__(self, brain):
         self.brain = brain
+
+        # Read Configurations
+        with open("/home/benny/CTRNN_Simulation_Results/data/2020-07-17_16-22-47/Configuration.json", "r", encoding='utf-8') as read_file:
+            file = json.load(read_file)
+            self.environment = file["environment"]
+            brain = file["brain"]
+            self.clippingRangeMax = brain["clipping_range_max"]
+            self.clippingRangeMin = brain["clipping_range_min"]
+            read_file.close()
 
         # Initial pygame module
         successes, failures = pygame.init()
@@ -44,10 +55,13 @@ class PygameBrainVisualizer(object):
         self.kitRect = self.kitLogo.get_rect()
         self.kitRect.center = 90, 30
 
+        # initialize & set font
+        pygame.font.init()
+        self.myfont = pygame.font.SysFont("Helvetica", 14)
 
         ##### Dictionary Graph Neurons
         ##### Create Graph with Spring layout and get Positions of Neurons back
-        self.graphPositionsDict = Positions.getGraphPositions(self, self.w, self.h)
+        self.graphPositionsDict = Positions.getGraphPositionsLean(self, self.w, self.h)
 
         # colors
         self.black = (0, 0, 0)
@@ -55,108 +69,115 @@ class PygameBrainVisualizer(object):
         self.grey = (169, 169, 169)
         self.brightGrey = (220, 220, 220)
         self.darkGrey = (79, 79, 79)
-        # Set Color for Display
+        # Color for Display
         self.displayColor = self.black
-        # Set Color for Numbers
+        # Color for Numbers
         self.numColor = (220, 220, 220)
+        # Colors for Weights
+        self.colorNegativeWeight = (185, 19, 44)      # rot
+        self.colorNeutralWeight = (91, 98, 89)
+        self.colorPositiveWeight = (188, 255, 169)     # hellgrün
+        # Colors Neutral Neurons
+        self.colorNeutralNeuron = (91, 98, 89)      # Grey
+        # Color Neurons in Graph
+        self.colorNegNeuronGraph = (187, 209, 251)  # Hellblau
+        self.colorPosNeuronGraph = (7, 49, 129)     # Blau
+        # Color Neurons in Input Layer
+        self.colorNegNeuronIn = (188, 255, 169)     # hellgrün
+        self.colorPosNeuronIn = (49, 173, 14)       # grün
+        # Color Neurons in Output Layer
+        self.colorNegNeuronOut = (255, 181, 118)      # Hell-Orange
+        self.colorPosNeuronOut = (255, 142, 46)  # orange
+
 
         # variables
         self.positiveWeights = True
         self.negativeWeights = True
         self.weightsDirection = False
-        self.weightVal = (-2)
+        self.weightVal = 0 # Defines how many connections will be drawn, defaul: every connection
         self.neuronRadius = 30
         self.neuronText = True
 
 
 
     def process_update(self, in_values, out_values):
-        # TODO: Fehlerhandling
-        # TODO: Zweite Runde bug oder was ist das?
         # Fill screen with color
         self.screen.fill((self.displayColor))
 
-        # Draw Rect
+        # Draw Rect for Logo and Blit Logo on the screen
         pygame.draw.rect(self.screen, self.darkGrey, (0, 0, self.w, 60))
-
-        # Blit Logo on the Screen
         self.screen.blit(self.neuroboticsLogo, self.neuroboticsRect)
         self.screen.blit(self.kitLogo, self.kitRect)
 
-        # initialize & set font
-        pygame.font.init()
-        myfont = pygame.font.SysFont("Helvetica", 14)
 
-        # Text
-        textSurface = myfont.render("Positive Weights [t] : " + str(self.positiveWeights), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 2) - 80), 5))
-        textSurface = myfont.render("Negative Weights [w] : " + str(self.negativeWeights), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 2) - 80), 23))
-        textSurface = myfont.render("Direction [z] : " + str(self.weightsDirection), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 2) - 80), 41))
+        def render_InfoText(self, list_of_strings, x_pos, initial_y_pos, color, y_step):
+            y_pos = initial_y_pos
+            for s in list_of_strings:
+                textSurface = self.myfont.render(s, False, self.numColor)
+                self.screen.blit(textSurface, (x_pos, y_pos))
+                y_pos += y_step
 
-        if self.weightVal == 0:
+        render_InfoText(self, [
+            "Positive Weights [t] : " + str(self.positiveWeights),
+            "Negative Weights [w] : " + str(self.negativeWeights),
+            "Direction [z] : " + str(self.weightsDirection)],
+                        ((self.w / 2) - 80), 5, self.numColor, 18)
+
+        if self.weightVal == 0:     # If weightVal is 0 every Connection will be drawn
             text = "all"
         else:
             text = str(self.weightVal)
-        textSurface = myfont.render("Weights [e,r] : " + text, False, self.numColor)
-        self.screen.blit(textSurface, (((3*self.w / 4) - 80), 14))
-        textSurface = myfont.render("Values [g] : " + str(self.neuronText), False, self.numColor)
-        self.screen.blit(textSurface, (((3*self.w / 4) - 80), 32))
+        render_InfoText(self, [
+            "Weights [e,r] : " + text,
+            "Values [g] : " + str(self.neuronText),
+            "Simulation : " + str(self.environment)],
+                        ((3 * self.w / 4) - 80), 5, self.numColor, 18)
 
         ##### Number Neurons
         numberInputNeurons = len(in_values)
         numberNeurons = len(self.brain.W.todense())
         numberOutputNeurons = len(out_values)
 
+        render_InfoText(self, [
+            "Input Neurons: " + str(numberInputNeurons),
+            "Graph Neurons: " + str(numberNeurons),
+            "Output Neurons: " + str(numberOutputNeurons)],
+                        ((self.w / 4) - 80), 5, self.numColor, 18)
 
         ##### Dictionary Input Neurons
-        obPositionsDict = Positions.getInputOutputPositions(self, numberInputNeurons, "input")
+        inputPositionsDict = Positions.getInputOutputPositions(self, numberInputNeurons, True)
 
         ##### Dictionary Graph Neurons
         # --> self.graphPositionsDict
 
         ##### Dictionary Output Neurons
-        outputPositionsDict = Positions.getInputOutputPositions(self, numberOutputNeurons, "output")
+        outputPositionsDict = Positions.getInputOutputPositions(self, numberOutputNeurons, False)
 
         ########## Weights
-        # TODO: checken ob directions so stimmen
         ##### n-1 Linien pro Neuron ; Input zu Neuron
-        textSurface = myfont.render("Input Neurons: " + str(numberInputNeurons), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 4) - 55), 5))
+        #Weights.drawNew(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
-        Weights.draw(self, self.graphPositionsDict, obPositionsDict, self.brain.V, self.positiveWeights, self.negativeWeights, self.weightsDirection, False)
+        # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
+        Weights.drawNew(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
+        # ##### n-1 Linien pro Neuron ; Neuron zu Output
+        Weights.drawNew(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
-        ##### n-1 Linien pro Neuron ; Neuron zu Neuron
-        textSurface = myfont.render("Graph Neurons: " + str(numberNeurons), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 4) - 55), 23))
-
-        Weights.draw(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W, self.positiveWeights, self.negativeWeights, self.weightsDirection, False)
-
-
-        ##### n-1 Linien pro Neuron ; Neuron zu Output
-        textSurface = myfont.render("Output Neurons: " + str(numberOutputNeurons), False, self.numColor)
-        self.screen.blit(textSurface, (((self.w / 4) - 55), 41))
-
-        Weights.draw(self, self.graphPositionsDict, outputPositionsDict, self.brain.T, self.positiveWeights, self.negativeWeights, self.weightsDirection, True)
-
+        # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
+        Neurons.draw(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + 5 + self.weightVal, True)
 
 
         ########### Draw neurons
         ##### Draw Graph
-        # TODO: clipping range generisch
-        # minMax = clipping Range; hell, grau, grell
-        Neurons.draw(self, myfont, self.graphPositionsDict, self.brain.W, 8, (255, 218, 184), (91, 98, 89), (255, 142, 34), self.neuronRadius + 5, True)
-        Neurons.draw(self, myfont, self.graphPositionsDict, self.brain.y, 0.1,  (187, 209, 251), (91, 98, 89), (7, 49, 129), self.neuronRadius - 5 + 5, False)
+        Neurons.draw(self, self.graphPositionsDict, self.brain.y, 2,  self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph, self.neuronRadius - 5 + 5, False)
 
         ##### draw ob-values (input)
-        # minMax = clipping Range; hell, grau, grell
-        Neurons.draw(self, myfont, obPositionsDict, in_values, 1, (188, 255, 169), (91, 98, 89), (49, 173, 14), self.neuronRadius)
+        # minMax = clipping Range
+        Neurons.draw(self, inputPositionsDict, in_values, 1, self.colorNegNeuronIn, self.colorNeutralNeuron, self.colorPosNeuronIn, self.neuronRadius)
 
         ##### draw action-values (out)
-        # minMax = clipping Range; hell, grau, grell
-        Neurons.draw(self, myfont, outputPositionsDict, out_values, 1, (249, 200, 207), (91, 98, 89), (185, 19, 44), self.neuronRadius)
+        # minMax = clipping Range
+        Neurons.draw(self, outputPositionsDict, out_values, 1, self.colorNegNeuronOut, self.colorNeutralNeuron, self.colorPosNeuronOut, self.neuronRadius)
 
 
         ######### Events: Close when x-Button, Show Number of Neuron when click on it
@@ -168,9 +189,9 @@ class PygameBrainVisualizer(object):
                     Positions.clearJSON(self)
                     sys.exit()
                 if event.type == MOUSEMOTION:
-                    Events.drawNeuronNumber(self, numberInputNeurons, numberNeurons, numberOutputNeurons, obPositionsDict, self.graphPositionsDict, outputPositionsDict, pygame.mouse.get_pos())
+                    Events.drawNeuronNumber(self, inputPositionsDict, self.graphPositionsDict, outputPositionsDict, pygame.mouse.get_pos())
                 if event.type == MOUSEBUTTONDOWN:
-                    clickedNeuron = Events.getNeuronOnClick(self, numberNeurons, self.graphPositionsDict, pygame.mouse.get_pos())
+                    clickedNeuron = Events.getNeuronOnClick(self, self.graphPositionsDict, pygame.mouse.get_pos())
                 if event.type == MOUSEBUTTONUP and clickedNeuron != None:
                     Events.changeNeuronPos(self, clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
                 if event.type == pygame.KEYDOWN:
@@ -213,10 +234,12 @@ class PygameBrainVisualizer(object):
                         pygame.event.clear(KEYDOWN)
                         while pause:
                             for event in pygame.event.get():
-                                if event.key == pygame.K_c:
-                                    pause = False
+                                if event.type == pygame.KEYDOWN:
+                                    if event.key == pygame.K_c:
+                                        pause = False
 
             except AttributeError:
+                print("Failure on Pygame-Event")
                 continue
 
         # Updates the content of the window
