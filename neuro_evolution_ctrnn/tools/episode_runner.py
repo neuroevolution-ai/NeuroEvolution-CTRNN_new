@@ -42,43 +42,34 @@ class EpisodeRunner:
         set_random_seeds(seed, env)
         fitness_total = 0
         steps_total = 0
-
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
 
         for i in range(number_of_rounds):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
+            ob = env.reset()
+            done = False
+            t = 0
 
             if render:
                 env.render()
-
-            ob = env.reset()
 
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain)
             else:
                 brain_vis = None
 
-            t = 0
-            done = False
-
             while not done:
                 brain_output = brain.step(ob)
-
                 action = output_to_action(brain_output, self.output_space)
-
                 ob, rew, done, info = env.step(action)
-
                 t += 1
+                fitness_current += rew
 
                 if brain_vis:
                     brain_vis.process_update(in_values=ob, out_values=action)
-
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
-
-                fitness_current += rew
-
                 if render:
                     env.render()
 
