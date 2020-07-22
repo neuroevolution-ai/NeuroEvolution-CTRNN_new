@@ -2,6 +2,7 @@ from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
 from brain_visualizer.neurons import Neurons
 from brain_visualizer.events import Events
+
 import json
 
 import pygame, sys
@@ -21,13 +22,10 @@ class PygameBrainVisualizer(object):
     def __init__(self, brain):
         self.brain = brain
 
-        # Read Configurations
-        with open("/home/benny/CTRNN_Simulation_Results/data/2020-07-17_16-22-47/Configuration.json", "r", encoding='utf-8') as read_file:
+        # Read Configuration file
+        with open("../CTRNN_Simulation_Results/data/" + ((sys.argv[2])[-19:]) + "/Configuration.json", "r", encoding='utf-8') as read_file:
             file = json.load(read_file)
             self.environment = file["environment"]
-            brain = file["brain"]
-            self.clippingRangeMax = brain["clipping_range_max"]
-            self.clippingRangeMin = brain["clipping_range_min"]
             read_file.close()
 
         # Initial pygame module
@@ -72,26 +70,28 @@ class PygameBrainVisualizer(object):
         # Color for Numbers
         self.numColor = (220, 220, 220)
         # Colors for Weights
-        self.colorNegativeWeight = (185, 19, 44)      # rot
-        self.colorNeutralWeight = (91, 98, 89)
-        self.colorPositiveWeight = (188, 255, 169)     # hellgrün
+        self.colorNegativeWeight = (185, 19, 44) # rot
+        self.colorNeutralWeight = self.darkGrey
+        self.colorPositiveWeight = (188, 255, 169)  # hellgrün
         # Colors Neutral Neurons
-        self.colorNeutralNeuron = (91, 98, 89)      # Grey
+        self.colorNeutralNeuron = self.darkGrey
         # Color Neurons in Graph
         self.colorNegNeuronGraph = (187, 209, 251)  # Hellblau
-        self.colorPosNeuronGraph = (7, 49, 129)     # Blau
-        # Color Neurons in Input Layer
-        self.colorNegNeuronIn = (188, 255, 169)     # hellgrün
-        self.colorPosNeuronIn = (49, 173, 14)       # grün
-        # Color Neurons in Output Layer
-        self.colorNegNeuronOut = (255, 181, 118)      # Hell-Orange
-        self.colorPosNeuronOut = (255, 142, 46)  # orange
+        self.colorPosNeuronGraph = (7, 49, 129)  # Blau
+        # Color Input Layer
+        self.colorNegNeuronIn = (188, 255, 169)   # hellgrün
+        self.colorPosNeuronIn = (49, 173, 14)   # grün
+        # Color in Output Layer
+        self.colorNegNeuronOut = (255, 181, 118)  # Hell-Orange
+        self.colorPosNeuronOut = (255, 142, 46)    # orange
 
 
         # variables
         self.positiveWeights = True
         self.negativeWeights = True
         self.weightsDirection = False
+        self.inputWeights = True
+        self.outputWeights = True
         self.weightVal = 0 # Defines how many connections will be drawn, defaul: every connection
         self.neuronRadius = 30
         self.neuronText = True
@@ -107,67 +107,65 @@ class PygameBrainVisualizer(object):
         self.screen.blit(self.neuroboticsLogo, self.neuroboticsRect)
         self.screen.blit(self.kitLogo, self.kitRect)
 
-
-        def render_InfoText(self, list_of_strings, x_pos, initial_y_pos, color, y_step):
-            y_pos = initial_y_pos
-            for s in list_of_strings:
-                textSurface = self.myfont.render(s, False, self.numColor)
-                self.screen.blit(textSurface, (x_pos, y_pos))
-                y_pos += y_step
-
-        render_InfoText(self, [
-            "Positive Weights [t] : " + str(self.positiveWeights),
-            "Negative Weights [w] : " + str(self.negativeWeights),
-            "Direction [z] : " + str(self.weightsDirection)],
-                        ((self.w / 2) - 80), 5, self.numColor, 18)
-
-        if self.weightVal == 0:     # If weightVal is 0 every Connection will be drawn
-            text = "all"
-        else:
-            text = str(self.weightVal)
-        render_InfoText(self, [
-            "Weights [e,r] : " + text,
-            "Values [g] : " + str(self.neuronText),
-            "Simulation : " + str(self.environment)],
-                        ((3 * self.w / 4) - 80), 5, self.numColor, 18)
-
         ##### Number Neurons
         numberInputNeurons = len(in_values)
         numberNeurons = len(self.brain.W.todense())
         numberOutputNeurons = len(out_values)
 
-        render_InfoText(self, [
+        ########## Draw Legend
+        PygameBrainVisualizer.render_InfoText(self, [
             "Input Neurons: " + str(numberInputNeurons),
             "Graph Neurons: " + str(numberNeurons),
             "Output Neurons: " + str(numberOutputNeurons)],
-                        ((self.w / 4) - 80), 5, self.numColor, 18)
+                                              ((self.w / 4) - 80), 5, self.numColor, 18)
 
-        ##### Dictionary Input Neurons
+        PygameBrainVisualizer.render_InfoText(self, [
+            "Positive/Negative Weights [t,w] : " + str(self.positiveWeights) + " / " + str(self.negativeWeights),
+            "Input/Output Weights [q,z] : " + str(self.inputWeights) + " / " + str(self.outputWeights),
+            "Direction [g] : " + str(self.weightsDirection)],
+                        ((self.w / 2) - 130), 5, self.numColor, 18)
+
+        if self.weightVal == 0:     # If weightVal is 0 every Connection will be drawn
+            text = "all"
+        else:
+            text = str(self.weightVal)
+        PygameBrainVisualizer.render_InfoText(self, [
+            "Weights [e,r] : " + text,
+            "Values [s] : " + str(self.neuronText),
+            "Simulation : " + str(self.environment)],
+                        ((3 * self.w / 4) - 80), 5, self.numColor, 18)
+
+
+
+        ########## Create Dictionaries with Positions
+        ##### Input Dictionary
         inputPositionsDict = Positions.getInputOutputPositions(self, numberInputNeurons, True)
 
         ##### Dictionary Graph Neurons
         # --> self.graphPositionsDict
 
-        ##### Dictionary Output Neurons
+        ##### Output Dictionary
         outputPositionsDict = Positions.getInputOutputPositions(self, numberOutputNeurons, False)
 
-        ########## Weights
+        ########## Draw Weights
         ##### n-1 Linien pro Neuron ; Input zu Neuron
-        #Weights.draw(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        if self.inputWeights:
+            Weights.draw(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense().T, self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
         Weights.draw(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Output
-        Weights.draw(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        if self.outputWeights:
+            Weights.draw(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
-        Neurons.draw(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + 5 + self.weightVal, True)
+        Neurons.draw(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + self.weightVal, True)
 
 
         ########### Draw neurons
         ##### Draw Graph
-        Neurons.draw(self, self.graphPositionsDict, self.brain.y, 2,  self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph, self.neuronRadius - 5 + 5, False)
+        Neurons.draw(self, self.graphPositionsDict, self.brain.y, 3,  self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph, self.neuronRadius-3, False)
 
         ##### draw ob-values (input)
         # minMax = clipping Range
@@ -207,7 +205,7 @@ class PygameBrainVisualizer(object):
                             print(self.neuronRadius)
                     if event.key == pygame.K_f:
                         self.neuronRadius = self.neuronRadius + 5
-                    if event.key == pygame.K_g:
+                    if event.key == pygame.K_s:
                         if self.neuronText:
                             self.neuronText = False
                         else:
@@ -222,11 +220,21 @@ class PygameBrainVisualizer(object):
                             self.negativeWeights = False
                         else:
                             self.negativeWeights = True
-                    if event.key == pygame.K_z:
+                    if event.key == pygame.K_g:
                         if self.weightsDirection:
                             self.weightsDirection = False
                         else:
                             self.weightsDirection = True
+                    if event.key == pygame.K_q:
+                        if self.inputWeights:
+                            self.inputWeights = False
+                        else:
+                            self.inputWeights = True
+                    if event.key == pygame.K_z:
+                        if self.outputWeights:
+                            self.outputWeights = False
+                        else:
+                            self.outputWeights = True
                     if event.key == pygame.K_SPACE:
                         pause = True
                         pygame.event.clear(KEYDOWN)
@@ -242,4 +250,11 @@ class PygameBrainVisualizer(object):
 
         # Updates the content of the window
         pygame.display.flip()
+
+    def render_InfoText(self, list_of_strings, x_pos, initial_y_pos, color, y_step):
+        y_pos = initial_y_pos
+        for s in list_of_strings:
+            textSurface = self.myfont.render(s, False, self.numColor)
+            self.screen.blit(textSurface, (x_pos, y_pos))
+            y_pos += y_step
 

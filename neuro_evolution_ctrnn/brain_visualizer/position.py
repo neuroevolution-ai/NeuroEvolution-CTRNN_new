@@ -15,7 +15,7 @@ class Positions():
         for index, value in np.ndenumerate(brainWeight):
             G.add_edges_from([(index[0], index[1], {'myweight': value})])
 
-        pos = nx.spring_layout(G, k=4, weight="myweight", iterations=100, scale=h / 2 - 100)
+        pos = nx.spring_layout(G, k=3, weight="myweight", iterations=50, scale=h / 2 - 100)
 
         # Adapt positions from spring-layout Method to pygame windows
         graphPositionsDict = {}
@@ -48,16 +48,16 @@ class Positions():
         for i in range(numberNeurons):
             if ((self.h - 100) / (numberNeurons * (self.neuronRadius*2))) > 1:
                 x_pos = x
-                y_pos = (50 + (self.h / 2)) - ((numberNeurons * (self.neuronRadius))) + (i * (self.neuronRadius*2))
+                y_pos = ((self.neuronRadius*2) + (self.h / 2)) - ((numberNeurons * (self.neuronRadius))) + (i * (self.neuronRadius*2))
                 PositionsDict[i] = [x_pos, y_pos]
             else:
                 if i % 2:  # ungerade
                     x_pos = x2
-                    y_pos = (50 + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
+                    y_pos = ((self.neuronRadius*2) + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
                     PositionsDict[i] = [x_pos, y_pos]
                 else:  # gerade
                     x_pos = x3
-                    y_pos = (50 + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
+                    y_pos = ((self.neuronRadius*2) + (self.h / 2)) - ((numberNeurons * self.neuronRadius) / 2) + (i * self.neuronRadius)
                     PositionsDict[i] = [x_pos, y_pos]
         return PositionsDict
 

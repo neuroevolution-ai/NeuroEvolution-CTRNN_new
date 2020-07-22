@@ -20,23 +20,32 @@ class Weights():
                     else:
                         weightColor = self.colorNegativeWeight
 
+                    if self.weightVal == 0:
+                        width = 1
+                    else:
+                        width = int(abs(weight)) + self.weightVal
+
                     if direction:
                         # Winkel der Linien zwischen den beiden Punkten zur x-Achse
                         rotation = math.atan2((endPos[1] - startPos[1]), (endPos[0] - startPos[0]))
                         # Punkt, Winkel und Länge der Linie für Endpunkt des Pfeils
-                        arrowLength = (-1 * (self.neuronRadius + 15))
+                        trirad = 5 + width
+                        arrowLength = (-1 * (self.neuronRadius + trirad + 5))
+
                         arrowEnd = (endPos[0] + arrowLength * math.cos(rotation), endPos[1] + arrowLength * math.sin(rotation))
                         if rotation != 0:
-                            Weights.arrow(self, self.screen, weightColor, weightColor, startPos, arrowEnd, 10, int(abs(weight)) + self.weightVal)
+                            Weights.arrow(self, self.screen, weightColor, weightColor, startPos, arrowEnd, trirad, width)
                     elif not direction:
-                        pygame.draw.line(self.screen, weightColor, (startPosX, startPosY), (endPosX, endPosY), int(abs(weight)) + self.weightVal)
+                        pygame.draw.line(self.screen, weightColor, (startPosX, startPosY), (endPosX, endPosY), width)
 
     def arrow(self, screen, color, tricolor, start, end, trirad, width):
-        pygame.draw.line(screen, color, start, end, width)
-        rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
-        pygame.draw.polygon(screen, tricolor, (
-        (end[0] + trirad * math.sin(math.radians(rotation)), end[1] + trirad * math.cos(math.radians(rotation))), (
-        end[0] + trirad * math.sin(math.radians(rotation - 120)),
-        end[1] + trirad * math.cos(math.radians(rotation - 120))), (
-        end[0] + trirad * math.sin(math.radians(rotation + 120)),
-        end[1] + trirad * math.cos(math.radians(rotation + 120)))))
+        if width >= 1:
+            #trirad += width
+            pygame.draw.line(screen, color, start, end, width)
+            rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
+            pygame.draw.polygon(screen, tricolor, (
+            (end[0] + trirad * math.sin(math.radians(rotation)), end[1] + trirad * math.cos(math.radians(rotation))), (
+            end[0] + trirad * math.sin(math.radians(rotation - 120)),
+            end[1] + trirad * math.cos(math.radians(rotation - 120))), (
+            end[0] + trirad * math.sin(math.radians(rotation + 120)),
+            end[1] + trirad * math.cos(math.radians(rotation + 120)))))
