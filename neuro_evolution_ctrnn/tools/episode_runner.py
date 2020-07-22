@@ -52,7 +52,6 @@ class EpisodeRunner:
             if render:
                 env.render()
 
-            set_random_seeds(seed + i, env)
             ob = env.reset()
 
             if neuron_vis:
