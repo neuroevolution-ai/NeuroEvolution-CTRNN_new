@@ -106,6 +106,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
+    mu: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -118,4 +119,3 @@ class ExperimentCfg:
     optimizer: IOptimizerCfg
     raw_dict: dict
     use_worker_processes: bool
-
