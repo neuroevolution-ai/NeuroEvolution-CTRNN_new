@@ -40,8 +40,12 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.initial_seed = None
             toolbox.logbook = tools.Logbook()
             toolbox.logbook = self.create_logbook(conf)
+            if conf.mu:
+                mu = conf.mu
+            else:
+                mu = int(conf.population_size / 2)
             toolbox.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
-                                            lambda_=conf.population_size)
+                                            lambda_=conf.population_size, mu=mu)
         toolbox.register("map", map_func)
         toolbox.register("evaluate", eval_fitness)
         toolbox.register("generate", toolbox.strategy.generate, creator.Individual)
