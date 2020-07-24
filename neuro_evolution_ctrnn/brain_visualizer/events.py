@@ -1,7 +1,83 @@
-import pygame
+from brain_visualizer.position import Positions
+
+import pygame, sys
 import math
+from pygame.locals import *
 
 class Events():
+    def handleEvents(self, event, inputPositionsDict, outputPositionsDict):
+        try:
+            global clickedNeuron
+            if event.type == QUIT:
+                pygame.quit()
+                Positions.clearJSON(self)
+                sys.exit()
+            if event.type == MOUSEMOTION:
+                Events.drawNeuronNumber(self, inputPositionsDict, self.graphPositionsDict, outputPositionsDict,
+                                        pygame.mouse.get_pos())
+            if event.type == MOUSEBUTTONDOWN:
+                clickedNeuron = Events.getNeuronOnClick(self, self.graphPositionsDict, pygame.mouse.get_pos())
+            if event.type == MOUSEBUTTONUP and clickedNeuron != None:
+                Events.changeNeuronPos(self, clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    Positions.clearJSON(self)
+                    sys.exit()
+                if event.key == pygame.K_e:
+                    self.weightVal = self.weightVal - 1
+                if event.key == pygame.K_r:
+                    self.weightVal = self.weightVal + 1
+                if event.key == pygame.K_d:
+                    if self.neuronRadius > 5:
+                        self.neuronRadius = self.neuronRadius - 5
+                        print(self.neuronRadius)
+                if event.key == pygame.K_f:
+                    self.neuronRadius = self.neuronRadius + 5
+                if event.key == pygame.K_s:
+                    if self.neuronText:
+                        self.neuronText = False
+                    else:
+                        self.neuronText = True
+                if event.key == pygame.K_t:
+                    if self.positiveWeights:
+                        self.positiveWeights = False
+                    else:
+                        self.positiveWeights = True
+                if event.key == pygame.K_w:
+                    if self.negativeWeights:
+                        self.negativeWeights = False
+                    else:
+                        self.negativeWeights = True
+                if event.key == pygame.K_g:
+                    if self.weightsDirection:
+                        self.weightsDirection = False
+                    else:
+                        self.weightsDirection = True
+                if event.key == pygame.K_q:
+                    if self.inputWeights:
+                        self.inputWeights = False
+                    else:
+                        self.inputWeights = True
+                if event.key == pygame.K_z:
+                    if self.outputWeights:
+                        self.outputWeights = False
+                    else:
+                        self.outputWeights = True
+                if event.key == pygame.K_SPACE:
+                    pause = True
+                    pygame.event.clear(KEYDOWN)
+                    while pause:
+                        for event in pygame.event.get():
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_c:
+                                    pause = False
+
+        except AttributeError:
+            print("Failure on Pygame-Event")
+
+
+
     ######### Method to get the Number of the Neuron back when hover
     def drawNeuronNumber(self, obPositionsDict, graphPositionsDict, outputPositionsDict, mousePose):
         mouseFont = pygame.font.SysFont("Helvetica", 32)

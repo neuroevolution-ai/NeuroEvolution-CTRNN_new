@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 
 class Positions():
-    def getGraphPositionsLean(self, w, h):
+    def getGraphPositions(self, w, h):
         brainState = self.brain.y
         brainWeight = self.brain.W.todense()
 
@@ -15,7 +15,7 @@ class Positions():
         for index, value in np.ndenumerate(brainWeight):
             G.add_edges_from([(index[0], index[1], {'myweight': value})])
 
-        pos = nx.spring_layout(G, k=3, weight="myweight", iterations=50, scale=h / 2 - 100)
+        pos = nx.spring_layout(G, k=1, weight="myweight", iterations=50, scale=h / 2 - 100)
 
         # Adapt positions from spring-layout Method to pygame windows
         graphPositionsDict = {}

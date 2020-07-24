@@ -2,7 +2,7 @@ import pygame
 from brain_visualizer.color import Colour
 
 class Neurons():
-    def draw(self, positions, valueDict, minMax, hell, grau, grell, radius, matrix=False):
+    def drawNeurons(self, positions, valueDict, minMax, hell, grau, grell, radius, matrix=False, weightNeruon=False):
         for neuron in range(len(positions)):
             position = positions[neuron]
             pos_x = int(position[0])
@@ -14,6 +14,9 @@ class Neurons():
             else:
                 val = valueDict[neuron]
                 colorVal = valueDict[neuron] / minMax
+
+            if weightNeruon:
+                radius = radius + int(abs(val))
 
             # Damit das Programm nicht abbricht wenn klipping range nicht passt
             # TODO: Das könnte man loggen

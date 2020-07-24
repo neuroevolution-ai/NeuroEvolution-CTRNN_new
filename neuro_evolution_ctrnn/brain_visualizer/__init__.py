@@ -35,7 +35,8 @@ class PygameBrainVisualizer(object):
 
         # Set position of screen (x, y) & create screen (length, width)
         # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (115, 510)
-        self.screen = pygame.display.set_mode([1500, 900])
+        #self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode([1900, 1000])
         self.w, self.h = pygame.display.get_surface().get_size()
 
         # Give it a name
@@ -57,7 +58,7 @@ class PygameBrainVisualizer(object):
 
         ##### Dictionary Graph Neurons
         ##### Create Graph with Spring layout and get Positions of Neurons back
-        self.graphPositionsDict = Positions.getGraphPositionsLean(self, self.w, self.h)
+        self.graphPositionsDict = Positions.getGraphPositions(self, self.w, self.h)
 
         # colors
         self.black = (0, 0, 0)
@@ -136,7 +137,6 @@ class PygameBrainVisualizer(object):
                         ((3 * self.w / 4) - 80), 5, self.numColor, 18)
 
 
-
         ########## Create Dictionaries with Positions
         ##### Input Dictionary
         inputPositionsDict = Positions.getInputOutputPositions(self, numberInputNeurons, True)
@@ -150,103 +150,36 @@ class PygameBrainVisualizer(object):
         ########## Draw Weights
         ##### n-1 Linien pro Neuron ; Input zu Neuron
         if self.inputWeights:
-            Weights.draw(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense().T, self.positiveWeights, self.negativeWeights, self.weightsDirection)
+            Weights.drawWeights(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense().T, self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
-        Weights.draw(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        Weights.drawWeights(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Output
         if self.outputWeights:
-            Weights.draw(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
+            Weights.drawWeights(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(), self.positiveWeights, self.negativeWeights, self.weightsDirection)
 
         # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
-        Neurons.draw(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + self.weightVal, True)
+        Neurons.drawNeurons(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight, self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + self.weightVal, True, True)
 
 
         ########### Draw neurons
         ##### Draw Graph
-        Neurons.draw(self, self.graphPositionsDict, self.brain.y, 3,  self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph, self.neuronRadius-3, False)
+        Neurons.drawNeurons(self, self.graphPositionsDict, self.brain.y, 1,  self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph, self.neuronRadius-3, False)
 
         ##### draw ob-values (input)
         # minMax = clipping Range
-        Neurons.draw(self, inputPositionsDict, in_values, 1, self.colorNegNeuronIn, self.colorNeutralNeuron, self.colorPosNeuronIn, self.neuronRadius)
+        Neurons.drawNeurons(self, inputPositionsDict, in_values, 1, self.colorNegNeuronIn, self.colorNeutralNeuron, self.colorPosNeuronIn, self.neuronRadius)
 
         ##### draw action-values (out)
         # minMax = clipping Range
-        Neurons.draw(self, outputPositionsDict, out_values, 1, self.colorNegNeuronOut, self.colorNeutralNeuron, self.colorPosNeuronOut, self.neuronRadius)
+        Neurons.drawNeurons(self, outputPositionsDict, out_values, 1, self.colorNegNeuronOut, self.colorNeutralNeuron, self.colorPosNeuronOut, self.neuronRadius)
 
 
         ######### Events: Close when x-Button, Show Number of Neuron when click on it
         for event in pygame.event.get():
-            try:
-                global clickedNeuron
-                if event.type == QUIT:
-                    pygame.quit()
-                    Positions.clearJSON(self)
-                    sys.exit()
-                if event.type == MOUSEMOTION:
-                    Events.drawNeuronNumber(self, inputPositionsDict, self.graphPositionsDict, outputPositionsDict, pygame.mouse.get_pos())
-                if event.type == MOUSEBUTTONDOWN:
-                    clickedNeuron = Events.getNeuronOnClick(self, self.graphPositionsDict, pygame.mouse.get_pos())
-                if event.type == MOUSEBUTTONUP and clickedNeuron != None:
-                    Events.changeNeuronPos(self, clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        pygame.quit()
-                        Positions.clearJSON(self)
-                        sys.exit()
-                    if event.key == pygame.K_e:
-                        self.weightVal = self.weightVal - 1
-                    if event.key == pygame.K_r:
-                        self.weightVal = self.weightVal + 1
-                    if event.key == pygame.K_d:
-                        if self.neuronRadius > 5:
-                            self.neuronRadius= self.neuronRadius - 5
-                            print(self.neuronRadius)
-                    if event.key == pygame.K_f:
-                        self.neuronRadius = self.neuronRadius + 5
-                    if event.key == pygame.K_s:
-                        if self.neuronText:
-                            self.neuronText = False
-                        else:
-                            self.neuronText = True
-                    if event.key == pygame.K_t:
-                        if self.positiveWeights:
-                            self.positiveWeights = False
-                        else:
-                            self.positiveWeights = True
-                    if event.key == pygame.K_w:
-                        if self.negativeWeights:
-                            self.negativeWeights = False
-                        else:
-                            self.negativeWeights = True
-                    if event.key == pygame.K_g:
-                        if self.weightsDirection:
-                            self.weightsDirection = False
-                        else:
-                            self.weightsDirection = True
-                    if event.key == pygame.K_q:
-                        if self.inputWeights:
-                            self.inputWeights = False
-                        else:
-                            self.inputWeights = True
-                    if event.key == pygame.K_z:
-                        if self.outputWeights:
-                            self.outputWeights = False
-                        else:
-                            self.outputWeights = True
-                    if event.key == pygame.K_SPACE:
-                        pause = True
-                        pygame.event.clear(KEYDOWN)
-                        while pause:
-                            for event in pygame.event.get():
-                                if event.type == pygame.KEYDOWN:
-                                    if event.key == pygame.K_c:
-                                        pause = False
+            Events.handleEvents(self, event, inputPositionsDict, outputPositionsDict)
 
-            except AttributeError:
-                print("Failure on Pygame-Event")
-                continue
 
         # Updates the content of the window
         pygame.display.flip()
@@ -257,4 +190,3 @@ class PygameBrainVisualizer(object):
             textSurface = self.myfont.render(s, False, self.numColor)
             self.screen.blit(textSurface, (x_pos, y_pos))
             y_pos += y_step
-

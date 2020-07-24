@@ -3,7 +3,7 @@ import numpy
 import math
 
 class Weights():
-    def draw(self, startPosDict, endPosDict, weightMatrix, positiveWeights, negativeWeights, direction):
+    def drawWeights(self, startPosDict, endPosDict, weightMatrix, positiveWeights, negativeWeights, direction):
         for (startNeruon, endNeuron), weight in numpy.ndenumerate(weightMatrix):
             if weight != 0:
                 if (weight > 0.0 and positiveWeights) or (weight < 0.0 and negativeWeights):
@@ -20,10 +20,10 @@ class Weights():
                     else:
                         weightColor = self.colorNegativeWeight
 
-                    if self.weightVal == 0:
+                    width = int(abs(weight)/0.5) + self.weightVal - 6
+                    #width = int(abs(weight)) + self.weightVal
+                    if self.weightVal == 0 and width < 1:
                         width = 1
-                    else:
-                        width = int(abs(weight)) + self.weightVal
 
                     if direction:
                         # Winkel der Linien zwischen den beiden Punkten zur x-Achse
