@@ -39,7 +39,5 @@ for sim in simulation_folders:
     # separate module which is used both by visualize.py and this script
     subprocess.run(["./neuro_evolution_ctrnn/visualize.py",
                     "--dir", sim,
-                    "--no-neuron-vis",
-                    "--no-plot",
                     "--hof", "0",
                     "--plot-save", file])
