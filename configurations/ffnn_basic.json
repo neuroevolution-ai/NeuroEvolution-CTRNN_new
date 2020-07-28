@@ -11,15 +11,13 @@
     "hof_size": 5
   },
   "brain": {
-    "type": "LNN",
+    "type": "FeedForward_NumPy",
     "normalize_input": false,
     "normalize_input_target": 2,
-    "number_neurons_layer1": 2,
-    "number_neurons_layer2": 2,
-    "cppn_hidden_size1": 2,
-    "cppn_hidden_size2": 2,
-    "use_biases": true,
-    "indirect_encoding": false
+    "use_bias": false,
+    "hidden_layers": [[2, 3]],
+    "indirect_encoding": false,
+    "cppn_hidden_layers": [[10, 10]]
   },
   "episode_runner": {
     "type": "Standard",

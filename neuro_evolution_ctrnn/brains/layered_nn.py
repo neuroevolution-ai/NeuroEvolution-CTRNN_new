@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 from brains.i_brain import IBrain
 from i_brain import ConfigClass
-from tools.configurations import FeedForwardCfg
+from tools.configurations import IBrainCfg, FeedForwardCfg
 from gym.spaces import Space, Discrete, Box
 
 
@@ -17,9 +17,8 @@ class FeedForward(IBrain[FeedForwardCfg]):
         self.config = config
 
         # If the check fails the program aborts
-        self._check_hidden_layers(config.hidden_layers)
+        self.hidden_layers = self.check_hidden_layers(config.hidden_layers)
 
-        self.hidden_layers = config.hidden_layers
         self.weights = []
         self.biases = []
 
@@ -27,10 +26,17 @@ class FeedForward(IBrain[FeedForwardCfg]):
         pass
 
     @staticmethod
-    def _check_hidden_layers(hidden_layers):
+    def check_hidden_layers(hidden_layers):
         try:
             assert len(hidden_layers) > 0
+
+            # Design Space, unpack first
+            if any(isinstance(i, list) for i in hidden_layers):
+                # Simply take the first list, should be the only one. If not somewhere the decision of the Design Space
+                # did not occur
+                hidden_layers = hidden_layers[0]
             assert all(hidden_layers) > 0
+            return hidden_layers
         except AssertionError:
             # TODO check if this line break works with .format
             raise RuntimeError(
@@ -42,19 +48,19 @@ class FeedForward(IBrain[FeedForwardCfg]):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
-        cls._check_hidden_layers(config.hidden_layers)
+        hidden_layers = cls.check_hidden_layers(config.hidden_layers)
 
         individual_size = 0
         last_layer = input_size
 
-        for hidden_layer in config.hidden_layers:
+        for hidden_layer in hidden_layers:
             individual_size += last_layer * hidden_layer
             last_layer = hidden_layer
 
         individual_size += last_layer * output_size
 
-        if config.use_biases:
-            individual_size += sum(config.hidden_layers) + output_size
+        if config.use_bias:
+            individual_size += sum(hidden_layers) + output_size
 
         return individual_size
 
@@ -216,21 +222,17 @@ class FeedForwardNumPy(FeedForward):
             last_layer = hidden_layer
             current_index += current_size
 
-        if config.use_biases:
+        if config.use_bias:
             for hidden_layer in self.hidden_layers + [self.output_size]:
                 self.biases.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
 
                 current_index += hidden_layer
         else:
-            self.biases = [None for _ in self.hidden_layers + [self.output_size]]
+            self.biases = [[0] * hidden_layer for hidden_layer in self.hidden_layers + [self.output_size]]
 
     def layer_step(self, a, layer_weights, bias):
-        x = np.dot(a, layer_weights)
-
-        if bias is not None:
-            x += bias
-
-        return x
+        # If bias is not used it will be zero, see constructor
+        return np.dot(a, layer_weights) + bias
 
     def relu(self, x):
         return np.maximum(0, x)
@@ -240,6 +242,7 @@ class FeedForwardNumPy(FeedForward):
 
     def step(self, ob):
         x = ob
+
         for weight, bias in zip(self.weights, self.biases):
             x = self.layer_step(x, weight, bias)
             x = self.tanh(x)

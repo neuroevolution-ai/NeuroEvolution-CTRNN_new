@@ -10,6 +10,7 @@ class IBrainCfg(abc.ABC):
     type: str
     normalize_input: bool
     normalize_input_target: float
+    use_bias: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -65,22 +66,18 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     parameter_perturbations: float
     neuron_activation: str
     neuron_activation_inplace: bool
-    use_bias: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: [int]
-    cppn_hidden_size1: int
-    cppn_hidden_size2: int
-    use_biases: bool #TODO move into IBrainCfg
     indirect_encoding: bool
+    cppn_hidden_layers: [int]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
-    use_biases: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

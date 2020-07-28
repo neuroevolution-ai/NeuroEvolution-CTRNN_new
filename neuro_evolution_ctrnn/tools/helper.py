@@ -11,7 +11,7 @@ from bz2 import compress
 import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, LayeredNNCfg,
+                                  StandardEpisodeRunnerCfg, MemoryExperimentCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
                                   LSTMCfg, IBrainCfg, NoveltyCfg)
 
 
@@ -70,8 +70,8 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     brain_cfg_class: Type[IBrainCfg]
     if config_dict["brain"]["type"] == "CTRNN":
         brain_cfg_class = ContinuousTimeRNNCfg
-    elif config_dict["brain"]["type"] == "LNN":
-        brain_cfg_class = LayeredNNCfg
+    elif config_dict["brain"]["type"] == "FeedForward_NumPy":
+        brain_cfg_class = FeedForwardCfg
     elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
         brain_cfg_class = LSTMCfg
     else:

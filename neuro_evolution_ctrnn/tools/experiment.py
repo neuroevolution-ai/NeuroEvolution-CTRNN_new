@@ -5,7 +5,7 @@ import logging
 from typing import Type
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
-from brains.layered_nn import LayeredNN
+from brains.layered_nn import FeedForwardNumPy
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
@@ -32,8 +32,8 @@ class Experiment(object):
         self.brain_class: Type[IBrain]
         if self.config.brain.type == "CTRNN":
             self.brain_class = ContinuousTimeRNN
-        elif self.config.brain.type == "LNN":
-            self.brain_class = LayeredNN
+        elif self.config.brain.type == "FeedForward_NumPy":
+            self.brain_class = FeedForwardNumPy
         elif self.config.brain.type == "LSTM_PyTorch":
             self.brain_class = LSTMPyTorch
         elif self.config.brain.type == "LSTM_NumPy":
