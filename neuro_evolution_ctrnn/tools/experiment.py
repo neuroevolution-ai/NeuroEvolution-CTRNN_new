@@ -5,7 +5,7 @@ import logging
 from typing import Type
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
-from brains.layered_nn import FeedForwardNumPy, FeedForwardPyTorch
+from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
