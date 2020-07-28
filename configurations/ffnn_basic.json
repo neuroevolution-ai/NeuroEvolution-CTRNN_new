@@ -14,8 +14,9 @@
     "type": "FeedForward_NumPy",
     "normalize_input": false,
     "normalize_input_target": 2,
-    "use_bias": false,
-    "hidden_layers": [[2, 3]],
+    "use_bias": true,
+    "hidden_layers": [[64, 64]],
+    "non_linearity": "relu",
     "indirect_encoding": false,
     "cppn_hidden_layers": [[10, 10]]
   },
@@ -23,7 +24,7 @@
     "type": "Standard",
     "keep_env_seed_fixed_during_generation": false,
     "number_fitness_runs": 1,
-    "reuse_env": false,
+    "reuse_env": true,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0
   }

@@ -70,7 +70,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     brain_cfg_class: Type[IBrainCfg]
     if config_dict["brain"]["type"] == "CTRNN":
         brain_cfg_class = ContinuousTimeRNNCfg
-    elif config_dict["brain"]["type"] == "FeedForward_NumPy":
+    elif config_dict["brain"]["type"] == "FeedForward_NumPy" or config_dict["brain"]["type"] == "FeedForward_PyTorch":
         brain_cfg_class = FeedForwardCfg
     elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
         brain_cfg_class = LSTMCfg

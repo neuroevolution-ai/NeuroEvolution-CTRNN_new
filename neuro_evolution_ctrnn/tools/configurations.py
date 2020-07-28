@@ -71,6 +71,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: [int]
+    non_linearity: str
     indirect_encoding: bool
     cppn_hidden_layers: [int]
 
