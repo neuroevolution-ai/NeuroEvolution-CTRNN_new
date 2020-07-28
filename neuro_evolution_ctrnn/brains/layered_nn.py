@@ -4,22 +4,23 @@ import torch.nn as nn
 from brains.i_brain import IBrain
 from tools.configurations import FeedForwardCfg
 from gym.spaces import Space
+import typing
 
 
 class FeedForward(IBrain[FeedForwardCfg]):
 
-    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
                                                            output_space=output_space)
 
-        self.input_size = self._size_from_space(input_space)
-        self.output_size = self._size_from_space(output_space)
+        self.input_size: int = self._size_from_space(input_space)
+        self.output_size: int = self._size_from_space(output_space)
         self.config = config
 
         # If the check fails the program aborts
-        self.hidden_layers = self.check_hidden_layers(config.hidden_layers)
+        self.hidden_layers: typing.List[int] = self.check_hidden_layers(config.hidden_layers)
 
         self.weights = []
         self.biases = []
@@ -39,19 +40,19 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
                 "".format(config.non_linearity))
 
-    def step(self, ob: np.ndarray):
-        pass
+    def step(self, ob: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
 
     @staticmethod
-    def relu(x):
+    def relu(x: np.ndarray) -> np.ndarray:
         return np.maximum(0, x)
 
     @staticmethod
-    def tanh(x):
+    def tanh(x: np.ndarray) -> np.ndarray:
         return np.tanh(x)
 
     @staticmethod
-    def check_hidden_layers(hidden_layers):
+    def check_hidden_layers(hidden_layers: typing.List[int]) -> typing.List[int]:
         try:
             assert len(hidden_layers) > 0
 
@@ -69,7 +70,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_individual_size(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
+    def get_individual_size(cls, config: FeedForwardCfg, input_space: Space, output_space: Space) -> int:
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -92,7 +93,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
 
 class FeedForwardPyTorch(nn.Module, FeedForward):
 
-    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
@@ -142,7 +143,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
         #
 
-    def step(self, ob: np.ndarray):
+    def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         if self.config.normalize_input:
@@ -159,7 +160,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
 
 class FeedForwardNumPy(FeedForward):
 
-    def __init__(self, input_space, output_space, individual, config: FeedForwardCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
         last_layer = self.input_size
@@ -180,18 +181,17 @@ class FeedForwardNumPy(FeedForward):
 
                 current_index += hidden_layer
         else:
-            self.biases = [[0] * hidden_layer for hidden_layer in self.hidden_layers + [self.output_size]]
+            self.biases = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
 
     @staticmethod
-    def layer_step(a, layer_weights, bias):
+    def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
         # If bias is not used it will be zero, see constructor
-        return np.dot(a, layer_weights) + bias
+        return np.dot(x, layer_weights) + bias
 
-    def step(self, ob):
+    def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         for weight, bias in zip(self.weights, self.biases):
-            x = self.layer_step(x, weight, bias)
-            x = self.non_linearity(x)
+            x = self.non_linearity(self.layer_step(x, weight, bias))
 
         return x
