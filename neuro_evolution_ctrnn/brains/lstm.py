@@ -18,7 +18,6 @@ class LSTM(IBrain):
         self.input_size = self._size_from_space(input_space)
         self.output_size = self._size_from_space(output_space)
         self.lstm_num_layers = config.lstm_num_layers
-        self.use_biases = config.use_biases
 
     def step(self, ob: np.ndarray):
         pass
@@ -36,14 +35,14 @@ class LSTM(IBrain):
         if lstm_num_layers > 0:
             individual_size += 4 * output_size * (input_size + output_size)
 
-            if config.use_biases:
+            if config.use_bias:
                 individual_size += 8 * output_size
 
         for i in range(1, lstm_num_layers):
             # Here it is assumed that the LSTM is not bidirectional
             individual_size += 8 * output_size * output_size
 
-            if config.use_biases:
+            if config.use_bias:
                 individual_size += 8 * output_size
 
         return individual_size
@@ -66,7 +65,7 @@ class LSTMPyTorch(nn.Module, LSTM):
         # Disable tracking of the gradients since backpropagation is not used
         with torch.no_grad():
             self.lstm = nn.LSTM(
-                self.input_size, self.output_size, num_layers=self.lstm_num_layers, bias=self.use_biases)
+                self.input_size, self.output_size, num_layers=self.lstm_num_layers, bias=config.use_bias)
 
             # Iterate through all layers and assign the weights from the individual
             current_index = 0
@@ -89,7 +88,7 @@ class LSTMPyTorch(nn.Module, LSTM):
                     individual[current_index: current_index + weight_hh_li_size]).view(weight_hh_li.size())
                 current_index += weight_hh_li_size
 
-                if self.use_biases:
+                if config.use_bias:
                     attr_bias_ih_li = "bias_ih_l{}".format(i)
                     attr_bias_hh_li = "bias_hh_l{}".format(i)
 
@@ -138,7 +137,7 @@ class LSTMNumPy(LSTM):
         self.weight_ih_l0 = np.random.randn(4, self.output_size, self.input_size).astype(np.float32)
         self.weight_hh_l0 = np.random.randn(4, self.output_size, self.output_size).astype(np.float32)
 
-        if config.use_biases:
+        if config.use_bias:
             self.bias_ih_l0 = np.random.randn(4, self.output_size).astype(np.float32)
             self.bias_hh_l0 = np.random.randn(4, self.output_size).astype(np.float32)
         else:
@@ -161,7 +160,7 @@ class LSTMNumPy(LSTM):
                 self.weight_hh_l0.shape)
             current_index += self.weight_hh_l0.size
 
-            if self.use_biases:
+            if config.use_bias:
                 self.bias_ih_l0 = individual[current_index:current_index + self.bias_ih_l0.size].reshape(
                     self.bias_ih_l0.shape)
                 current_index += self.bias_ih_l0.size
@@ -194,7 +193,7 @@ class LSTMNumPy(LSTM):
             attr_bias_ih_li = "bias_ih_l{}".format(i)
             attr_bias_hh_li = "bias_hh_l{}".format(i)
 
-            if config.use_biases:
+            if config.use_bias:
                 setattr(self, attr_bias_ih_li, individual[current_index:current_index + bias_size].reshape(bias_shape))
                 current_index += bias_size
 
