@@ -1,5 +1,5 @@
 {
-  "environment": "ReacherMemory-v0",
+  "environment": "AntBulletEnv-v0",
   "random_seed": 0,
   "number_generations": 2500,
   "use_worker_processes": true,
@@ -8,7 +8,8 @@
     "population_size": 200,
     "sigma": 1.0,
     "checkpoint_frequency": 10,
-    "hof_size": 10
+    "hof_size": 10,
+    "mu": 25
   },
   "brain": {
     "type": "CTRNN",

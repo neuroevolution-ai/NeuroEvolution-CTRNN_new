@@ -9,13 +9,15 @@
       "population_size": [3, 4],
       "sigma": [0.5, 0.9],
       "checkpoint_frequency": 0,
-      "hof_size": 5
+      "hof_size": 5,
+      "mu": 25
     }, {
       "type": "CMA_ES",
       "population_size": [10, 15],
       "sigma": [1.0, 1.5, 2.0],
       "checkpoint_frequency": 0,
-      "hof_size": 5
+      "hof_size": 5,
+      "mu": 25
     }
   ],
   "brain": {

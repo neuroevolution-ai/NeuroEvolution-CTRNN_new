@@ -8,7 +8,8 @@
     "population_size": 5,
     "sigma": 1.0,
     "checkpoint_frequency": 0,
-    "hof_size": 5
+    "hof_size": 5,
+    "mu": 25
   },
   "brain": {
     "type": "FeedForward_NumPy",

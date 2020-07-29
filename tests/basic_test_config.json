@@ -8,7 +8,8 @@
     "population_size": 2,
     "sigma": 1.0,
     "checkpoint_frequency": 0,
-    "hof_size": 0
+    "hof_size": 0,
+    "mu": 25
   },
   "brain": {
     "type": "CTRNN",
