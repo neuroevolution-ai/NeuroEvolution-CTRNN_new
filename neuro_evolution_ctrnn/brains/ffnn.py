@@ -64,7 +64,6 @@ class FeedForward(IBrain[FeedForwardCfg]):
             assert all(hidden_layers) > 0
             return hidden_layers
         except AssertionError:
-            # TODO check if this line break works with .format
             raise RuntimeError(
                 "Error with the chosen hidden layer list {}. It must be at least of size 1 and have elements which are "
                 "larger than 0.".format(hidden_layers))
@@ -109,6 +108,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
 
             self.weights.append(next_layer)
             last_layer = hidden_layer
+            current_index += current_size
 
         if config.use_bias:
             # Take extra loop for bias because we have the "convention" to add bias to the end of the individual array
@@ -117,6 +117,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
                     np.array(individual[current_index:current_index + hidden_layer]))
                 current_index += hidden_layer
 
+        # TODO this has to be redone if it shall be used
         # # Indirect encoding
         # if config.indirect_encoding:
         #
@@ -170,7 +171,7 @@ class FeedForwardNumPy(FeedForward):
             current_size = last_layer * hidden_layer
 
             current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
-            self.weights.append(current_weight.reshape([last_layer, hidden_layer]))
+            self.weights.append(current_weight.reshape((hidden_layer, last_layer)))
 
             last_layer = hidden_layer
             current_index += current_size
@@ -186,7 +187,7 @@ class FeedForwardNumPy(FeedForward):
     @staticmethod
     def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
         # If bias is not used it will be zero, see constructor
-        return np.dot(x, layer_weights) + bias
+        return np.dot(layer_weights, x) + bias
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
