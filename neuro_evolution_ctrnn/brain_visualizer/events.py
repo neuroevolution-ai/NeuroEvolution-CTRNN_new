@@ -4,21 +4,20 @@ import pygame, sys
 import math
 from pygame.locals import *
 
+
 class Events():
     def handleEvents(self, event, inputPositionsDict, outputPositionsDict):
         try:
-            global clickedNeuron
             if event.type == QUIT:
                 pygame.quit()
-                Positions.clearJSON(self)
                 sys.exit()
             if event.type == MOUSEMOTION:
                 Events.drawNeuronNumber(self, inputPositionsDict, self.graphPositionsDict, outputPositionsDict,
                                         pygame.mouse.get_pos())
             if event.type == MOUSEBUTTONDOWN:
-                clickedNeuron = Events.getNeuronOnClick(self, self.graphPositionsDict, pygame.mouse.get_pos())
-            if event.type == MOUSEBUTTONUP and clickedNeuron != None:
-                Events.changeNeuronPos(self, clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
+                self.clickedNeuron = Events.getNeuronOnClick(self, self.graphPositionsDict, pygame.mouse.get_pos())
+            if event.type == MOUSEBUTTONUP and isinstance(self.clickedNeuron, int):
+                Events.changeNeuronPos(self.clickedNeuron, pygame.mouse.get_pos(), self.graphPositionsDict)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
@@ -76,15 +75,13 @@ class Events():
         except AttributeError:
             print("Failure on Pygame-Event")
 
-
-
     ######### Method to get the Number of the Neuron back when hover
     def drawNeuronNumber(self, obPositionsDict, graphPositionsDict, outputPositionsDict, mousePose):
         mouseFont = pygame.font.SysFont("Helvetica", 32)
 
         hoveredInputNeuron = Events.getNeuronWhenHover(self, obPositionsDict, mousePose)
         if hoveredInputNeuron != None:
-            mouseLabel = mouseFont.render("Ob-Neuron:" + str(hoveredInputNeuron), 1, self.brightGrey)
+            mouseLabel = mouseFont.render("Input:" + str(hoveredInputNeuron), 1, self.brightGrey)
             self.screen.blit(mouseLabel, (mousePose[0] + 20, mousePose[1] - 32))
 
         hoveredGraphNeuron = Events.getNeuronWhenHover(self, graphPositionsDict, mousePose)
@@ -94,12 +91,11 @@ class Events():
 
         hoveredOutputNeuron = Events.getNeuronWhenHover(self, outputPositionsDict, mousePose)
         if hoveredOutputNeuron != None:
-            mouseLabel = mouseFont.render("Output-Neuron:" + str(hoveredOutputNeuron), 1, self.brightGrey)
+            mouseLabel = mouseFont.render("Output:" + str(hoveredOutputNeuron), 1, self.brightGrey)
             self.screen.blit(mouseLabel, (mousePose[0] - 250, mousePose[1] - 32))
 
-
     def getNeuronWhenHover(self, positionsDict, mousePose):
-        maxDistance = 30
+        maxDistance = self.neuronRadius
         for i in range(len(positionsDict)):
             hoveredNeuron = None
             neuronPose = positionsDict[i]
@@ -108,7 +104,6 @@ class Events():
                 hoveredNeuron = i
             if hoveredNeuron != None:
                 return hoveredNeuron
-
 
     ######### Method to get the Number of the Neuron back if Mousclick on it
     def getNeuronOnClick(self, graphPositionsDict, mousePose):
@@ -119,8 +114,6 @@ class Events():
                 neuron = i
                 return neuron
 
-    def changeNeuronPos(self, neuron, mousePose, graphPositionsDict):
+    @staticmethod
+    def changeNeuronPos(neuron, mousePose, graphPositionsDict):
         graphPositionsDict[neuron] = (mousePose[0], mousePose[1])
-
-
-

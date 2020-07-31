@@ -1,5 +1,7 @@
 import pygame
+import logging
 from brain_visualizer.color import Colour
+
 
 class Neurons():
     def drawNeurons(self, positions, valueDict, minMax, hell, grau, grell, radius, matrix=False, weightNeruon=False):
@@ -19,11 +21,12 @@ class Neurons():
                 radius = radius + int(abs(val))
 
             # Damit das Programm nicht abbricht wenn klipping range nicht passt
-            # TODO: Das könnte man loggen
             if colorVal > 1:
                 colorVal = 1
+                Neurons.color_logging(self, minMax)
             if colorVal < -1:
-                colorVal = -1
+                colorVal = 1
+                Neurons.color_logging(self, minMax)
 
             if colorVal <= 0:
                 # grau zu hell
@@ -38,3 +41,12 @@ class Neurons():
             pygame.draw.circle(self.screen, interpolierteFarbe, (pos_x, pos_y), radius)
             if self.neuronText == True:
                 self.screen.blit(textSurface, ((pos_x - 16), (pos_y - 7)))
+
+    def color_logging(self, minMax):
+        if minMax == self.colorClippingRange[0]:
+            var = "Input"
+        if minMax == self.colorClippingRange[1]:
+            var = "Graph"
+        if minMax == self.colorClippingRange[2]:
+            var = "Output"
+        logging.warning("Please Increase Clipping Range for: " + var)
