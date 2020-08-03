@@ -16,6 +16,9 @@ dask[distributed]
 torch
 pytest-parallel
 bokeh # for dash-dashboard
+pygame
+networkx
+
 
 # optional, if needed install manually
 # gym[mujoco]

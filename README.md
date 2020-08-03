@@ -52,7 +52,7 @@
 
 3. Visualize the results
     
-    `python neuro_evolution_ctrnn/visualize.py`
+    `python neuro_evolution_ctrnn/visualize.py --neuron-vis --render` 
 
 4. Optional: Publish the results
     - All results are stored in a git submodule which is located in a different folder
@@ -150,6 +150,13 @@ File --> Settings --> Editor --> Code Style --> JSON --> Wrapping and Braces
 | Arrays| Wrap if long
 | Objects| Wrap if long
 | Align| Do not align
+
+## visualizer
+If it is not possible to install pygame via pip, try with apt-manager:
+``sudo apt-get install python-pygame``
+
+### Interaktion
+You can individualize the visualizer via keyboard and mouse.
 
 
 ## Troubleshooting

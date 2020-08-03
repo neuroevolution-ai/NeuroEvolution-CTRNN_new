@@ -1,0 +1,28 @@
+@startuml
+loop number of Individuals
+DaskHandler --> Worker: run(eval_fitness, Individual)
+activate Worker
+Worker -> EpRunner: eval_fitness(Individual)
+activate EpRunner
+EpRunner -> gym: reset()
+return
+create Brain
+EpRunner -> Brain: __init(Individual)
+loop until done
+EpRunner -> Brain: step()
+
+activate Brain
+Brain -> Brain_class: read_masks
+activate Brain_class
+return
+return
+EpRunner -> gym: step()
+return
+end
+destroy Brain
+
+return fitness
+return fitness
+
+end
+@enduml

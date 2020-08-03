@@ -12,9 +12,6 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 parser = argparse.ArgumentParser(
     description='generate multiple experiments from design space and execute them')
 
-parser.add_argument('--base-dir', type=str,
-                    help='path to the parent-folder of simulation results',
-                    default=os.path.join('..', 'CTRNN_Simulation_Results', 'data'))
 parser.add_argument('--design-space', type=str, dest='design_space_path',
                     help='path to design-space.json',
                     default='configurations/cma_es_basic_design_space.json')
