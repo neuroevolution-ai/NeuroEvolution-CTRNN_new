@@ -36,8 +36,8 @@ for sim in simulation_folders:
             logging.info("replacing existing file: " + str(file))
 
     # instead of calling the other file, it would probably better to move the generation of the plot into a
-    # separate module which is used both by visualize.py and this script
-    subprocess.run(["./neuro_evolution_ctrnn/visualize.py",
+    # separate module which is used both by plot_experiment.py and this script
+    subprocess.run(["./neuro_evolution_ctrnn/plot_experiment.py",
                     "--dir", sim,
-                    "--hof", "0",
-                    "--plot-save", file])
+                    "--no-show",
+                    "--save_png", file])

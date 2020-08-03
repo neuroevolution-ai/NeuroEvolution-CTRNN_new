@@ -19,6 +19,8 @@ bokeh # for dash-dashboard
 pygame
 networkx
 
+typed-argument-parser # adds code completyion to argparse in pycharm
+
 
 # optional, if needed install manually
 # gym[mujoco]

@@ -15,6 +15,9 @@ from tools.experiment import Experiment
 from brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_dict
 import numpy as np
+import matplotlib
+import tikzplotlib
+
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -133,11 +136,18 @@ def plot_chapter(axis, chapter, gens, colors):
 
 
 if args.plot_save or args.plot:
+
+    matplotlib.rcParams.update({
+        "pgf.texsystem": "xelatex",
+        'font.family': 'serif',
+        'pgf.rcfonts': False,
+        'text.usetex': True,
+    })
     generations = [i for i in range(len(log))]
 
     base_dir = os.path.basename(args.dir)
     params_display = conf['environment'] + "\n" + conf['brain']['type'] + " + " + conf['optimizer'][
-        'type'] + "\nneurons: " + str(conf['brain']['number_neurons'])
+        'type'].replace('_',' ') + "\nneurons: " + str(conf['brain']['number_neurons'])
 
     fig, ax1 = plt.subplots()
     plt.style.use('seaborn-paper')
@@ -149,7 +159,7 @@ if args.plot_save or args.plot:
     ax1.legend(loc='upper left')
 
     ax1.grid()
-    plt.title(base_dir)
+    plt.title(base_dir.replace('_',' '))
     ax1.text(0.96, 0.05, params_display, ha='right',
              fontsize=8, fontname='Ubuntu', transform=ax1.transAxes,
              bbox={'facecolor': 'white', 'alpha': 0.4, 'pad': 8})
@@ -169,6 +179,9 @@ if args.plot_save or args.plot:
     if args.plot_save:
         logging.info("saving plot to: " + str(args.plot_save))
         plt.savefig(args.plot_save)
-
+    tikzplotlib.clean_figure(target_resolution=80)
+    tikzplotlib.save(filepath='plot.tex', strict=True, axis_height='8cm',
+                     axis_width='10cm')
     if args.plot:
         plt.show()
+
