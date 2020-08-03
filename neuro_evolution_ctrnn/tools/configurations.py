@@ -1,7 +1,7 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
 import attr
 import abc
-import typing
+from typing import List, Optional
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -43,8 +43,8 @@ class EpisodeRunnerCfg(abc.ABC):
     max_steps_per_run: int
     max_steps_penalty: int
     keep_env_seed_fixed_during_generation: bool
-    novelty: typing.Optional[NoveltyCfg]
-    environment_attributes: IEnvAttributesCfg = None
+    novelty: Optional[NoveltyCfg]
+    environment_attributes: Optional[IEnvAttributesCfg] = None
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -69,10 +69,10 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
-    hidden_layers: [int]
+    hidden_layers: List[int]
     non_linearity: str
     indirect_encoding: bool
-    cppn_hidden_layers: [int]
+    cppn_hidden_layers: List[int]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -85,7 +85,7 @@ class IOptimizerCfg(abc.ABC):
     type: str
     checkpoint_frequency: int
     hof_size: int
-    novelty: typing.Optional[NoveltyCfg]
+    novelty: Optional[NoveltyCfg]
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

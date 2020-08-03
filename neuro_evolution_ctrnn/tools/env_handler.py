@@ -1,5 +1,5 @@
 import gym
-import pybullet_envs
+import pybullet_envs # unused import is needed to register pybullet envs
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
@@ -19,9 +19,9 @@ class EnvHandler:
     def make_env(self, env_id: str):
         if env_id == "ReacherMemory-v0":
 
-            assert (isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg),
-                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"
-                    " (config.environment_attributes)")
+            assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
+                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"\
+                    " (config.environment_attributes)"
 
             env = gym.make(
                 env_id,

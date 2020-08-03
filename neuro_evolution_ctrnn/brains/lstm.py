@@ -3,13 +3,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from brains.i_brain import IBrain, ConfigClass
+from brains.i_brain import IBrain
 from tools.configurations import LSTMCfg
 
 
 class LSTM(IBrain):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
         super().__init__(input_space, output_space, individual, config)
 
         self.config = config

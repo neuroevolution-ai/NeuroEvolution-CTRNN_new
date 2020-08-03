@@ -4,7 +4,7 @@ import torch.nn as nn
 from brains.i_brain import IBrain
 from tools.configurations import FeedForwardCfg
 from gym.spaces import Space
-import typing
+from typing import List, Callable
 
 
 class FeedForward(IBrain[FeedForwardCfg]):
@@ -20,19 +20,20 @@ class FeedForward(IBrain[FeedForwardCfg]):
         self.config = config
 
         # If the check fails the program aborts
-        self.hidden_layers: typing.List[int] = self.check_hidden_layers(config.hidden_layers)
+        self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-        self.weights = []
-        self.biases = []
+        self.weights: List[nn.Module] = []
+        self.biases: List[float] = []
 
+        self.non_linearity: Callable[[np.ndarray], np.ndarray]
         if config.non_linearity == "relu":
             if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.ReLU()
+                self.non_linearity = nn.ReLU()  # type:ignore
             else:
                 self.non_linearity = self.relu
         elif config.non_linearity == "tanh":
             if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.Tanh()
+                self.non_linearity = nn.Tanh()  # type:ignore
             else:
                 self.non_linearity = self.tanh
         else:
@@ -52,7 +53,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
         return np.tanh(x)
 
     @staticmethod
-    def check_hidden_layers(hidden_layers: typing.List[int]) -> typing.List[int]:
+    def check_hidden_layers(hidden_layers: List[int]) -> List[int]:
         try:
             assert len(hidden_layers) > 0
 
@@ -155,7 +156,6 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
 
             for layer in self.weights:
                 x = self.non_linearity(layer(x))
-
             return x.view(self.output_size).numpy()
 
 

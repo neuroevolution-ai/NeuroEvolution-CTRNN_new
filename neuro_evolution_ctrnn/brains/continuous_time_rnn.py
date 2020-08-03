@@ -126,7 +126,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
 
         if self.config.neuron_activation_inplace:
-            self.y = y_
+            self.y = y_  # type:ignore
         dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
         # Euler forward discretization
