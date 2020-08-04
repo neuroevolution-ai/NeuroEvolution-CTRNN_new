@@ -20,7 +20,7 @@ pygame
 networkx
 
 typed-argument-parser # adds code completyion to argparse in pycharm
-
+tikzplotlib
 
 # optional, if needed install manually
 # gym[mujoco]

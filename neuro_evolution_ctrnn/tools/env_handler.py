@@ -97,10 +97,10 @@ class QbertGlitchlessWrapper(Wrapper):
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(QbertGlitchlessWrapper, self).step(action)
         if rew == 500 or rew == 525:
-            logging.info("remove reward to avoid luring enemy into abyss")
+            logging.debug("remove reward to avoid luring enemy into abyss")
             rew = 0
         if rew == 300 or rew == 325:
-            logging.info("removed reward from fruit to avoid repetitive behavior")
+            logging.debug("removed reward from fruit to avoid repetitive behavior")
             rew = 0
         return ob, rew, done, info
 

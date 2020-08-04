@@ -19,10 +19,10 @@ class RenderArgs(Tap):
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
     description = "Visualize Experiments"
-    neuron_vis: bool  # show neuron visualizer?
+    neuron_vis: bool = False  # show neuron visualizer?
     hof: int = 1  # how many members of hall-of-fame should be shown?
     rounds: int = 1  # how many episodes should be shown per HOF-member?
-    slow_down: int  # how many milliseconds should be pause between time steps?
+    slow_down: int = 0 # how many milliseconds should be pause between time steps?
 
 
 args = RenderArgs().parse_args()
@@ -42,7 +42,7 @@ with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is registered when loading experiment
     hall_of_fame = pickle.load(read_file_hof)
 
-assert len(hall_of_fame) < args.hof, "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(
+assert len(hall_of_fame) >= args.hof, "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(
     args.hof, len(hall_of_fame))
 
 individuals = hall_of_fame[0:args.hof]

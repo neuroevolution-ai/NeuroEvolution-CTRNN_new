@@ -20,12 +20,13 @@ class PlotArgs(Tap):
     # for details on parsing see: https://github.com/swansonk14/typed-argument-parser
 
     dir: str  # Directory path to the simulation result
-    no_show: bool = True  # Open a matplotlib window to show the plot
+    no_show: bool = False  # Open a matplotlib window to show the plot
     save_png: str = None  # A filename where the plot should be saved as png
     save_tikz: str = None  # A filename where the plot should be saved as tikz
     plot_novelty: bool = False  # include novelty in the plot?
     smooth: int = 0  # How strong should the lines be smoothed? (0 to disable)
     style: str = 'seaborn-paper'  # Which plot style should be used?
+    tex_renderer: bool = False # Use text to render plot?
 
 
 args = PlotArgs().parse_args()
@@ -56,13 +57,13 @@ def plot_chapter(axis, chapter, gens, colors):
                       label='variance')
     my_plot(axis, gens, fit_min, '-', color=colors[3], label="minimum")
 
-
-matplotlib.rcParams.update({
-    "pgf.texsystem": "xelatex",
-    'font.family': 'serif',
-    'pgf.rcfonts': False,
-    'text.usetex': True,
-})
+if args.tex_renderer:
+    matplotlib.rcParams.update({
+        "pgf.texsystem": "xelatex",
+        'font.family': 'serif',
+        'pgf.rcfonts': False,
+        'text.usetex': True,
+    })
 
 with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
     log = pickle.load(read_file_log)
@@ -108,5 +109,5 @@ if args.save_tikz:
     tikzplotlib.clean_figure(target_resolution=80)
     tikzplotlib.save(filepath=args.save_tikz, strict=True, axis_height='8cm',
                      axis_width='10cm')
-if args.show:
+if not args.no_show:
     plt.show()
