@@ -45,8 +45,9 @@ class EnvHandler:
             # terminal_on_life_loss behaves different than EpisodicLifeEnv
             # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
             # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
-            env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
-            env = EpisodicLifeEnv(env)
+            # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
+            # env = EpisodicLifeEnv(env)
+            env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True)
 
         if env.spec.id.startswith("Qbert"):
             logging.info("wrapping env in QbertGlitchlessWrapper")
