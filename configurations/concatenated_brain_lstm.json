@@ -1,0 +1,54 @@
+{
+  "environment": "CartPole-v1",
+  "random_seed": 0,
+  "number_generations": 5,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 5,
+    "sigma": 1.0,
+    "checkpoint_frequency": 10,
+    "hof_size": 5,
+    "mu": 25
+  },
+  "brain": {
+    "type": "ConcatenatedBrain_LSTM",
+    "normalize_input": true,
+    "normalize_input_target": 5,
+    "use_bias": true,
+    "feed_forward_front": {
+      "type": "FeedForward_NumPy",
+      "normalize_input": false,
+      "normalize_input_target": 2,
+      "use_bias": true,
+      "hidden_layers": [[64, 128]],
+      "non_linearity": "relu",
+      "indirect_encoding": false,
+      "cppn_hidden_layers": [[10, 10]]
+    },
+    "lstm": {
+      "type": "LSTMNumPy",
+      "normalize_input": true,
+      "normalize_input_target": 5,
+      "use_bias": true,
+      "lstm_num_layers": 1
+    },
+    "feed_forward_back": {
+      "type": "FeedForward_NumPy",
+      "normalize_input": false,
+      "normalize_input_target": 2,
+      "use_bias": true,
+      "hidden_layers": [[256, 512]],
+      "non_linearity": "relu",
+      "indirect_encoding": false,
+      "cppn_hidden_layers": [[10, 10]]
+    }
+  },
+  "episode_runner": {
+    "keep_env_seed_fixed_during_generation": false,
+    "number_fitness_runs": 1,
+    "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0
+  }
+}

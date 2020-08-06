@@ -1,7 +1,7 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
 import attr
 import abc
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -78,6 +78,13 @@ class FeedForwardCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ConcatenatedBrainLSTMCfg(IBrainCfg):
+    lstm: LSTMCfg
+    feed_forward_front: FeedForwardCfg = None
+    feed_forward_back: FeedForwardCfg = None
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
