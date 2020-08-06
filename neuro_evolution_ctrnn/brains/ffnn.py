@@ -22,9 +22,6 @@ class FeedForward(IBrain[FeedForwardCfg]):
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-        self.weights: List[nn.Module] = []
-        self.biases: List[float] = []
-
         self.non_linearity: Callable[[np.ndarray], np.ndarray]
         if config.non_linearity == "relu":
             if isinstance(self, FeedForwardPyTorch):
@@ -97,6 +94,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
+        self.layers: [nn.Linear] = []
+
         current_index = 0
         last_layer = self.input_size
         for hidden_layer in self.hidden_layers + [self.output_size]:
@@ -107,14 +106,14 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
                 np.array(individual[current_index:current_index + current_size], dtype=np.single).reshape(
                     (hidden_layer, last_layer)))
 
-            self.weights.append(next_layer)
+            self.layers.append(next_layer)
             last_layer = hidden_layer
             current_index += current_size
 
         if config.use_bias:
             # Take extra loop for bias because we have the "convention" to add bias to the end of the individual array
             for index, hidden_layer in enumerate(self.hidden_layers + [self.output_size]):
-                self.weights[index].bias.data = torch.from_numpy(
+                self.layers[index].bias.data = torch.from_numpy(
                     np.array(individual[current_index:current_index + hidden_layer]))
                 current_index += hidden_layer
 
@@ -154,7 +153,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))
 
-            for layer in self.weights:
+            for layer in self.layers:
                 x = self.non_linearity(layer(x))
             return x.view(self.output_size).numpy()
 
@@ -163,6 +162,9 @@ class FeedForwardNumPy(FeedForward):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
+
+        self.weights: [np.ndarray] = []
+        self.bias: [np.ndarray] = []
 
         last_layer = self.input_size
         current_index = 0
@@ -178,11 +180,11 @@ class FeedForwardNumPy(FeedForward):
 
         if config.use_bias:
             for hidden_layer in self.hidden_layers + [self.output_size]:
-                self.biases.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
+                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
 
                 current_index += hidden_layer
         else:
-            self.biases = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
+            self.bias = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
 
     @staticmethod
     def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
@@ -192,7 +194,7 @@ class FeedForwardNumPy(FeedForward):
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
-        for weight, bias in zip(self.weights, self.biases):
+        for weight, bias in zip(self.weights, self.bias):
             x = self.non_linearity(self.layer_step(x, weight, bias))
 
         return x
