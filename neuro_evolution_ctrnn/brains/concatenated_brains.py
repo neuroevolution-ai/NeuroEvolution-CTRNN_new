@@ -56,6 +56,7 @@ class ConcatenatedLSTM(IBrain):
 
     def step(self, ob: np.ndarray):
         x = ob
+
         if self.config.normalize_input:
             x = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
 
@@ -79,15 +80,20 @@ class ConcatenatedLSTM(IBrain):
 
         feed_forward_front_cfg = None
         feed_forward_back_cfg = None
-        lstm_config = LSTMCfg(**config.lstm)
+        lstm_config = config.lstm if isinstance(config.lstm, LSTMCfg) else LSTMCfg(**config.lstm)
 
         if config.feed_forward_front:
-            feed_forward_front_cfg = FeedForwardCfg(**config.feed_forward_front)
+            feed_forward_front_cfg = (
+                config.feed_forward_front if isinstance(config.feed_forward_front, FeedForwardCfg) else FeedForwardCfg(
+                    **config.feed_forward_front))
+
             # TODO for Design Space the shape of hidden_layers could only be one-dimensional, so [0] will not work
             lstm_input_size = feed_forward_front_cfg.hidden_layers[0][-1]
 
         if config.feed_forward_back:
-            feed_forward_back_cfg = FeedForwardCfg(**config.feed_forward_back)
+            feed_forward_back_cfg = (
+                config.feed_forward_back if isinstance(config.feed_forward_back, FeedForwardCfg) else FeedForwardCfg(
+                    **config.feed_forward_back))
             # TODO Same as above with the front feed forward layer
             lstm_output_size = feed_forward_back_cfg.hidden_layers[0][0]
 
