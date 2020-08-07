@@ -9,11 +9,11 @@
     "sigma": 1.0,
     "checkpoint_frequency": 10,
     "hof_size": 5,
-    "mu": 25
+    "mu": 1
   },
   "brain": {
     "type": "ConcatenatedBrain_LSTM",
-    "normalize_input": true,
+    "normalize_input": false,
     "normalize_input_target": 5,
     "use_bias": true,
     "feed_forward_front": {
@@ -28,7 +28,7 @@
     },
     "lstm": {
       "type": "LSTMNumPy",
-      "normalize_input": true,
+      "normalize_input": false,
       "normalize_input_target": 5,
       "use_bias": true,
       "lstm_num_layers": 1

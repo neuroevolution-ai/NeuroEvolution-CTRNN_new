@@ -13,11 +13,16 @@ class ConcatenatedLSTM(IBrain):
         super().__init__(input_space, output_space, individual, config)
 
         self.config = config
+        self.input_space = input_space
+        self.output_space = output_space
+        self.feed_forward_front = None
+        self.feed_forward_back = None
 
         feed_forward_front_cfg, feed_forward_back_cfg, lstm_config, lstm_input_size, lstm_output_size = (
             self.get_configs_and_output_sizes(self.config, input_space, output_space))
 
         current_index = 0
+
         if config.feed_forward_front:
             ff_front_individual_size = FeedForwardNumPy.get_individual_size(feed_forward_front_cfg, input_space,
                                                                             Box(-1, 1, (lstm_input_size,)))
@@ -50,7 +55,19 @@ class ConcatenatedLSTM(IBrain):
         assert current_index == len(individual)
 
     def step(self, ob: np.ndarray):
-        pass
+        x = ob
+        if self.config.normalize_input:
+            x = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+
+        if self.feed_forward_front:
+            x = self.feed_forward_front.step(x)
+
+        x = self.lstm.step(x)
+
+        if self.feed_forward_back:
+            x = self.feed_forward_back.step(x)
+
+        return x
 
     @classmethod
     def get_configs_and_output_sizes(cls, config: ConcatenatedBrainLSTMCfg, input_space: Space, output_space: Space):
