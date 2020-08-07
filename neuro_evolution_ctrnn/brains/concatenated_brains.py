@@ -13,10 +13,41 @@ class ConcatenatedLSTM(IBrain):
         super().__init__(input_space, output_space, individual, config)
 
         self.config = config
-        self.lstms = []
 
-        for v in self.config.lstm_layers.values():
-            self.lstms.append(LSTMCfg(**v))
+        feed_forward_front_cfg, feed_forward_back_cfg, lstm_config, lstm_input_size, lstm_output_size = (
+            self.get_configs_and_output_sizes(self.config, input_space, output_space))
+
+        current_index = 0
+        if config.feed_forward_front:
+            ff_front_individual_size = FeedForwardNumPy.get_individual_size(feed_forward_front_cfg, input_space,
+                                                                            Box(-1, 1, (lstm_input_size,)))
+
+            self.feed_forward_front = FeedForwardNumPy(input_space, Box(-1, 1, (lstm_input_size,)),
+                                                       individual[
+                                                       current_index:current_index + ff_front_individual_size],
+                                                       feed_forward_front_cfg)
+            current_index += ff_front_individual_size
+
+        lstm_individual_size = LSTMNumPy.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
+                                                             Box(-1, 1, (lstm_output_size,)))
+
+        self.lstm = LSTMNumPy(Box(-1, 1, (lstm_input_size,)), Box(-1, 1, (lstm_output_size,)),
+                              individual[current_index:current_index + lstm_individual_size], lstm_config)
+
+        current_index += lstm_individual_size
+
+        if config.feed_forward_back:
+            ff_back_individual_size = FeedForwardNumPy.get_individual_size(feed_forward_back_cfg,
+                                                                           Box(-1, 1, (lstm_output_size,)),
+                                                                           output_space)
+
+            self.feed_forward_back = FeedForwardNumPy(Box(-1, 1, (lstm_output_size,)), output_space,
+                                                      individual[current_index:current_index + ff_back_individual_size],
+                                                      feed_forward_back_cfg)
+
+            current_index += ff_back_individual_size
+
+        assert current_index == len(individual)
 
     def step(self, ob: np.ndarray):
         pass
@@ -62,6 +93,6 @@ class ConcatenatedLSTM(IBrain):
 
         if config.feed_forward_back:
             individual_size += FeedForwardNumPy.get_individual_size(feed_forward_back_cfg,
-                                                                    Box(-1, 1, (lstm_output_size, )), output_space)
+                                                                    Box(-1, 1, (lstm_output_size,)), output_space)
 
         return individual_size
