@@ -24,17 +24,17 @@ class TestConcatenatedLSTM:
 
         # Basic assertion to test if the architecture of the concatenated brain matches the chosen configuration
         assert (concatenated_lstm.feed_forward_front.hidden_layers ==
-                concat_lstm_config.feed_forward_front.hidden_layers[0])
+                concat_lstm_config.feed_forward_front.hidden_layers)
 
-        assert concatenated_lstm.lstm.input_space.shape[0] == concat_lstm_config.feed_forward_front.hidden_layers[0][-1]
+        assert concatenated_lstm.lstm.input_space.shape[0] == concat_lstm_config.feed_forward_front.hidden_layers[-1]
 
         assert (concatenated_lstm.feed_forward_back.hidden_layers ==
-                concat_lstm_config.feed_forward_back.hidden_layers[0])
+                concat_lstm_config.feed_forward_back.hidden_layers)
 
         # To test the concatenated brain, construct the individual parts alone and later compare the results
         # First construct the leading Feed Forward part
         ff_front_cfg = concat_lstm_config.feed_forward_front
-        ff_front_output_space = Box(-1, 1, (ff_front_cfg.hidden_layers[0][-1],))
+        ff_front_output_space = Box(-1, 1, (ff_front_cfg.hidden_layers[-1],))
         ff_front_individual_size = FeedForwardNumPy.get_individual_size(ff_front_cfg, input_space, ff_front_output_space)
 
         current_index = 0
@@ -45,7 +45,7 @@ class TestConcatenatedLSTM:
 
         # Create input space for Feed Forward part at the back here because it is the output space for the LSTM
         ff_back_cfg = concat_lstm_config.feed_forward_back
-        ff_back_input_space = Box(-1, 1, (ff_back_cfg.hidden_layers[0][0],))
+        ff_back_input_space = Box(-1, 1, (ff_back_cfg.hidden_layers[0],))
 
         # Create LSTM
         lstm_cfg = concat_lstm_config.lstm

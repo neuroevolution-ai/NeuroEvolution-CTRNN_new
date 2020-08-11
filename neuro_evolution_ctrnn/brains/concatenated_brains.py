@@ -87,15 +87,14 @@ class ConcatenatedLSTM(IBrain):
                 config.feed_forward_front if isinstance(config.feed_forward_front, FeedForwardCfg) else FeedForwardCfg(
                     **config.feed_forward_front))
 
-            # TODO for Design Space the shape of hidden_layers could only be one-dimensional, so [0] will not work
-            lstm_input_size = feed_forward_front_cfg.hidden_layers[0][-1]
+            lstm_input_size = feed_forward_front_cfg.hidden_layers[-1]
 
         if config.feed_forward_back:
             feed_forward_back_cfg = (
                 config.feed_forward_back if isinstance(config.feed_forward_back, FeedForwardCfg) else FeedForwardCfg(
                     **config.feed_forward_back))
-            # TODO Same as above with the front feed forward layer
-            lstm_output_size = feed_forward_back_cfg.hidden_layers[0][0]
+
+            lstm_output_size = feed_forward_back_cfg.hidden_layers[0]
 
         return feed_forward_front_cfg, feed_forward_back_cfg, lstm_config, lstm_input_size, lstm_output_size
 

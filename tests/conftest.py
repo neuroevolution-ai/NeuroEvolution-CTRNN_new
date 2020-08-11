@@ -42,13 +42,13 @@ def concat_lstm_config() -> ConcatenatedBrainLSTMCfg:
                                     use_bias=True,
                                     feed_forward_front=FeedForwardCfg(type="FeedForward_PyTorch", normalize_input=False,
                                                                       normalize_input_target=1, use_bias=True,
-                                                                      hidden_layers=[[8, 16]], non_linearity="relu",
+                                                                      hidden_layers=[8, 16], non_linearity="relu",
                                                                       indirect_encoding=False,
-                                                                      cppn_hidden_layers=[[2, 4]]),
+                                                                      cppn_hidden_layers=[2, 4]),
                                     lstm=LSTMCfg(type="LSTM_PyTorch", normalize_input=False, normalize_input_target=1,
                                                  lstm_num_layers=3, use_bias=True),
                                     feed_forward_back=FeedForwardCfg(type="FeedForward_PyTorch", normalize_input=False,
                                                                      normalize_input_target=1, use_bias=True,
-                                                                     hidden_layers=[[32, 64]], non_linearity="relu",
+                                                                     hidden_layers=[32, 64], non_linearity="relu",
                                                                      indirect_encoding=False,
-                                                                     cppn_hidden_layers=[[2, 4]]))
+                                                                     cppn_hidden_layers=[2, 4]))
