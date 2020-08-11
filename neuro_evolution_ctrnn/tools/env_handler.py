@@ -1,5 +1,6 @@
 import gym
 import pybullet_envs # unused import is needed to register pybullet envs
+import gym_memory_environments
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg

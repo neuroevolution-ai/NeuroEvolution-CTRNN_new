@@ -2,8 +2,8 @@ from gym.spaces import Space, Box
 import numpy as np
 
 from brains.i_brain import IBrain
-from lstm import LSTMNumPy, LSTMPyTorch
-from ffnn import FeedForwardNumPy, FeedForwardPyTorch
+from brains.lstm import LSTMNumPy
+from brains.ffnn import FeedForwardNumPy
 from tools.configurations import ConcatenatedBrainLSTMCfg, LSTMCfg, FeedForwardCfg
 
 
