@@ -21,7 +21,7 @@
       "normalize_input": false,
       "normalize_input_target": 2,
       "use_bias": true,
-      "hidden_layers": [[4, 8], [8, 16], [16]],
+      "hidden_layers": [[4, 8], [8, 16], [8], [16]],
       "non_linearity": "relu",
       "indirect_encoding": false,
       "cppn_hidden_layers": [10, 10]
@@ -38,7 +38,7 @@
       "normalize_input": false,
       "normalize_input_target": 2,
       "use_bias": true,
-      "hidden_layers": [[4, 8], [8, 16], [16]],
+      "hidden_layers": [[4, 8], [8, 16], [8], [16]],
       "non_linearity": "relu",
       "indirect_encoding": false,
       "cppn_hidden_layers": [10, 10]
