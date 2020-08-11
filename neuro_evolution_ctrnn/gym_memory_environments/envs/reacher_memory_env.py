@@ -36,6 +36,8 @@ class ReacherMemoryEnv(ReacherEnv):
         return ob, rew, done, info
 
     def reset(self):
-        super().reset()
+        ob = super().reset()
         self.spec.max_episode_steps = self.observation_frames + self.memory_frames + self.action_frames
         self.t = 0
+
+        return ob
