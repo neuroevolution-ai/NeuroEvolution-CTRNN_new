@@ -12,7 +12,8 @@ import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg)
+                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
+                                  ConcatenatedBrainLSTMCfg)
 
 
 def output_to_action(output, action_space):
@@ -74,6 +75,8 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         brain_cfg_class = FeedForwardCfg
     elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
         brain_cfg_class = LSTMCfg
+    elif config_dict["brain"]["type"] == "ConcatenatedBrain_LSTM":
+        brain_cfg_class = ConcatenatedBrainLSTMCfg
     else:
         raise RuntimeError("Unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
@@ -96,7 +99,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
 
     if config_dict['random_seed'] < 0:
         seed = random.randint(1, 10000)
-        logging.info("setting random seed to "+ str(seed))
+        logging.info("setting random seed to " + str(seed))
         logging.info("if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
                      "set random_seed to a positive integer.")
         config_dict['random_seed'] = seed
@@ -104,7 +107,6 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
     if config_dict["environment"] == "ReacherMemory-v0":
         config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
             **config_dict["episode_runner"]["environment_attributes"])
-
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))

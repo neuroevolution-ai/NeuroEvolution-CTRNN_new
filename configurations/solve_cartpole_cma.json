@@ -9,7 +9,7 @@
     "sigma": 1.0,
     "checkpoint_frequency": 0,
     "hof_size": 5,
-    "mu": 25
+    "mu": 5
   },
   "brain": {
     "type": "CTRNN",

@@ -9,7 +9,7 @@ from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
-# import brains.layered_nn as lnn
+from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -40,6 +40,8 @@ class Experiment(object):
             self.brain_class = LSTMPyTorch
         elif self.config.brain.type == "LSTM_NumPy":
             self.brain_class = LSTMNumPy
+        elif self.config.brain.type == "ConcatenatedBrain_LSTM":
+            self.brain_class = ConcatenatedLSTM
         else:
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 

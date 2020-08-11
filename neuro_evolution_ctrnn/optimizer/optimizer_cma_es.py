@@ -42,6 +42,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.logbook = self.create_logbook(conf)
             if conf.mu:
                 mu = conf.mu
+                assert conf.population_size >= mu, "The population size must be higher or equal to the chosen mu."
             else:
                 mu = int(conf.population_size / 2)
             toolbox.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
