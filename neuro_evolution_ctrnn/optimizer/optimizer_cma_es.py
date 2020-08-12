@@ -8,8 +8,8 @@ from deap import tools
 from deap import cma
 from tools import algorithms
 from tools.configurations import OptimizerCmaEsCfg
-from tools.helper import write_checkpoint, get_checkpoint
 from optimizer.i_optimizer import IOptimizer
+from tools.helper import get_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
 
 
 class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
@@ -26,16 +26,20 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         self.toolbox = toolbox = base.Toolbox()
         self.conf: OptimizerCmaEsCfg = conf
         self.toolbox.stats = stats
+        toolbox.conf = conf
+
         self.create_classes()
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
             toolbox.initial_generation = cp["generation"] + 1
             self.hof = cp["halloffame"]
+            toolbox.recorded_individuals = cp["recorded_individuals"]
             toolbox.logbook = cp["logbook"]
             toolbox.initial_seed = cp["last_seed"]
             toolbox.strategy = cp["strategy"]
         else:
             self.hof = hof
+            toolbox.recorded_individuals = []
             toolbox.initial_generation = 0
             toolbox.initial_seed = None
             toolbox.logbook = tools.Logbook()
@@ -51,8 +55,24 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         toolbox.register("evaluate", eval_fitness)
         toolbox.register("generate", toolbox.strategy.generate, creator.Individual)
         toolbox.register("update", toolbox.strategy.update)
-
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
+        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
+                         mutation_learned=False)
+
+        if conf.novelty:
+            if conf.novelty.distance == "euclid":
+                toolbox.register("get_distance", euklidian_distance)
+            elif conf.novelty.distance == "NCD":
+                toolbox.register("get_distance", normalized_compression_distance)
+            elif conf.novelty.distance == "equal":
+                toolbox.register("get_distance", equal_elements_distance)
+            else:
+                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
+        else:
+            toolbox.register("get_distance", lambda *args: 0)
+
+        toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
+
 
     def train(self, number_generations) -> tools.Logbook:
         return algorithms.eaGenerateUpdate(self.toolbox, ngen=number_generations, halloffame=self.hof)

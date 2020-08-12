@@ -64,32 +64,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             indpb = 2 ** (ind1[-2] - 3)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
-        def shape_fitness(population):
-            if conf.novelty:
-                novel_counter = 0
-                for ind in sorted(population, key=lambda x: x.novelty):
-                    ind.novelty_rank = novel_counter
-                    novel_counter += 1
-
-            if conf.efficiency_weight:
-                efficiency_counter = 0
-                for ind in sorted(population, key=lambda x: -x.steps):
-                    ind.efficiency_rank = efficiency_counter
-                    efficiency_counter += 1
-
-            fitness_counter = 0
-            for ind in sorted(population, key=lambda x: x.fitness.values[0]):
-                ind.fitness_rank = fitness_counter
-                fitness_counter += 1
-
-            for ind in population:
-                ind.shaped_fitness = ind.fitness_rank
-                if conf.novelty:
-                    ind.shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
-                if conf.efficiency_weight:
-                    ind.shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank
-
-        toolbox.register("shape_fitness", shape_fitness)
+        toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
         toolbox.register("mate", mate)
         toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
                          mutation_learned=True)

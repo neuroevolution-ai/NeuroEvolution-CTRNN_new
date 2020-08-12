@@ -63,3 +63,28 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         if mutation_learned:
             return list(np.array(population)[:, :-2])
         return population
+
+    def shape_fitness_weighted_ranks(self, population):
+        if self.conf.novelty:
+            novel_counter = 0
+            for ind in sorted(population, key=lambda x: x.novelty):
+                ind.novelty_rank = novel_counter
+                novel_counter += 1
+
+        if self.conf.efficiency_weight:
+            efficiency_counter = 0
+            for ind in sorted(population, key=lambda x: -x.steps):
+                ind.efficiency_rank = efficiency_counter
+                efficiency_counter += 1
+
+        fitness_counter = 0
+        for ind in sorted(population, key=lambda x: x.fitness.values[0]):
+            ind.fitness_rank = fitness_counter
+            fitness_counter += 1
+
+        for ind in population:
+            ind.shaped_fitness = ind.fitness_rank
+            if self.conf.novelty:
+                ind.shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
+            if self.conf.efficiency_weight:
+                ind.shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank

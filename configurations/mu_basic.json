@@ -1,7 +1,7 @@
 {
   "environment": "LunarLander-v2",
   "random_seed": 0,
-  "number_generations": 30,
+  "number_generations": 5,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
@@ -13,11 +13,11 @@
     "extra_from_hof": 0,
     "lambda_": 100,
     "mutpb": 0.8,
-    "efficiency_weight": 0.0
+    "efficiency_weight": 0.2
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 20,
+    "number_neurons": 10,
     "neuron_activation": "tanh",
     "neuron_activation_inplace": true,
     "delta_t": 0.5,

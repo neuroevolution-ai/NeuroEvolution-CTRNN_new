@@ -93,6 +93,7 @@ class IOptimizerCfg(abc.ABC):
     checkpoint_frequency: int
     hof_size: int
     novelty: Optional[NoveltyCfg]
+    efficiency_weight: float
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -103,7 +104,6 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     lambda_: int
     mutpb: float
     extra_from_hof: int
-    efficiency_weight: float
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

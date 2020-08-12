@@ -1,7 +1,7 @@
 {
   "environment": "BipedalWalker-v3",
   "random_seed": 0,
-  "number_generations": 150,
+  "number_generations": 5,
   "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
@@ -9,7 +9,18 @@
     "sigma": 1.0,
     "checkpoint_frequency": 0,
     "hof_size": 5,
-    "mu": 25
+    "mu": 25,
+    "efficiency_weight": 0.1
+  },
+  "novelty": {
+    "distance": "euclid",
+    "max_recorded_behaviors": 30,
+    "recorded_behaviors_per_generation": 5,
+    "novelty_nearest_k": 5,
+    "novelty_weight": 0.2,
+    "behavioral_interval": 5,
+    "behavioral_max_length": 500,
+    "behavior_from_observation": false
   },
   "brain": {
     "type": "CTRNN",
