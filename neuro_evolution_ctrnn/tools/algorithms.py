@@ -131,7 +131,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, nevals=len(population), steps=total_steps, **record)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
