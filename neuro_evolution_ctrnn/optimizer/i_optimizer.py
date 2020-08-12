@@ -8,6 +8,8 @@ from pathlib import Path
 import logging
 import os
 from tools.helper import write_checkpoint
+from tools.helper import normalized_compression_distance, euklidian_distance, equal_elements_distance
+from deap import base
 
 ConfigClass = TypeVar('ConfigClass', bound=IOptimizerCfg)
 
@@ -18,7 +20,16 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
                  map_func=map,
                  from_checkoint=None):
-        pass
+        self.create_classes()
+        self.conf: ConfigClass = conf
+        self.toolbox = toolbox = base.Toolbox()
+        self.toolbox.stats = stats
+        toolbox.conf = conf
+        toolbox.register("map", map_func)
+        toolbox.register("evaluate", eval_fitness)
+        toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
+        self.register_checkpoints(toolbox, conf.checkpoint_frequency)
+        self.register_novelty_distance(toolbox)
 
     @staticmethod
     @abc.abstractmethod
@@ -35,6 +46,20 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         Path(cp_base_path).mkdir(parents=True, exist_ok=True)
         logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
         toolbox.register("checkpoint", write_checkpoint, cp_base_path, checkpoint_frequency)
+
+    def register_novelty_distance(self, toolbox):
+        conf = self.conf
+        if conf.novelty:
+            if conf.novelty.distance == "euclid":
+                toolbox.register("get_distance", euklidian_distance)
+            elif conf.novelty.distance == "NCD":
+                toolbox.register("get_distance", normalized_compression_distance)
+            elif conf.novelty.distance == "equal":
+                toolbox.register("get_distance", equal_elements_distance)
+            else:
+                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
+        else:
+            toolbox.register("get_distance", lambda *args: 0)
 
     @staticmethod
     def create_logbook(conf: IOptimizerCfg):
