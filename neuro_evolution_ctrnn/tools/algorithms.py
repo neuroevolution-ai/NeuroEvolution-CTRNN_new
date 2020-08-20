@@ -135,6 +135,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy))
+                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
+                                         recorded_individuals=toolbox.recorded_individuals))
 
     return toolbox.logbook
