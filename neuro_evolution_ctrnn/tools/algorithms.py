@@ -12,20 +12,24 @@ from itertools import tee
 def evaluate_candidates(candidates, toolbox):
     if toolbox.initial_seed:
         seed_after_map: int = random.randint(1, 10000)
-        seed_for_generation = random.randint(1, 10000)
+        if toolbox.conf.fix_seed_for_generation:
+            seed_for_generation = random.randint(1, 10000)
+            seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
+            seeds_for_recorded = seed_for_generation *  np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
+        else:
+            seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+            seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
     else:
-        seed_after_map = 0
-        seed_for_generation = 0
+        seed_after_map =  0
+        seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
+        seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
 
     brain_genomes = toolbox.strip_strategy_from_population(candidates)
     brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
     nevals = len(brain_genomes) + len(brain_genomes_recorded)
-
-    seeds_for_evaluation = np.ones(len(brain_genomes), dtype=np.int64) * seed_for_generation
     results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
 
     if toolbox.conf.novelty:
-        seeds_for_recorded = np.ones(len(toolbox.recorded_individuals), dtype=np.int64) * seed_for_generation
         results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
         results_copy, results = tee(results, 2)
         novelties = toolbox.map(calc_novelty,
@@ -43,17 +47,26 @@ def evaluate_candidates(candidates, toolbox):
         ind.novelty = nov
         ind.steps = steps
         total_steps += steps
-    # setting seeds must happen after reading alle fitnesses from results, because of the async nature of map, it
+    # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
     # is possiblethat some evaluations are still running when the first results get processes
     set_random_seeds(seed_after_map, env=None)
 
     toolbox.shape_fitness(candidates)
+
+    if toolbox.conf.novelty:
+        # drop recorded_individuals, when there are too many
+        overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
+        if overfill > 0:
+            toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
+
     return nevals, total_steps, seed_after_map
+
 
 def record_individuals(toolbox, population):
     if toolbox.conf.novelty:
         toolbox.recorded_individuals += random.choices(population,
                                                        k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+
 
 def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                    include_parents_in_next_generation=True):
@@ -75,16 +88,10 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
         nevals, total_steps, current_seed = evaluate_candidates(candidates, toolbox)
 
-        if toolbox.conf.novelty:
-            # drop recorded_individuals, when there are too many
-            overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
-            if overfill > 0:
-                toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
-
         if halloffame is not None:
             halloffame.update(offspring)
 
-        population[:] = toolbox.select(candidates, toolbox.conf.mu, fit_attr="shaped_fitness")
+        population[:] = toolbox.select(candidates, toolbox.conf.mu)
 
         record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
         toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
@@ -121,7 +128,8 @@ def calc_novelty(res, results_recorded, get_distance, k):
 
 def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
     if toolbox.initial_seed:
-        set_random_seeds(toolbox.initial_seed, env=None)
+        # set_random_seeds(toolbox.initial_seed, env=None)
+        pass
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         population: Collection = toolbox.generate()

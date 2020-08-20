@@ -94,6 +94,7 @@ class IOptimizerCfg(abc.ABC):
     hof_size: int
     novelty: Optional[NoveltyCfg]
     efficiency_weight: float
+    fix_seed_for_generation: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

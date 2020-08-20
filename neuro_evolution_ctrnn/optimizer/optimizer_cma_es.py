@@ -24,6 +24,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
                                              from_checkoint)
         toolbox = self.toolbox
+
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
             toolbox.initial_generation = cp["generation"] + 1
@@ -36,7 +37,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             self.hof = hof
             toolbox.recorded_individuals = []
             toolbox.initial_generation = 0
-            toolbox.initial_seed = None
+            toolbox.initial_seed = random_seed
             toolbox.logbook = tools.Logbook()
             toolbox.logbook = self.create_logbook(conf)
             if conf.mu:

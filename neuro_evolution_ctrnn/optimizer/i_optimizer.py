@@ -27,9 +27,13 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         toolbox.conf = conf
         toolbox.register("map", map_func)
         toolbox.register("evaluate", eval_fitness)
+        # toolbox.register("shape_fitness", lambda *args: None)
         toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
         self.register_novelty_distance(toolbox)
+
+        if conf.novelty and not conf.fix_seed_for_generation:
+            logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
 
     @staticmethod
     @abc.abstractmethod
@@ -89,6 +93,16 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             return list(np.array(population)[:, :-2])
         return population
 
+    def shape_fitness_multi_objective(self, population):
+        for ind in population:
+            shaped_fitness = [ind.fitness.values[0]]
+            novelty = ind.novelty if self.conf.novelty else 0
+            efficiency = -ind.steps if self.conf.efficiency_weight else 0
+            shaped_fitness.append(novelty)
+            shaped_fitness.append(efficiency)
+            ind.fitness.values = tuple(shaped_fitness)
+
+
     def shape_fitness_weighted_ranks(self, population):
         if self.conf.novelty:
             novel_counter = 0
@@ -108,8 +122,9 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             fitness_counter += 1
 
         for ind in population:
-            ind.shaped_fitness = ind.fitness_rank
+            shaped_fitness = ind.fitness_rank
             if self.conf.novelty:
-                ind.shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
+                shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
             if self.conf.efficiency_weight:
-                ind.shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank
+                shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank
+            ind.fitness.values = tuple([shaped_fitness])
