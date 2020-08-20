@@ -10,6 +10,8 @@ import os
 from tools.helper import write_checkpoint
 from tools.helper import normalized_compression_distance, euklidian_distance, equal_elements_distance
 from deap import base
+import copy
+
 
 ConfigClass = TypeVar('ConfigClass', bound=IOptimizerCfg)
 
@@ -95,6 +97,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     def shape_fitness_multi_objective(self, population):
         for ind in population:
+            ind.fitness_orig = copy.deepcopy( ind.fitness)
             shaped_fitness = [ind.fitness.values[0]]
             novelty = ind.novelty if self.conf.novelty else 0
             efficiency = -ind.steps if self.conf.efficiency_weight else 0
@@ -104,6 +107,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
 
     def shape_fitness_weighted_ranks(self, population):
+
         if self.conf.novelty:
             novel_counter = 0
             for ind in sorted(population, key=lambda x: x.novelty):
@@ -122,6 +126,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             fitness_counter += 1
 
         for ind in population:
+            ind.fitness_orig = copy.deepcopy( ind.fitness)
             shaped_fitness = ind.fitness_rank
             if self.conf.novelty:
                 shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank
