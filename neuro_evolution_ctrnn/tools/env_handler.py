@@ -1,5 +1,5 @@
 import gym
-import pybullet_envs # unused import is needed to register pybullet envs
+import pybullet_envs  # unused import is needed to register pybullet envs
 import gym_memory_environments
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
@@ -9,6 +9,8 @@ from gym import Wrapper
 from bz2 import BZ2Compressor
 from typing import Union, Iterable
 import numpy as np
+import cv2
+from gym.spaces import Box
 
 
 class EnvHandler:
@@ -20,14 +22,22 @@ class EnvHandler:
     def make_env(self, env_id: str):
         if env_id == "ReacherMemory-v0" or env_id == "ReacherMemoryDynamic-v0":
             assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
-                    "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"\
-                    " (config.environment_attributes)"
+                "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg" \
+                " (config.environment_attributes)"
 
             env = gym.make(
                 env_id,
                 observation_frames=self.config.environment_attributes.observation_frames,
                 memory_frames=self.config.environment_attributes.memory_frames,
                 action_frames=self.config.environment_attributes.action_frames)
+        elif env_id.startswith("procgen"):
+            logging.info("initiating procgen with memory")
+            env = gym.make(env_id,
+                           distribution_mode="memory",
+                           use_monochrome_assets=False,
+                           restrict_themes=True,
+                           use_backgrounds=False)
+            env = ProcEnvWrapper(env)
         else:
             env = gym.make(env_id)
 
@@ -71,6 +81,28 @@ class EnvHandler:
             env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
 
         return env
+
+
+class ProcEnvWrapper(Wrapper):
+
+    def __init__(self, env):
+        super(ProcEnvWrapper, self).__init__(env)
+        self.screen_size = 16
+        self.obs_dtype = np.float16
+        self.observation_space = Box(low=0, high=1,
+                                     shape=(self.screen_size, self.screen_size, 3),
+                                     dtype=self.obs_dtype)
+
+    def _transform_ob(self, ob):
+        ob = cv2.resize(ob, (self.screen_size, self.screen_size), interpolation=cv2.INTER_AREA)
+        return np.asarray(ob, dtype=self.obs_dtype) / 255.0
+
+    def step(self, action):
+        ob, rew, done, info = super(ProcEnvWrapper, self).step(action)
+        return self._transform_ob(ob), rew, done, info
+
+    def reset(self):
+        return self._transform_ob(super(ProcEnvWrapper, self).reset())
 
 
 class MaxStepWrapper(Wrapper):

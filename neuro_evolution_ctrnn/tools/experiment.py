@@ -65,7 +65,8 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
-
+        logging.info("input space: " + str(self.input_space))
+        logging.info("output space: " + str(self.output_space))
         self.brain_class.set_masks_globally(config=self.config.brain,
                                             input_space=self.input_space,
                                             output_space=self.output_space)
@@ -112,7 +113,7 @@ class Experiment(object):
 
         DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
         if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.env_template.spec.id, self.config.episode_runner)
+            DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(

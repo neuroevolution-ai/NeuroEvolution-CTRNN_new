@@ -15,9 +15,11 @@ attrs
 dask[distributed]
 torch
 pytest-parallel
-bokeh # for dash-dashboard
+bokeh==2.0 # for dash-dashboard.
+# Note: dask==2.23.0 requires bokeh 2.0. After upgrading to dask 2.24 we can stop pinning bokeh
 pygame
 networkx
+procgen
 
 typed-argument-parser # adds code completyion to argparse in pycharm
 tikzplotlib
