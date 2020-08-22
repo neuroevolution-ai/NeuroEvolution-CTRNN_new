@@ -43,7 +43,6 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
     def reset(self):
         self._check_levelup()
         self.memory_frames = self.np_random.randint(3) + self.memory_frames_min
-        logging.info(str(self.t) + " - " + str(self._max_episode_steps))
         ob = super(ReacherMemoryEnvDynamic, self).reset()
         self.episode_total_reward = 0.0
         return ob
