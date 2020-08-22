@@ -104,7 +104,7 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
                      "set random_seed to a positive integer.")
         config_dict['random_seed'] = seed
 
-    if config_dict["environment"] == "ReacherMemory-v0":
+    if config_dict["environment"] == "ReacherMemory-v0" or config_dict["environment"] == "ReacherMemoryDynamic-v0":
         config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
             **config_dict["episode_runner"]["environment_attributes"])
 

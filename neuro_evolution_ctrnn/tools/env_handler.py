@@ -18,8 +18,7 @@ class EnvHandler:
         self.config = config
 
     def make_env(self, env_id: str):
-        if env_id == "ReacherMemory-v0":
-
+        if env_id == "ReacherMemory-v0" or env_id == "ReacherMemoryDynamic-v0":
             assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
                     "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg"\
                     " (config.environment_attributes)"

@@ -12,9 +12,8 @@ class ReacherMemoryEnv(ReacherEnv):
         self.memory_frames = memory_frames
         self.action_frames = action_frames
         self.observation_mask = [4, 5, 8, 9, 10]
-
         self.t = 0
-
+        self._max_episode_steps = self.observation_frames + self.memory_frames + self.action_frames
         super().__init__()
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, np.ndarray, bool, np.ndarray]:
@@ -31,13 +30,15 @@ class ReacherMemoryEnv(ReacherEnv):
         if self.t < self.observation_frames + self.memory_frames:
             rew = 0.0
 
-        self.t += 1
+        if self.t >= self._max_episode_steps:
+            done = True
 
+        self.t += 1
         return ob, rew, done, info
 
     def reset(self):
         ob = super().reset()
-        self.spec.max_episode_steps = self.observation_frames + self.memory_frames + self.action_frames
+        self._max_episode_steps = self.observation_frames + self.memory_frames + self.action_frames
         self.t = 0
 
         return ob
