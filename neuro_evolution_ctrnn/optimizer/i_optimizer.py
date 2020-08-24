@@ -121,12 +121,13 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
                 efficiency_counter += 1
 
         fitness_counter = 0
-        for ind in sorted(population, key=lambda x: x.fitness.values[0]):
+        for ind in sorted(population, key=lambda x: x.fitness_orig):
             ind.fitness_rank = fitness_counter
             fitness_counter += 1
 
         for ind in population:
-            ind.fitness_orig = copy.deepcopy( ind.fitness)
+            # assert not hasattr(ind, 'fitness_orig'), 'individual already has shaped fitness'
+
             shaped_fitness = ind.fitness_rank
             if self.conf.novelty:
                 shaped_fitness += self.conf.novelty.novelty_weight * ind.novelty_rank

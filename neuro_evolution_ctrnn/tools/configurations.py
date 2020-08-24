@@ -21,7 +21,7 @@ class NoveltyCfg:
     recorded_behaviors_per_generation: int
     behavioral_interval: int
     behavioral_max_length: int
-    behavior_from_observation: bool
+    behavior_source: str
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

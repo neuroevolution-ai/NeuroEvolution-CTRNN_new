@@ -152,9 +152,9 @@ def set_random_seeds(seed, env):
 
 def normalized_compression_distance(a, b, a_len=None, b_len=None):
     if not a_len:
-        a_len = len(compress(bytearray(a), 1))
+        a_len = len(compress(bytearray(a), 2))
     if not b_len:
-        b_len = len(compress(bytearray(b), 1))
+        b_len = len(compress(bytearray(b), 2))
     ab_len = len(compress(bytearray(np.concatenate((a, b))), 2))
     return (ab_len - min(a_len, b_len)) / max(a_len, b_len)
 

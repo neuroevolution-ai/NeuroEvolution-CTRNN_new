@@ -72,9 +72,11 @@ class EnvHandler:
             env = Box2DWalkerWrapper(env)
 
         if self.config.novelty:
-            logging.info("wrapping env in BehaviorWrapper")
-            env = BehaviorWrapper(env, self.config.novelty.behavior_from_observation,
-                                  self.config.novelty.behavioral_interval, self.config.novelty.behavioral_max_length)
+            if self.config.novelty.behavior_source in ['observation', 'action', 'state']:
+                logging.info("wrapping env in BehaviorWrapper")
+                env = BehaviorWrapper(env, self.config.novelty.behavior_source,
+                                      self.config.novelty.behavioral_interval,
+                                      self.config.novelty.behavioral_max_length)
 
         if self.config.max_steps_per_run:
             logging.info("wrapping env in MaxStepWrapper")
@@ -139,9 +141,9 @@ class QbertGlitchlessWrapper(Wrapper):
 
 
 class BehaviorWrapper(Wrapper):
-    def __init__(self, env, behavior_from_observation, behavioral_interval, behavioral_max_length):
+    def __init__(self, env, behavior_source, behavioral_interval, behavioral_max_length):
         super().__init__(env)
-        self.behavior_from_observation = behavior_from_observation
+        self.behavior_source = behavior_source
         self.behavioral_interval = behavioral_interval
         self.behavioral_max_length = behavioral_max_length
         self.compressed_behavior = b''
@@ -172,19 +174,21 @@ class BehaviorWrapper(Wrapper):
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
-
-        if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
-            # since float16.max is only around 65500, we need to make it a little smaller
-            data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
-            self._record(data)
-        elif self.behavior_from_observation:
+        if self.behavior_source == "observation":
             self._record(ob)
-        elif self.env.spec.id.endswith("NoFrameskip-v4"):
-            # this is an atari env
-            # noinspection PyProtectedMember
-            self._record(self.env.unwrapped._get_ram())
-        else:
+        elif self.behavior_source == "action":
             self._record(action)
+        elif self.behavior_source == "state":
+            if hasattr(self.env.unwrapped, "model") and "PyMjModel" in str(type(self.env.unwrapped.model)):
+                # since float16.max is only around 65500, we need to make it a little smaller
+                data = np.array(self.env.unwrapped.sim.data.qpos.flat) * 10e-3
+                self._record(data)
+            elif self.env.spec.id.endswith("NoFrameskip-v4"):
+                # this is an atari env
+                # noinspection PyProtectedMember
+                self._record(self.env.unwrapped._get_ram())
+            else:
+                raise RuntimeError('behavior_source=="state" is unsupported for this environment')
         return ob, rew, done, info
 
     def get_compressed_behavior(self):

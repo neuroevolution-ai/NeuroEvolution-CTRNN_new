@@ -1,11 +1,14 @@
 from gym import wrappers
 import time
 import logging
+from bz2 import compress
+import numpy as np
 
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
+from brains.continuous_time_rnn import ContinuousTimeRNN
 
 
 class EpisodeRunner:
@@ -43,7 +46,7 @@ class EpisodeRunner:
         fitness_total = 0
         steps_total = 0
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
-
+        brain_state_history = None
         for i in range(number_of_rounds):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
@@ -55,7 +58,8 @@ class EpisodeRunner:
                 env.render()
 
             if neuron_vis:
-                brain_vis = brain_vis_handler.launch_new_visualization(brain, width=1800, height=900, colorClippingRange=(2.5, 0.5, 2.5))
+                brain_vis = brain_vis_handler.launch_new_visualization(brain, width=1800, height=900,
+                                                                       colorClippingRange=(2.5, 0.5, 2.5))
             else:
                 brain_vis = None
 
@@ -72,6 +76,14 @@ class EpisodeRunner:
                     time.sleep(slow_down / 1000.0)
                 if render:
                     env.render()
+                if self.config.novelty.behavior_source == 'brain':
+                    if isinstance(brain, ContinuousTimeRNN):
+                        if brain_state_history is None:
+                            brain_state_history = np.tanh(brain.y).tolist()
+                        else:
+                            brain_state_history += np.tanh(brain.y).tolist()
+                    else:
+                        logging.error('behavior_source == "brain" not yet supported for this kind of brain')
 
             if render:
                 logging.info("steps: " + str(t) + " \tfitness: " + str(fitness_current))
@@ -84,5 +96,8 @@ class EpisodeRunner:
             # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
+
+        if self.config.novelty.behavior_source == 'brain':
+            compressed_behavior = compress(np.array(brain_state_history).astype(np.float16).tobytes(), 2)
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total

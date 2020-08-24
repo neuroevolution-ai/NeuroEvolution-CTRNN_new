@@ -7,6 +7,8 @@ from deap.algorithms import varOr
 from deap import tools
 from bz2 import compress, decompress
 from itertools import tee
+import copy
+
 
 
 def evaluate_candidates(candidates, toolbox):
@@ -43,7 +45,7 @@ def evaluate_candidates(candidates, toolbox):
     total_steps = 0
     for ind, res, nov in zip(candidates, results, novelties):
         fitness, behavior_compressed, steps = res
-        ind.fitness.values = [fitness]
+        ind.fitness_orig = fitness
         ind.novelty = nov
         ind.steps = steps
         total_steps += steps
@@ -78,10 +80,11 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         extra = []
         if halloffame.items:
             extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
-
         offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
 
         if include_parents_in_next_generation:
+            for ind in population:
+                del ind.fitness.values
             candidates = population + offspring
         else:
             candidates = offspring
