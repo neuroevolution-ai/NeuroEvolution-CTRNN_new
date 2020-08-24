@@ -94,9 +94,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         if halloffame is not None:
             halloffame.update(offspring)
 
+        record = toolbox.stats.compile(candidates) if toolbox.stats is not None else {}
         population[:] = toolbox.select(candidates, toolbox.conf.mu)
 
-        record = toolbox.stats.compile(population) if toolbox.stats is not None else {}
         toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
         if verbose:
             print(toolbox.logbook.stream)
