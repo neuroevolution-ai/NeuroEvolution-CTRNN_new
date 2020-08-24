@@ -6,7 +6,7 @@ import logging
 
 
 class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
-    MIN_REWARD_SHORTFALL_FOR_PROMOTION = -4.0
+    MIN_REWARD_SHORTFALL_FOR_PROMOTION = -6.0
 
     def __init__(self, observation_frames: int, memory_frames: int, action_frames: int):
         self.episode_total_reward = 0.0
@@ -14,7 +14,7 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
                                                       memory_frames=memory_frames,
                                                       action_frames=action_frames)
         self.reward_shortfalls = []
-        self.last = 10
+        self.last = 100
         self.memory_frames_min = memory_frames
 
     def step(self, action):
