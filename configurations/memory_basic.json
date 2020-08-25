@@ -9,7 +9,9 @@
     "sigma": 1.0,
     "checkpoint_frequency": 10,
     "hof_size": 10,
-    "mu": 25
+    "mu": 25,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": false
   },
   "brain": {
     "type": "ConcatenatedBrain_LSTM",

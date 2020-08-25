@@ -24,6 +24,7 @@ class TestExperiment:
         # note; this value depends on the machine
         accepted_results = [-99.11361202453168,  # result on bjoern's notebook
                             -98.95448135483025,  # result on bjoern's desktop
+                            -92.24354731262838   # result on Patrick's notebook
                             ]
         assert experiment.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
 

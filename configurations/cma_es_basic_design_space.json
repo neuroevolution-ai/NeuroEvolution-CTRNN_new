@@ -10,14 +10,18 @@
       "sigma": [0.5, 0.9],
       "checkpoint_frequency": 0,
       "hof_size": 5,
-      "mu": 3
+      "mu": 3,
+      "efficiency_weight": 0.0,
+      "fix_seed_for_generation": false
     }, {
       "type": "CMA_ES",
       "population_size": [10, 15],
       "sigma": [1.0, 1.5, 2.0],
       "checkpoint_frequency": 0,
       "hof_size": 5,
-      "mu": 10
+      "mu": 10,
+      "efficiency_weight": 0.0,
+      "fix_seed_for_generation": false
     }
   ],
   "brain": {

@@ -9,7 +9,9 @@
     "sigma": 1.0,
     "checkpoint_frequency": 0,
     "hof_size": 5,
-    "mu": 5
+    "mu": 5,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": false
   },
   "brain": {
     "type": "FeedForward_NumPy",

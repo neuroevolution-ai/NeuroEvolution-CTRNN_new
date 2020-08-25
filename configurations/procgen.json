@@ -41,7 +41,7 @@
   "novelty": {
     "behavioral_interval": 100,
     "behavioral_max_length": 10,
-    "behavior_from_observation": true,
+    "behavior_source": "state",
     "distance": "NCD",
     "max_recorded_behaviors": 50,
     "recorded_behaviors_per_generation": 2,

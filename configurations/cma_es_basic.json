@@ -10,7 +10,8 @@
     "checkpoint_frequency": 0,
     "hof_size": 5,
     "mu": 25,
-    "efficiency_weight": 0.1
+    "efficiency_weight": 0.1,
+    "fix_seed_for_generation": true
   },
   "novelty": {
     "distance": "euclid",
@@ -20,7 +21,7 @@
     "novelty_weight": 0.2,
     "behavioral_interval": 5,
     "behavioral_max_length": 500,
-    "behavior_from_observation": false
+    "behavior_source": "state"
   },
   "brain": {
     "type": "CTRNN",

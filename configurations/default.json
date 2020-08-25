@@ -13,7 +13,8 @@
     "extra_from_hof": 0,
     "lambda_": 600,
     "mutpb": 0.8,
-    "efficiency_weight": 0.0
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": true
   },
   "brain": {
     "type": "CTRNN",
@@ -47,7 +48,7 @@
   "novelty": {
     "behavioral_interval": 10,
     "behavioral_max_length": 100,
-    "behavior_from_observation": true,
+    "behavior_source": "state",
     "distance": "euclid",
     "max_recorded_behaviors": 30,
     "recorded_behaviors_per_generation": 5,
