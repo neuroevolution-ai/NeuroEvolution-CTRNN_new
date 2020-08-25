@@ -16,7 +16,6 @@ class AEWrapper(gym.Wrapper):
         logging.info("setting number of torch-threads to 1")
         # see https://github.com/pytorch/pytorch/issues/13757
         torch.set_num_threads(1)
-        torch.mkl_set_dynamic(False)
         self.fe = FeatureExtractor(use_diff=True)
         self.observation_space = Box(low=0, high=10,
                                      shape=(30, 1),
@@ -72,17 +71,19 @@ class AutoEncoderVAE(nn.Module):
 
 class FeatureExtractor:
     def __init__(self, use_diff):
-        self.ae = AutoEncoderVAE()
-        self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt', map_location=torch.device('cpu')))
-        # self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt'))
-        self.ae.eval()
+        with torch.no_grad():
+            with torch.set_grad_enabled(False):
+                self.ae = AutoEncoderVAE()
+                self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt', map_location=torch.device('cpu')))
+                # self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt'))
+                self.ae.eval()
         self.last = np.zeros(30)
         self.use_diff = use_diff
 
     def extract(self, obs):
-        frame = self.frame2tensor(obs)
         with torch.no_grad():
             with torch.set_grad_enabled(False):
+                frame = self.frame2tensor(obs)
                 features = self.ae(frame)
                 features = features.detach().cpu().numpy().flatten()
         if self.use_diff:
