@@ -43,6 +43,7 @@ class EpisodeRunnerCfg(abc.ABC):
     max_steps_per_run: int
     max_steps_penalty: int
     keep_env_seed_fixed_during_generation: bool
+    use_autoencoder: bool
     novelty: Optional[NoveltyCfg]
     environment_attributes: Optional[IEnvAttributesCfg] = None
 

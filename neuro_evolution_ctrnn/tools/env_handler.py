@@ -11,6 +11,7 @@ from typing import Union, Iterable
 import numpy as np
 import cv2
 from gym.spaces import Box
+from tools.ae_wrapper import AEWrapper
 
 
 class EnvHandler:
@@ -41,6 +42,24 @@ class EnvHandler:
         else:
             env = gym.make(env_id)
 
+        if self.config.use_autoencoder:
+            logging.info("wrapping env in AEWrapper")
+            env = AEWrapper(env)
+        else:
+            if env.spec.id.endswith("NoFrameskip-v4"):
+                logging.info("wrapping env in AtariPreprocessing")
+
+                # terminal_on_life_loss behaves different than EpisodicLifeEnv
+                # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
+                # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
+                # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
+                # env = EpisodicLifeEnv(env)
+                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True)
+
+            if env.spec.id.startswith("Qbert"):
+                logging.info("wrapping env in QbertGlitchlessWrapper")
+                env = QbertGlitchlessWrapper(env)
+
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the
             # global configuration file.
@@ -48,20 +67,6 @@ class EnvHandler:
             env.env.min_length = 7
             logging.info("creating env with min_length " + str(
                 env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
-
-        if env.spec.id.endswith("NoFrameskip-v4"):
-            logging.info("wrapping env in AtariPreprocessing")
-
-            # terminal_on_life_loss behaves different than EpisodicLifeEnv
-            # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
-            # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
-            # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
-            # env = EpisodicLifeEnv(env)
-            env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True)
-
-        if env.spec.id.startswith("Qbert"):
-            logging.info("wrapping env in QbertGlitchlessWrapper")
-            env = QbertGlitchlessWrapper(env)
 
         if env_id == "Reverse-v0":
             logging.info("wrapping env in ReverseWrapper")
