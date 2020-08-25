@@ -76,14 +76,15 @@ class EpisodeRunner:
                     time.sleep(slow_down / 1000.0)
                 if render:
                     env.render()
-                if self.config.novelty.behavior_source == 'brain':
-                    if isinstance(brain, ContinuousTimeRNN):
-                        if brain_state_history is None:
-                            brain_state_history = np.tanh(brain.y).tolist()
+                if self.config.novelty:
+                    if self.config.novelty.behavior_source == 'brain':
+                        if isinstance(brain, ContinuousTimeRNN):
+                            if brain_state_history is None:
+                                brain_state_history = np.tanh(brain.y).tolist()
+                            else:
+                                brain_state_history += np.tanh(brain.y).tolist()
                         else:
-                            brain_state_history += np.tanh(brain.y).tolist()
-                    else:
-                        logging.error('behavior_source == "brain" not yet supported for this kind of brain')
+                            logging.error('behavior_source == "brain" not yet supported for this kind of brain')
 
             if render:
                 logging.info("steps: " + str(t) + " \tfitness: " + str(fitness_current))
@@ -97,7 +98,8 @@ class EpisodeRunner:
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
-        if self.config.novelty.behavior_source == 'brain':
-            compressed_behavior = compress(np.array(brain_state_history).astype(np.float16).tobytes(), 2)
+        if self.config.novelty:
+            if self.config.novelty.behavior_source == 'brain':
+                compressed_behavior = compress(np.array(brain_state_history).astype(np.float16).tobytes(), 2)
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
