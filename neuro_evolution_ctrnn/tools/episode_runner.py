@@ -1,7 +1,7 @@
 from gym import wrappers
 import time
 import logging
-from bz2 import compress
+from bz2 import BZ2Compressor
 import numpy as np
 
 from tools.helper import set_random_seeds, output_to_action
@@ -46,7 +46,7 @@ class EpisodeRunner:
         fitness_total = 0
         steps_total = 0
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
-        brain_state_history = None
+        brain_state_history = []
         for i in range(number_of_rounds):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
@@ -79,10 +79,7 @@ class EpisodeRunner:
                 if self.config.novelty:
                     if self.config.novelty.behavior_source == 'brain':
                         if isinstance(brain, ContinuousTimeRNN):
-                            if brain_state_history is None:
-                                brain_state_history = np.tanh(brain.y).tolist()
-                            else:
-                                brain_state_history += np.tanh(brain.y).tolist()
+                            brain_state_history.append(np.tanh(brain.y))
                         else:
                             logging.error('behavior_source == "brain" not yet supported for this kind of brain')
 
@@ -100,6 +97,18 @@ class EpisodeRunner:
 
         if self.config.novelty:
             if self.config.novelty.behavior_source == 'brain':
-                compressed_behavior = compress(np.array(brain_state_history).astype(np.float16).tobytes(), 2)
+                # todo: remove code duplication. This code is also in BehaviorWrapper
+                compressor = BZ2Compressor(2)
+                compressed_behavior = b''
+                for i in range(self.config.novelty.behavioral_max_length):
+                    aggregate = np.zeros(len(brain_state_history[0]),  dtype=np.float32)
+                    for j in range(self.config.novelty.behavioral_interval):
+                        if len(brain_state_history) > j + i * self.config.novelty.behavioral_interval:
+                            state = brain_state_history[j + i * self.config.novelty.behavioral_interval]
+                            aggregate += state / self.config.novelty.behavioral_interval
+                        else:
+                            break
+                    compressed_behavior += compressor.compress(aggregate.astype(np.float16).tobytes())
+                compressed_behavior += compressor.flush()
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total

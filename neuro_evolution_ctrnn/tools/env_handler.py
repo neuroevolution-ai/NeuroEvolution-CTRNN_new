@@ -152,15 +152,11 @@ class BehaviorWrapper(Wrapper):
         self.behavioral_interval = behavioral_interval
         self.behavioral_max_length = behavioral_max_length
         self.compressed_behavior = b''
-        self.compressor = BZ2Compressor(1)
+        self.compressor = BZ2Compressor(2)
         self.step_count = 0
         self.aggregate = None
 
     def reset(self, **kwargs):
-        self.compressed_behavior = b''
-        self.compressor = BZ2Compressor(2)
-        self.step_count = 0
-        self.aggregate = None
         return super(BehaviorWrapper, self).reset(**kwargs)
 
     def _record(self, data):
