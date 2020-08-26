@@ -8,6 +8,8 @@ import gym
 from gym.spaces import Box
 import logging
 
+import time
+
 
 class AEWrapper(gym.Wrapper):
 
@@ -22,12 +24,28 @@ class AEWrapper(gym.Wrapper):
                                      dtype=np.float16)
         assert env.spec.id == "QbertNoFrameskip-v4", "this wrapper only works for QbertNoFrameskip-v4"
 
+        self.times_step = []
+        self.times_ae = []
+
     def step(self, action):
+        time_step_s = time.time()
         ob, rew, done, info = super(AEWrapper, self).step(action)
-        return self.fe.extract(ob), rew, done, info
+        self.times_step.append(time.time() - time_step_s)
+
+        time_ae_s = time.time()
+        ob_ae = self.fe.extract(ob)
+        self.times_ae.append(time.time() - time_ae_s)
+
+        return ob_ae, rew, done, info
 
     def reset(self, ):
         ob = super(AEWrapper, self).reset()
+
+        if self.times_step and self.times_ae:
+            logging.info("Times Step Mean {} Std {} || Times AE Mean {} Std {}".format(np.mean(self.times_step),
+                                                                                       np.std(self.times_step),
+                                                                                       np.mean(self.times_ae),
+                                                                                       np.std(self.times_ae)))
         return self.fe.extract(ob)
 
 
