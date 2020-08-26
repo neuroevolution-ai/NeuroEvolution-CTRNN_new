@@ -13,18 +13,17 @@ class AEWrapper(gym.Wrapper):
 
     def __init__(self, env):
         super(AEWrapper, self).__init__(env)
-        logging.info("setting number of torch-threads to 1")
+        logging.info("Setting number of torch-threads to 1")
         # see https://github.com/pytorch/pytorch/issues/13757
         torch.set_num_threads(1)
         self.fe = FeatureExtractor(use_diff=True)
         self.observation_space = Box(low=0, high=10,
                                      shape=(30, 1),
                                      dtype=np.float16)
-        assert env.spec.id == 'QbertNoFrameskip-v4', 'this wrapper only works for QbertNoFrameskip-v4'
+        assert env.spec.id == "QbertNoFrameskip-v4", "this wrapper only works for QbertNoFrameskip-v4"
 
     def step(self, action):
         ob, rew, done, info = super(AEWrapper, self).step(action)
-
         return self.fe.extract(ob), rew, done, info
 
     def reset(self, ):
@@ -59,48 +58,53 @@ class AutoEncoderVAE(nn.Module):
         self.deconv2 = nn.ConvTranspose2d(20, 3, kernel_size=5, stride=1)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x, indices1 = self.maxpool1(x)
-        x = F.relu(self.conv2(x))
-        x, indices2 = self.maxpool2(x)
-        x = x.view(x.size(0), -1)
-        x = torch.sigmoid(self.lv1(x))
-        x = torch.sigmoid(self.lv2(x))
-        return x
+        with torch.no_grad():
+            x = F.relu(self.conv1(x))
+            x, _ = self.maxpool1(x)
+            x = F.relu(self.conv2(x))
+            x, _ = self.maxpool2(x)
+            x = x.flatten()
+            x = torch.sigmoid(self.lv1(x))
+            x = torch.sigmoid(self.lv2(x))
+
+            return x
 
 
 class FeatureExtractor:
     def __init__(self, use_diff):
-        with torch.no_grad():
-            with torch.set_grad_enabled(False):
-                self.ae = AutoEncoderVAE()
-                self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt', map_location=torch.device('cpu')))
-                # self.ae.load_state_dict(torch.load('neuro_evolution_ctrnn/tools/ae.pt'))
-                self.ae.eval()
+        self.ae = AutoEncoderVAE()
+        self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt", map_location=torch.device("cpu")))
+        # self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt"))
+
+        # Sets the Model into Evaluation Mode
+        self.ae.eval()
+
         self.last = np.zeros(30)
         self.use_diff = use_diff
 
     def extract(self, obs):
-        with torch.no_grad():
-            with torch.set_grad_enabled(False):
-                frame = self.frame2tensor(obs)
-                features = self.ae(frame)
-                features = features.detach().cpu().numpy().flatten()
+        frame = self.frame2tensor(obs)
+        features = self.ae(frame)
+        features = features.numpy().flatten()
+
         if self.use_diff:
             diff = features - self.last
             self.last = features
             diff *= 10e1
             return diff
-        else:
-            return features
 
-    def rencode(self, obs):
+        return features
+
+    def reencode(self, obs):
+        # TODO Don't use does not work atm -> pred is (1, 30) dimensional so permute does not work
         frame = self.frame2tensor(obs)
-        pred, features = self.ae(frame)
+        pred = self.ae(frame)
         pred = pred.permute(0, 2, 3, 1)
-        yay = torch.tensor([255], dtype=torch.int)
-        imgpred = pred * yay
-        return imgpred[0].detach().cpu().numpy().astype(np.uint8)
+
+        with torch.no_grad():
+            yay = torch.tensor([255], dtype=torch.int)
+            imgpred = pred * yay
+            return imgpred.numpy().flatten().astype(np.uint8)
 
     @staticmethod
     def normalize(v):
@@ -108,10 +112,8 @@ class FeatureExtractor:
 
     @staticmethod
     def frame2tensor(frame):
-        frame = FeatureExtractor.normalize(np.array([frame])[:, :, :, :])
-        torchFrame = torch.from_numpy(frame).type(torch.FloatTensor)
-        torchFrame = torchFrame.permute(0, 3, 1, 2)
-        return torchFrame[:, :, :, :]
+        frame = FeatureExtractor.normalize(np.array([frame]))
+        return torch.from_numpy(frame).type(torch.float32).permute(0, 3, 1, 2)
 
 
 def feature2img(feature):
@@ -121,12 +123,12 @@ def feature2img(feature):
     return cv2.resize(feat_data, (160, 210), interpolation=cv2.INTER_NEAREST)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fe = FeatureExtractor(True)
-    env = gym.make('QbertNoFrameskip-v4')
-    video_obs = cv2.VideoWriter('obs.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), True)
-    video_pred = cv2.VideoWriter('pred.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), True)
-    video_feat = cv2.VideoWriter('feat.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), True)
+    env = gym.make("QbertNoFrameskip-v4")
+    video_obs = cv2.VideoWriter("obs.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
+    video_pred = cv2.VideoWriter("pred.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
+    video_feat = cv2.VideoWriter("feat.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
     for _ in range(1):
         ob = env.reset()
         done = False
@@ -135,9 +137,9 @@ if __name__ == '__main__':
             step += 1
             observation, reward, done, info = env.step(env.action_space.sample())  # take a random action
             video_obs.write(observation.astype(np.uint8))
-            video_pred.write(fe.rencode(observation))
+            video_pred.write(fe.reencode(observation))
             video_feat.write(feature2img(fe.extract(observation)))
-            print("step " + str(step))
+            print("Step " + str(step))
     env.close()
     cv2.destroyAllWindows()
     video_obs.release()
