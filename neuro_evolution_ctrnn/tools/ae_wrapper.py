@@ -91,8 +91,14 @@ class AutoEncoderVAE(nn.Module):
 class FeatureExtractor:
     def __init__(self, use_diff):
         self.ae = AutoEncoderVAE()
-        self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt", map_location=torch.device("cpu")))
-        # self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt"))
+
+        if torch.cuda.is_available():
+            self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt"))
+            self.ae.cuda()
+            logging.info("Using the GPU for the Autoencoder ({})".format(torch.cuda.get_device_name()))
+        else:
+            self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt", map_location=torch.device("cpu")))
+            logging.info("CUDA not available, therefore using the CPU for the Autoencoder")
 
         # Sets the Model into Evaluation Mode
         self.ae.eval()
