@@ -9,8 +9,10 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
-cnn_output_space = Box(-1, 1, (48, 1), np.float16)
+
+cnn_output_space = Box(-1, 1, (245, 1), np.float16)
 
 
 # noinspection PyPep8Naming
@@ -28,7 +30,9 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        cnn_out = self.cnn.forward(x=torch.from_numpy(np.array([ob])).permute(0, 3, 1, 2))
+        # x = torch.from_numpy(ob.astype(np.float32))
+        x = torch.from_numpy(np.array([ob])).permute(0, 3, 1, 2)
+        cnn_out = self.cnn.forward(x=x)
         return self.ctrnn.step(ob=cnn_out.numpy())
 
     @classmethod
@@ -54,6 +58,13 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
     @classmethod
     def set_class_state(cls, v_mask, w_mask, t_mask):
+        # https://github.com/pytorch/pytorch/issues/24398
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+
+        logging.info("Setting number of torch-threads to 1")
+        # see https://github.com/pytorch/pytorch/issues/13757
+        torch.set_num_threads(1)
         return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
 
 
@@ -61,33 +72,36 @@ class Cnn(nn.Module):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):
         super().__init__()
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
-
-        self.maxpool1 = nn.MaxPool2d(kernel_size=4, stride=4)
-        self.conv1 = nn.Conv2d(3, 3, kernel_size=3, stride=3, padding=(2, 2))
-        # self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=3)
-        # self.conv2 = nn.Conv2d(3, 5, kernel_size=3, stride=1, padding=(2, 2))
-
         with torch.no_grad():
+            self.conv1 = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=(2, 2))
+            self.maxpool1 = nn.MaxPool2d(kernel_size=4, stride=2)
+            self.conv2 = nn.Conv2d(3, 5, kernel_size=5, stride=1, padding=(2, 2))
+            self.maxpool2 = nn.MaxPool2d(kernel_size=4, stride=2)
+
             index = 0
             size = self.conv1.weight.size().numel()
             weight = individual[index:index + size]
             self.conv1.weight = nn.Parameter(torch.from_numpy(weight).view(self.conv1.weight.size()).float())
+            index = size
 
-            # self.conv2.weight analog
+            size = self.conv2.weight.size().numel()
+            weight = individual[index:index + size]
+            self.conv2.weight = nn.Parameter(torch.from_numpy(weight).view(self.conv2.weight.size()).float())
+
 
         self.eval()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            x = self.maxpool1(x)
             x = F.relu(self.conv1(x))
-            # x = self.maxpool2(x)
-            # x = torch.sigmoid(self.conv2(x))
+            x = self.maxpool1(x)
+            x = torch.sigmoid(self.conv2(x))
+            x = self.maxpool2(x)
             return x.flatten()
 
     @classmethod
     def get_individual_size(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
         conv1 = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=(2, 2)).weight.size().numel()
-        # conv2 = nn.Conv2d(3, 5, kernel_size=5, stride=1, padding=(3, 3)).weight.size().numel()
+        conv2 = nn.Conv2d(3, 5, kernel_size=5, stride=1, padding=(3, 3)).weight.size().numel()
 
-        return conv1
+        return conv1 + conv2
