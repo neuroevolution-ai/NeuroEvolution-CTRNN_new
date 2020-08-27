@@ -11,7 +11,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import logging
 
-
 cnn_output_space = Box(-1, 1, (245, 1), np.float16)
 
 
@@ -87,7 +86,6 @@ class Cnn(nn.Module):
             size = self.conv2.weight.size().numel()
             weight = individual[index:index + size]
             self.conv2.weight = nn.Parameter(torch.from_numpy(weight).view(self.conv2.weight.size()).float())
-
 
         self.eval()
 
