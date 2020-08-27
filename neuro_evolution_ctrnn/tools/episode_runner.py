@@ -9,6 +9,7 @@ from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains.CNN_CTRNN import CnnCtrnn
 
 
 class EpisodeRunner:
@@ -80,6 +81,8 @@ class EpisodeRunner:
                     if self.config.novelty.behavior_source == 'brain':
                         if isinstance(brain, ContinuousTimeRNN):
                             brain_state_history.append(np.tanh(brain.y))
+                        elif isinstance(brain, CnnCtrnn):
+                            brain_state_history.append(np.tanh(brain.ctrnn.y))
                         else:
                             logging.error('behavior_source == "brain" not yet supported for this kind of brain')
 

@@ -1,0 +1,71 @@
+{
+  "environment": "QbertNoFrameskip-v4",
+  "random_seed": -1,
+  "number_generations": 500,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "MU_ES",
+    "hof_size": 10,
+    "checkpoint_frequency": 10,
+    "initial_gene_range": 2,
+    "tournsize": 5,
+    "mu": 30,
+    "extra_from_hof": 1,
+    "lambda_": 60,
+    "mutpb": 0.8,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": true
+  },
+  "brain": {
+    "type": "CNN_CTRNN",
+    "normalize_input": false,
+    "normalize_input_target": 0.0,
+    "use_bias": false,
+    "cnn_conf": {
+      "type": "CNN",
+      "normalize_input": false,
+      "normalize_input_target": 0.0,
+      "use_bias": false
+    },
+    "ctrnn_conf": {
+      "type": "CTRNN",
+      "number_neurons": 10,
+      "neuron_activation": "relu",
+      "neuron_activation_inplace": false,
+      "use_bias": true,
+      "delta_t": 0.05,
+      "normalize_input": false,
+      "normalize_input_target": 2,
+      "optimize_state_boundaries": "global",
+      "clipping_range_max": 1.0,
+      "clipping_range_min": -1.0,
+      "optimize_y0": false,
+      "set_principle_diagonal_elements_of_W_negative": false,
+      "parameter_perturbations": 0.0,
+      "w_mask": "logarithmic",
+      "w_mask_param": 2,
+      "v_mask": "logarithmic",
+      "v_mask_param": 2,
+      "t_mask": "logarithmic",
+      "t_mask_param": 2
+    }
+  },
+  "novelty": {
+    "behavioral_interval": 100,
+    "behavioral_max_length": 20,
+    "behavior_source": "brain",
+    "distance": "euclid",
+    "max_recorded_behaviors": 30,
+    "recorded_behaviors_per_generation": 2,
+    "novelty_nearest_k": 5,
+    "novelty_weight": 0.5
+  },
+  "episode_runner": {
+    "number_fitness_runs": 1,
+    "reuse_env": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "keep_env_seed_fixed_during_generation": true,
+    "use_autoencoder": false
+  }
+}

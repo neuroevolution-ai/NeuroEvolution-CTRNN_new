@@ -10,6 +10,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 from brains.concatenated_brains import ConcatenatedLSTM
+from brains.CNN_CTRNN import CnnCtrnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -42,6 +43,8 @@ class Experiment(object):
             self.brain_class = LSTMNumPy
         elif self.config.brain.type == "ConcatenatedBrain_LSTM":
             self.brain_class = ConcatenatedLSTM
+        elif self.config.brain.type == "CNN_CTRNN":
+            self.brain_class = CnnCtrnn
         else:
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 

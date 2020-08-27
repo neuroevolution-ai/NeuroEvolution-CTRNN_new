@@ -54,7 +54,7 @@ class EnvHandler:
                 # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
                 # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
                 # env = EpisodicLifeEnv(env)
-                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True)
+                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True, grayscale_obs=False)
 
             if env.spec.id.startswith("Qbert"):
                 logging.info("wrapping env in QbertGlitchlessWrapper")

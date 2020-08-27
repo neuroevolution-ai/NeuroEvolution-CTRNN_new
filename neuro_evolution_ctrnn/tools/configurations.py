@@ -69,6 +69,17 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class ConvolutionalNNCfg(IBrainCfg):
+    pass
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class CnnCtrnnCfg(IBrainCfg):
+    cnn_conf: ConvolutionalNNCfg
+    ctrnn_conf: ContinuousTimeRNNCfg
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     non_linearity: str
