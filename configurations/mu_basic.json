@@ -14,11 +14,12 @@
     "lambda_": 10,
     "mutpb": 0.8,
     "efficiency_weight": 0.2,
-    "fix_seed_for_generation": false
+    "fix_seed_for_generation": false,
+    "strategy_parameter_per_gene": true
   },
   "brain": {
     "type": "CTRNN",
-    "number_neurons": 8000,
+    "number_neurons": 10,
     "neuron_activation": "tanh",
     "neuron_activation_inplace": true,
     "delta_t": 0.5,
@@ -43,6 +44,7 @@
     "number_fitness_runs": 2,
     "reuse_env": true,
     "max_steps_per_run": 0,
-    "max_steps_penalty": 0
+    "max_steps_penalty": 0,
+    "use_autoencoder": false
   }
 }

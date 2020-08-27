@@ -117,6 +117,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     lambda_: int
     mutpb: float
     extra_from_hof: int
+    strategy_parameter_per_gene: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

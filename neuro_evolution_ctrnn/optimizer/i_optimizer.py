@@ -85,14 +85,18 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         return logbook
 
     @staticmethod
-    def strip_strategy_from_population(population, mutation_learned):
+    def strip_strategy_from_population(population, mutation_learned, strategy_parameter_per_gene=False):
         """Sometimes strategy parameters are learned along side brain parameters. In these caeses
         the strategy parameters need to be stripped  from the population before sending the brain genomes to
         the evaluation. """
         if len(population) == 0:
             return population
         if mutation_learned:
-            return list(np.array(population)[:, :-2])
+            if strategy_parameter_per_gene:
+                half = len(np.array(population)[0])//2
+                return list(np.array(population)[:, :-half])
+            else:
+                return list(np.array(population)[:, :-2])
         return population
 
     def shape_fitness_multi_objective(self, population):
