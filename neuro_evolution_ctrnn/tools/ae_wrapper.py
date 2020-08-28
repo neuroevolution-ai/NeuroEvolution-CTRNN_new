@@ -77,9 +77,6 @@ class AutoEncoderVAE(nn.Module):
 
     def forward(self, x):
         with torch.no_grad():
-            if torch.cuda.is_available():
-                x = torch.from_numpy(x).cuda()
-
             x = F.relu(self.conv1(x))
             x, _ = self.maxpool1(x)
             x = F.relu(self.conv2(x))
@@ -140,7 +137,10 @@ class FeatureExtractor:
     @staticmethod
     def frame2tensor(frame):
         frame = FeatureExtractor.normalize(np.array([frame]))
-        return torch.from_numpy(frame).type(torch.float32).permute(0, 3, 1, 2)
+        tensor = torch.from_numpy(frame).type(torch.float32).permute(0, 3, 1, 2)
+        if torch.cuda.is_available():
+            return tensor.cuda()
+        return tensor
 
 
 def feature2img(feature):
