@@ -109,6 +109,10 @@ class FeatureExtractor:
     def extract(self, obs):
         frame = self.frame2tensor(obs)
         features = self.ae(frame)
+
+        if torch.cuda.is_available():
+            features = features.cpu()
+
         features = features.numpy().flatten()
 
         if self.use_diff:
