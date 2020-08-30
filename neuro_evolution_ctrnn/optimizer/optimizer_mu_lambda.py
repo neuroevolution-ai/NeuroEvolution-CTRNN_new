@@ -29,7 +29,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         toolbox = self.toolbox
 
         if self.conf.strategy_parameter_per_gene:
-            individual_size *=2
+            individual_size *= 2
         else:
             # add two genes for strategy parameters used in mutate
             individual_size += 2
@@ -50,32 +50,32 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
         def fct_mutation_learned_per_gene(ind1):
             half = len(ind1) // 2
-            strategy = ind1[half:]
-            strategy = np.clip(strategy, -3, 3)
-            # mutate genome with parameters from strategy. and mutate strategy with sigma = 0.5
-            sigma = np.concatenate(((2 ** strategy), np.ones(len(strategy)) * 0.5), axis=None).tolist()
+            ind1[half:] = np.clip(ind1[half:], -6, 0)
+            strategy = []
+            for s in ind1[half:]:
+                strategy.append(2 ** s)
+            # mutate genome with parameters from strategy. and mutate strategy with constant
+            sigma = np.concatenate((strategy, ([0.2] * half)), axis=None).tolist()
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=1.0)
 
         def fct_mutation_learned(ind1):
             # need to clip in up-direction because too large numbers create overflows
             # need to clip below to avoid stagnation, which happens when a top individuals
             # mutates bad strategy parameters
-            ind1[-1] = np.clip(ind1[-1], -3, 3)
-            ind1[-2] = np.clip(ind1[-2], -3, 3)
+            ind1[-1] = np.clip(ind1[-1], -5, 3)
+            ind1[-2] = np.clip(ind1[-2], -5, 3)
             sigma = 2 ** ind1[-1]
             indpb = 2 ** (ind1[-2] - 3)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
         toolbox.register("mate", mate)
-        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=True)
         if self.conf.strategy_parameter_per_gene:
             toolbox.register("mutate", fct_mutation_learned_per_gene)
 
         else:
             toolbox.register("mutate", fct_mutation_learned)
         toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                             mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
+                         mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
 
         toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
 
