@@ -55,7 +55,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             for s in ind1[half:]:
                 strategy.append(2 ** s)
             # mutate genome with parameters from strategy. and mutate strategy with constant
-            sigma = np.concatenate((strategy, ([0.2] * half)), axis=None).tolist()
+            # sigma = np.concatenate((strategy, ([0.2] * half)), axis=None).tolist()
+            sigma = np.concatenate((strategy, strategy), axis=None).tolist()
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=1.0)
 
         def fct_mutation_learned(ind1):

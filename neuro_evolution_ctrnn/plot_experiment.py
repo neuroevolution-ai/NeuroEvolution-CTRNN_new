@@ -26,7 +26,7 @@ class PlotArgs(Tap):
     plot_novelty: bool = False  # include novelty in the plot?
     smooth: int = 0  # How strong should the lines be smoothed? (0 to disable)
     style: str = 'seaborn-paper'  # Which plot style should be used?
-    tex_renderer: bool = False # Use text to render plot?
+    tex_renderer: bool = False  # Use text to render plot?
 
 
 args = PlotArgs().parse_args()
@@ -57,6 +57,7 @@ def plot_chapter(axis, chapter, gens, colors):
                       label='variance')
     my_plot(axis, gens, fit_min, '-', color=colors[3], label="minimum")
 
+
 if args.tex_renderer:
     matplotlib.rcParams.update({
         "pgf.texsystem": "xelatex",
@@ -71,8 +72,13 @@ with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
 with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
     conf = json.load(read_file)
 
+if conf['brain']['type'] == 'CNN_CTRNN':
+    nn = conf['brain']['ctrnn_conf']['number_neurons']
+else:
+    nn = conf['brain']['number_neurons']
+
 params_display = conf['environment'] + "\n" + conf['brain']['type'] + " + " + conf['optimizer'][
-    'type'].replace('_', ' ') + "\nneurons: " + str(conf['brain']['number_neurons'])
+    'type'].replace('_', ' ') + "\nneurons: " + str()
 
 fig, ax1 = plt.subplots()
 plt.style.use('seaborn-paper')

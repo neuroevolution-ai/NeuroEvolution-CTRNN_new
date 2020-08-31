@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import logging
 
+# cnn_output_space = Box(-1, 1, (245, 1), np.float16)
 cnn_output_space = Box(-1, 1, (245, 1), np.float16)
 
 
@@ -72,9 +73,9 @@ class Cnn(nn.Module):
         super().__init__()
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
         with torch.no_grad():
-            self.conv1 = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=(2, 2))
+            self.conv1 = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=(1, 1))
             self.maxpool1 = nn.MaxPool2d(kernel_size=4, stride=2)
-            self.conv2 = nn.Conv2d(3, 5, kernel_size=5, stride=1, padding=(2, 2))
+            self.conv2 = nn.Conv2d(3, 5, kernel_size=5, stride=2, padding=(2, 2))
             self.maxpool2 = nn.MaxPool2d(kernel_size=4, stride=2)
 
             index = 0

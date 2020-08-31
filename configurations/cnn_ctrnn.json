@@ -1,7 +1,7 @@
 {
   "environment": "QbertNoFrameskip-v4",
   "random_seed": -1,
-  "number_generations": 500,
+  "number_generations": 5000,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
@@ -14,7 +14,8 @@
     "lambda_": 600,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
-    "fix_seed_for_generation": true
+    "fix_seed_for_generation": true,
+    "strategy_parameter_per_gene": false
   },
   "brain": {
     "type": "CNN_CTRNN",
@@ -33,7 +34,7 @@
       "neuron_activation": "relu",
       "neuron_activation_inplace": false,
       "use_bias": true,
-      "delta_t": 0.05,
+      "delta_t": 0.1,
       "normalize_input": false,
       "normalize_input_target": 2,
       "optimize_state_boundaries": "global",
