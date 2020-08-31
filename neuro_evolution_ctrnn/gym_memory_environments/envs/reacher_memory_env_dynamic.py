@@ -16,6 +16,8 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
         self.reward_shortfalls = []
         self.last = 200
         self.memory_frames_min = memory_frames
+        self.max_bad_runs = 20
+        self.memory_frames_max = 50
 
     def step(self, action):
         ob, rew, done, info = super(ReacherMemoryEnvDynamic, self).step(action)
@@ -33,9 +35,14 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
             return
         self.reward_shortfalls.append(self.episode_total_reward)
         self.reward_shortfalls = self.reward_shortfalls[-self.last:]
+        num_bad_runs = 0
+        for run in self.reward_shortfalls:
+            if run < self.MIN_REWARD_SHORTFALL_FOR_PROMOTION:
+                num_bad_runs += 1
+
         if len(self.reward_shortfalls) == self.last and \
-                min(self.reward_shortfalls) >= self.MIN_REWARD_SHORTFALL_FOR_PROMOTION and \
-                self.memory_frames_min < 40:
+                num_bad_runs < self.max_bad_runs and \
+                self.memory_frames_min < self.memory_frames_max:
             self.memory_frames_min += 1
             self.reward_shortfalls = []
             logging.info("promotion!")
