@@ -14,9 +14,9 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
                                                       memory_frames=memory_frames,
                                                       action_frames=action_frames)
         self.reward_shortfalls = []
-        self.last = 300
+        self.last = 600
         self.memory_frames_min = memory_frames
-        self.max_bad_runs = 100
+        self.max_bad_runs = 150
         self.memory_frames_max = 50
 
     def step(self, action):
