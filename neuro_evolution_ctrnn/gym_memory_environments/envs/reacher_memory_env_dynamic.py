@@ -14,9 +14,9 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
                                                       memory_frames=memory_frames,
                                                       action_frames=action_frames)
         self.reward_shortfalls = []
-        self.last = 200
+        self.last = 300
         self.memory_frames_min = memory_frames
-        self.max_bad_runs = 20
+        self.max_bad_runs = 50
         self.memory_frames_max = 50
 
     def step(self, action):
@@ -28,7 +28,7 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
         """Called between episodes. Update our running record of episode rewards
         and, if appropriate, 'level up' number of memory_frames.
 
-        This is copied from
+        This is based on
         https://github.com/openai/gym/blob/bf7e44f680fa/gym/envs/algorithmic/algorithmic_env.py#L205"""
         if self.episode_total_reward is None:
             # This is before the first episode/call to reset(). Nothing to do.
