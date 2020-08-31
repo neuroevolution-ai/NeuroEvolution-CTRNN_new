@@ -31,7 +31,7 @@ if __name__ == "__main__":  # pragma: no cover
     initialise everything that is not pickle-able before this point. Especially the DEAP-toolbox's creator-object is not 
     pickle-able. 
     """
-
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
     args = parse_args()
     experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
                             from_checkpoint=args.from_checkpoint)
