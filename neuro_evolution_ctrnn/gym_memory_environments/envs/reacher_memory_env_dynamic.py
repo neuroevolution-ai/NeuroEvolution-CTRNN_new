@@ -44,7 +44,7 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
                 self.memory_frames_min < self.memory_frames_max:
             self.memory_frames_min += 1
             self.reward_shortfalls = []
-            logging.info("promotion!")
+            logging.info("promotion! memory_frames_min is now " + str(self.memory_frames_min))
 
     def reset(self):
         self._check_levelup()
