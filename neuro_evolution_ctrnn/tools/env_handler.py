@@ -151,6 +151,9 @@ class BehaviorWrapper(Wrapper):
         self.behavior_source = behavior_source
         self.behavioral_interval = behavioral_interval
         self.behavioral_max_length = behavioral_max_length
+        self._reset_compressor()
+
+    def _reset_compressor(self):
         self.compressed_behavior = b''
         self.compressor = BZ2Compressor(2)
         self.step_count = 0
@@ -193,7 +196,9 @@ class BehaviorWrapper(Wrapper):
         return ob, rew, done, info
 
     def get_compressed_behavior(self):
-        return self.compressed_behavior + self.compressor.flush()
+        data = self.compressed_behavior + self.compressor.flush()
+        self._reset_compressor()
+        return data
 
 
 class Box2DWalkerWrapper(Wrapper):
