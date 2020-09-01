@@ -94,7 +94,7 @@ class ProcEnvWrapper(Wrapper):
 
     def __init__(self, env):
         super(ProcEnvWrapper, self).__init__(env)
-        self.screen_size = 16
+        self.screen_size = 32
         self.obs_dtype = np.float16
         self.observation_space = Box(low=0, high=1,
                                      shape=(self.screen_size, self.screen_size, 3),

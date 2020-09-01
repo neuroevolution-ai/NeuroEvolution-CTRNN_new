@@ -31,7 +31,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         # x = torch.from_numpy(ob.astype(np.float32))
-        x = torch.from_numpy(np.array([ob])).permute(0, 3, 1, 2)
+        x = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
         cnn_out = self.cnn.forward(x=x)
         return self.ctrnn.step(ob=cnn_out.numpy())
 
@@ -81,12 +81,12 @@ class Cnn(nn.Module):
             index = 0
             size = self.conv1.weight.size().numel()
             weight = individual[index:index + size]
-            self.conv1.weight = nn.Parameter(torch.from_numpy(weight).view(self.conv1.weight.size()).float())
+            self.conv1.weight = nn.Parameter(torch.from_numpy(np.array(weight)).view(self.conv1.weight.size()).float())
             index = size
 
             size = self.conv2.weight.size().numel()
             weight = individual[index:index + size]
-            self.conv2.weight = nn.Parameter(torch.from_numpy(weight).view(self.conv2.weight.size()).float())
+            self.conv2.weight = nn.Parameter(torch.from_numpy(np.array(weight)).view(self.conv2.weight.size()).float())
 
         self.eval()
 
