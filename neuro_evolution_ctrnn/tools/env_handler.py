@@ -54,7 +54,8 @@ class EnvHandler:
                 # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
                 # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
                 # env = EpisodicLifeEnv(env)
-                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True, grayscale_obs=False)
+                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True,
+                                         grayscale_obs=False)
 
             if env.spec.id.startswith("Qbert"):
                 logging.info("wrapping env in QbertGlitchlessWrapper")
@@ -162,19 +163,28 @@ class BehaviorWrapper(Wrapper):
     def reset(self, **kwargs):
         return super(BehaviorWrapper, self).reset(**kwargs)
 
+    def _aggregate2compressor(self):
+        if self.aggregate is not None:
+            data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
+            self.compressed_behavior += self.compressor.compress(data_bytes)
+            self.aggregate.fill(0)
+
     def _record(self, data):
+        if self.behavioral_interval < 0:
+            # in this case  the actual recording is handled by reset
+            self.aggregate = np.array(data)
+            return
+
         if self.aggregate is None:
             self.aggregate = np.array(data, dtype=np.float32)
             self.aggregate.fill(0)
 
-        if self.behavioral_interval != 0:
+        if self.behavioral_interval > 0:
             self.aggregate += np.array(data) / self.behavioral_interval
 
         if self.step_count * self.behavioral_interval < self.behavioral_max_length:
             if self.step_count % self.behavioral_interval == 0:
-                data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
-                self.compressed_behavior += self.compressor.compress(data_bytes)
-                self.aggregate.fill(0)
+                self._aggregate2compressor()
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
@@ -196,6 +206,8 @@ class BehaviorWrapper(Wrapper):
         return ob, rew, done, info
 
     def get_compressed_behavior(self):
+        if self.behavioral_interval < 0:
+            self._aggregate2compressor()
         data = self.compressed_behavior + self.compressor.flush()
         self._reset_compressor()
         return data
