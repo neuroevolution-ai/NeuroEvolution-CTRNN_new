@@ -77,8 +77,10 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.register("mutate", fct_mutation_learned)
         toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
                          mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
-
-        toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
+        if self.conf.tournsize:
+            toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
+        else:
+            toolbox.register("select", tools.selBest)
 
         if from_checkoint:
             cp = get_checkpoint(from_checkoint)
