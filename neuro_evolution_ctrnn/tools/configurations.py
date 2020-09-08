@@ -69,6 +69,17 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class ConvolutionalNNCfg(IBrainCfg):
+    pass
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class CnnCtrnnCfg(IBrainCfg):
+    cnn_conf: ConvolutionalNNCfg
+    ctrnn_conf: ContinuousTimeRNNCfg
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     non_linearity: str
@@ -106,6 +117,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     lambda_: int
     mutpb: float
     extra_from_hof: int
+    strategy_parameter_per_gene: bool
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

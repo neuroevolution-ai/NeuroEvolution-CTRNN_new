@@ -10,6 +10,7 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 from brains.concatenated_brains import ConcatenatedLSTM
+from brains.CNN_CTRNN import CnnCtrnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -18,6 +19,7 @@ from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
 from tools.env_handler import EnvHandler
+from brains.CNN_CTRNN import CnnCtrnn
 
 
 # from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
@@ -42,6 +44,8 @@ class Experiment(object):
             self.brain_class = LSTMNumPy
         elif self.config.brain.type == "ConcatenatedBrain_LSTM":
             self.brain_class = ConcatenatedLSTM
+        elif self.config.brain.type == "CNN_CTRNN":
+            self.brain_class = CnnCtrnn
         else:
             raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
 
@@ -75,6 +79,11 @@ class Experiment(object):
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
+        if issubclass(self.brain_class, CnnCtrnn):
+            cnn_size, ctrnn_size = self.brain_class._get_sub_individual_size(self.config.brain,
+                                                                             input_space=self.input_space,
+                                                                             output_space=self.output_space)
+            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
@@ -101,7 +110,8 @@ class Experiment(object):
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkoint=self.from_checkpoint, random_seed=self.config.random_seed)
+                                              stats=stats, from_checkoint=self.from_checkpoint,
+                                              random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,

@@ -1,14 +1,14 @@
 {
-  "environment": "procgen:procgen-heist-v0",
-  "random_seed": 0,
-  "number_generations": 1000,
+  "environment": "QbertNoFrameskip-v4",
+  "random_seed": -1,
+  "number_generations": 5000,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
     "checkpoint_frequency": 10,
     "initial_gene_range": 2,
-    "tournsize": 5,
+    "tournsize": 0,
     "mu": 300,
     "extra_from_hof": 1,
     "lambda_": 600,
@@ -30,11 +30,11 @@
     },
     "ctrnn_conf": {
       "type": "CTRNN",
-      "number_neurons": 15,
+      "number_neurons": 10,
       "neuron_activation": "relu",
       "neuron_activation_inplace": false,
       "use_bias": true,
-      "delta_t": 0.05,
+      "delta_t": 0.1,
       "normalize_input": false,
       "normalize_input_target": 2,
       "optimize_state_boundaries": "global",
@@ -44,25 +44,25 @@
       "set_principle_diagonal_elements_of_W_negative": false,
       "parameter_perturbations": 0.0,
       "w_mask": "logarithmic",
-      "w_mask_param": 8,
+      "w_mask_param": 2,
       "v_mask": "logarithmic",
-      "v_mask_param": 8,
+      "v_mask_param": 2,
       "t_mask": "logarithmic",
-      "t_mask_param": 4
+      "t_mask_param": 2
     }
   },
   "novelty": {
-    "behavioral_interval": 500,
-    "behavioral_max_length": 10,
+    "behavioral_interval": 100,
+    "behavioral_max_length": 20,
     "behavior_source": "brain",
     "distance": "euclid",
-    "max_recorded_behaviors": 50,
+    "max_recorded_behaviors": 100,
     "recorded_behaviors_per_generation": 2,
-    "novelty_nearest_k": 25,
-    "novelty_weight": 0.1
+    "novelty_nearest_k": 5,
+    "novelty_weight": 0.7
   },
   "episode_runner": {
-    "number_fitness_runs": 3,
+    "number_fitness_runs": 1,
     "reuse_env": true,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,

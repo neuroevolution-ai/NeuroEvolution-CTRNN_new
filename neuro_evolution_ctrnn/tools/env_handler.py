@@ -54,7 +54,8 @@ class EnvHandler:
                 # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
                 # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
                 # env = EpisodicLifeEnv(env)
-                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True)
+                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True,
+                                         grayscale_obs=False)
 
             if env.spec.id.startswith("Qbert"):
                 logging.info("wrapping env in QbertGlitchlessWrapper")
@@ -94,7 +95,7 @@ class ProcEnvWrapper(Wrapper):
 
     def __init__(self, env):
         super(ProcEnvWrapper, self).__init__(env)
-        self.screen_size = 16
+        self.screen_size = 32
         self.obs_dtype = np.float16
         self.observation_space = Box(low=0, high=1,
                                      shape=(self.screen_size, self.screen_size, 3),
@@ -151,31 +152,39 @@ class BehaviorWrapper(Wrapper):
         self.behavior_source = behavior_source
         self.behavioral_interval = behavioral_interval
         self.behavioral_max_length = behavioral_max_length
-        self.compressed_behavior = b''
-        self.compressor = BZ2Compressor(1)
-        self.step_count = 0
-        self.aggregate = None
+        self._reset_compressor()
 
-    def reset(self, **kwargs):
+    def _reset_compressor(self):
         self.compressed_behavior = b''
         self.compressor = BZ2Compressor(2)
         self.step_count = 0
         self.aggregate = None
+
+    def reset(self, **kwargs):
         return super(BehaviorWrapper, self).reset(**kwargs)
 
+    def _aggregate2compressor(self):
+        if self.aggregate is not None:
+            data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
+            self.compressed_behavior += self.compressor.compress(data_bytes)
+            self.aggregate.fill(0)
+
     def _record(self, data):
+        if self.behavioral_interval < 0:
+            # in this case  the actual recording is handled by reset
+            self.aggregate = np.array(data)
+            return
+
         if self.aggregate is None:
             self.aggregate = np.array(data, dtype=np.float32)
             self.aggregate.fill(0)
 
-        if self.behavioral_interval != 0:
+        if self.behavioral_interval > 0:
             self.aggregate += np.array(data) / self.behavioral_interval
 
         if self.step_count * self.behavioral_interval < self.behavioral_max_length:
             if self.step_count % self.behavioral_interval == 0:
-                data_bytes = np.array(self.aggregate).astype(np.float16).tobytes()
-                self.compressed_behavior += self.compressor.compress(data_bytes)
-                self.aggregate.fill(0)
+                self._aggregate2compressor()
 
     def step(self, action: Union[int, Iterable[int]]):
         ob, rew, done, info = super(BehaviorWrapper, self).step(action)
@@ -197,7 +206,11 @@ class BehaviorWrapper(Wrapper):
         return ob, rew, done, info
 
     def get_compressed_behavior(self):
-        return self.compressed_behavior + self.compressor.flush()
+        if self.behavioral_interval < 0:
+            self._aggregate2compressor()
+        data = self.compressed_behavior + self.compressor.flush()
+        self._reset_compressor()
+        return data
 
 
 class Box2DWalkerWrapper(Wrapper):

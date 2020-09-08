@@ -13,7 +13,7 @@ import gym
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
                                   LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
-                                  ConcatenatedBrainLSTMCfg)
+                                  ConcatenatedBrainLSTMCfg,CnnCtrnnCfg,ConvolutionalNNCfg)
 
 
 def output_to_action(output, action_space):
@@ -77,6 +77,11 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         brain_cfg_class = LSTMCfg
     elif config_dict["brain"]["type"] == "ConcatenatedBrain_LSTM":
         brain_cfg_class = ConcatenatedBrainLSTMCfg
+
+    elif config_dict["brain"]["type"] == "CNN_CTRNN":
+        brain_cfg_class = CnnCtrnnCfg
+        config_dict["brain"]["cnn_conf"] = ConvolutionalNNCfg(**config_dict["brain"]["cnn_conf"])
+        config_dict["brain"]["ctrnn_conf"] = ContinuousTimeRNNCfg(**config_dict["brain"]["ctrnn_conf"])
     else:
         raise RuntimeError("Unknown neural_network_type: " + str(config_dict["brain"]["type"]))
 
@@ -146,6 +151,10 @@ def set_random_seeds(seed, env):
     np.random.seed(seed)
     torch.manual_seed(seed)
     if env:
+        if env.spec.id.startswith('procgen'):
+            # setting random seeds is not supported with procgen. So instead we need to make a new env
+            # https://github.com/openai/procgen/issues/21
+            logging.error("setting random seeds with procgen is not supported")
         env.seed(seed)
         env.action_space.seed(seed)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from gym.envs.mujoco import ReacherEnv
 from typing import Tuple
-
+from mujoco_py import const
 
 class ReacherMemoryEnv(ReacherEnv):
 
@@ -42,3 +42,14 @@ class ReacherMemoryEnv(ReacherEnv):
         self.t = 0
 
         return ob
+
+    def render(self, *nargs, **kwargs):
+        if self.viewer:
+            if self.t < self.observation_frames:
+                phase = "observe"
+            elif self.t < self.observation_frames + self.memory_frames:
+                phase = "memory"
+            else:
+                phase = "action"
+            self.viewer.add_overlay(const.GRID_BOTTOMRIGHT, "Phase", phase)
+        return super(ReacherMemoryEnv, self).render(*nargs, **kwargs)

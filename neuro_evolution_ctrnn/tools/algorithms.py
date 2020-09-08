@@ -10,19 +10,18 @@ from itertools import tee
 import copy
 
 
-
 def evaluate_candidates(candidates, toolbox):
     if toolbox.initial_seed:
         seed_after_map: int = random.randint(1, 10000)
         if toolbox.conf.fix_seed_for_generation:
             seed_for_generation = random.randint(1, 10000)
             seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
-            seeds_for_recorded = seed_for_generation *  np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
+            seeds_for_recorded = seed_for_generation * np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
         else:
             seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
             seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
     else:
-        seed_after_map =  0
+        seed_after_map = 0
         seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
         seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
 
@@ -82,6 +81,10 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
         offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
 
+        for ind in offspring:
+            # just a little extra for when we later want to analyze the hof manually
+            ind.generation = gen
+
         if include_parents_in_next_generation:
             for ind in population:
                 del ind.fitness.values
@@ -114,6 +117,7 @@ def calc_novelty(res, results_recorded, get_distance, k):
     behavior_data = decompress(behavior_compressed)
     behavior = np.frombuffer(behavior_data, dtype=np.float16)
     dist_list = []
+    k = min(k, len(results_recorded))
     for rec_res in results_recorded:
         recorded_behavior_compressed = rec_res[1]
         recorded_behavior_data = decompress(recorded_behavior_compressed)
@@ -125,7 +129,6 @@ def calc_novelty(res, results_recorded, get_distance, k):
     dist_sum = 0
     for nearest_neighbor in sorted(dist_list, reverse=False)[0:k]:
         dist_sum += nearest_neighbor
-
     return dist_sum / k
 
 
@@ -136,6 +139,10 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
 
     for gen in range(toolbox.initial_generation, ngen + 1):
         population: Collection = toolbox.generate()
+
+        for ind in population:
+            # just a little extra for when we later want to analyze the hof manually
+            ind.generation = gen
         record_individuals(toolbox, population)
         nevals, total_steps, current_seed = evaluate_candidates(population, toolbox)
         if halloffame is not None:

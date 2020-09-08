@@ -1,0 +1,38 @@
+{
+  "environment": "Reacher-v0",
+  "random_seed": 0,
+  "number_generations": 2500,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 200,
+    "sigma": 1.0,
+    "checkpoint_frequency": 10,
+    "hof_size": 10,
+    "mu": 25,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": false
+  },
+  "brain": {
+    "type": "FeedForward_NumPy",
+    "normalize_input": false,
+    "normalize_input_target": 2,
+    "use_bias": true,
+    "hidden_layers": [[64, 64]],
+    "non_linearity": "relu",
+    "indirect_encoding": false,
+    "cppn_hidden_layers": [[10, 10]]
+  },
+  "episode_runner": {
+    "number_fitness_runs": 50,
+    "reuse_env": true,
+    "keep_env_seed_fixed_during_generation": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "environment_attributes": {
+      "observation_frames": 20,
+      "memory_frames": 1,
+      "action_frames": 50
+    }
+  }
+}
