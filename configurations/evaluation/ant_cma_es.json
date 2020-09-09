@@ -7,7 +7,7 @@
     "type": "CMA_ES",
     "population_size": 1000,
     "sigma": 0.2,
-    "checkpoint_frequency": 0,
+    "checkpoint_frequency": 20,
     "hof_size": 20,
     "mu": 50,
     "efficiency_weight": 0.0,
