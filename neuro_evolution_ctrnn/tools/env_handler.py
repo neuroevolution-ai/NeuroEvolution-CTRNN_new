@@ -39,6 +39,9 @@ class EnvHandler:
                            restrict_themes=True,
                            use_backgrounds=False)
             env = ProcEnvWrapper(env)
+        elif env_id == 'QbertHard-v0':
+            logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
+            env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
         else:
             env = gym.make(env_id)
 
@@ -54,12 +57,8 @@ class EnvHandler:
                 # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
                 # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
                 # env = EpisodicLifeEnv(env)
-                env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=True,
+                env = AtariPreprocessing(env, screen_size=64, scale_obs=True, terminal_on_life_loss=True,
                                          grayscale_obs=False)
-
-            if env.spec.id.startswith("Qbert"):
-                logging.info("wrapping env in QbertGlitchlessWrapper")
-                env = QbertGlitchlessWrapper(env)
 
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the

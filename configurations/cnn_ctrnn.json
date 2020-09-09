@@ -1,7 +1,7 @@
 {
-  "environment": "QbertNoFrameskip-v4",
+  "environment": "QbertHard-v0",
   "random_seed": -1,
-  "number_generations": 5000,
+  "number_generations": 5,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
@@ -9,9 +9,9 @@
     "checkpoint_frequency": 10,
     "initial_gene_range": 2,
     "tournsize": 0,
-    "mu": 300,
+    "mu": 30,
     "extra_from_hof": 1,
-    "lambda_": 600,
+    "lambda_": 60,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
     "fix_seed_for_generation": true,
