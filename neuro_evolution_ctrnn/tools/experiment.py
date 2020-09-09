@@ -80,10 +80,10 @@ class Experiment(object):
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
         if issubclass(self.brain_class, CnnCtrnn):
-            cnn_size, ctrnn_size = self.brain_class._get_sub_individual_size(self.config.brain,
+            cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
                                                                              input_space=self.input_space,
                                                                              output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size))
+            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " + str(cnn_output_space))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,

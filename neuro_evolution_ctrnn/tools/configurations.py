@@ -70,7 +70,15 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
-    pass
+    conv_size1: int
+    conv_feat1: int
+    maxp_size1: int
+    maxp_stride1: int
+    conv_size2: int
+    conv_feat2: int
+    maxp_size2: int
+    maxp_stride2: int
+
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
