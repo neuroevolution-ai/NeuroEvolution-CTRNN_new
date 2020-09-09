@@ -17,7 +17,7 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
         self.last = 600
         self.memory_frames_min = memory_frames
         self.max_bad_runs = 195
-        self.memory_frames_max = 50
+        self.memory_frames_max = 20
 
     def step(self, action):
         ob, rew, done, info = super(ReacherMemoryEnvDynamic, self).step(action)

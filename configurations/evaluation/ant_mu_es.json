@@ -1,7 +1,7 @@
 {
   "environment": "Ant-v2",
   "random_seed": 0,
-  "number_generations": 1000,
+  "number_generations": 5000,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",

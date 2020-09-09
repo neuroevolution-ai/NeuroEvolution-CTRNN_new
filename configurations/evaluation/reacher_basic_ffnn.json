@@ -24,14 +24,14 @@
     "cppn_hidden_layers": [[10, 10]]
   },
   "episode_runner": {
-    "number_fitness_runs": 50,
+    "number_fitness_runs": 25,
     "reuse_env": true,
     "keep_env_seed_fixed_during_generation": true,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,
     "environment_attributes": {
       "observation_frames": 20,
-      "memory_frames": 1,
+      "memory_frames": 20,
       "action_frames": 50
     }
   }
