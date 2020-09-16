@@ -27,9 +27,12 @@ class RenderArgs(Tap):
 
 args = RenderArgs().parse_args()
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
-
-with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
-    log = pickle.load(read_file_log)
+try:
+    with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
+        log = pickle.load(read_file_log)
+except:
+    with open(os.path.join(args.dir, "Log.json"), "r") as read_file_log:
+        log = json.load(read_file_log)
 with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
     config = config_from_dict( json.load(read_file))
 
