@@ -35,13 +35,13 @@ class Positions():
 
     ##### Calcuale Input or Output Positions based on number of Neurons and radius of Neurons
     @staticmethod
-    def getInputOutputPositions(brain_visualizer, numberNeurons, is_input):
+    def getInputOutputPositions(brain_visualizer, numberNeurons: int, is_input: bool):
         PositionsDict = {}
         if is_input:
             x = ((1 * brain_visualizer.w) / 12)
             x2 = ((1 * brain_visualizer.w) / 18)
             x3 = ((2 * brain_visualizer.w) / 18)
-        elif not is_input:
+        else:
             x = ((11 * brain_visualizer.w) / 12)
             x2 = ((16 * brain_visualizer.w) / 18)
             x3 = ((17 * brain_visualizer.w) / 18)

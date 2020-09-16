@@ -59,7 +59,7 @@ class EpisodeRunner:
                 env.render()
 
             if neuron_vis:
-                brain_vis = brain_vis_handler.launch_new_visualization(brain, width=1800, height=900,
+                brain_vis = brain_vis_handler.launch_new_visualization(brain, self.brain_config, width=1800, height=900,
                                                                        colorClippingRange=(2.5, 0.5, 2.5))
             else:
                 brain_vis = None
@@ -72,7 +72,7 @@ class EpisodeRunner:
                 fitness_current += rew
 
                 if brain_vis:
-                    brain_vis.process_update(in_values=ob, out_values=action)
+                    brain_vis.process_update(in_values=ob, out_values=brain_output)
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
                 if render:
