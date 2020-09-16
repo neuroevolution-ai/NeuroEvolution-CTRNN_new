@@ -49,22 +49,22 @@ class Positions:
 
         # Place Neurons in one row if there is enough place, else take two rows
         for i in range(number_neurons):
-            if ((brain_visualizer.h - 100) / (number_neurons * brain_visualizer.neuronRadius * 2)) > 1:
+            if ((brain_visualizer.h - 100) / (number_neurons * brain_visualizer.neuron_radius * 2)) > 1:
                 x_pos = x
-                y_pos = (((brain_visualizer.neuronRadius * 2) + (brain_visualizer.h / 2)) - (
-                            number_neurons * brain_visualizer.neuronRadius) + (i * brain_visualizer.neuronRadius * 2))
+                y_pos = (((brain_visualizer.neuron_radius * 2) + (brain_visualizer.h / 2)) - (
+                            number_neurons * brain_visualizer.neuron_radius) + (i * brain_visualizer.neuron_radius * 2))
                 positions_dict[i] = [x_pos, y_pos]
             else:
                 if i % 2:
                     x_pos = x2
-                    y_pos = ((brain_visualizer.neuronRadius * 2) + (brain_visualizer.h / 2)) - (
-                            (number_neurons * brain_visualizer.neuronRadius) / 2) + (
-                                    i * brain_visualizer.neuronRadius)
+                    y_pos = ((brain_visualizer.neuron_radius * 2) + (brain_visualizer.h / 2)) - (
+                            (number_neurons * brain_visualizer.neuron_radius) / 2) + (
+                                    i * brain_visualizer.neuron_radius)
                     positions_dict[i] = [x_pos, y_pos]
                 else:
                     x_pos = x3
-                    y_pos = ((brain_visualizer.neuronRadius * 2) + (brain_visualizer.h / 2)) - (
-                            (number_neurons * brain_visualizer.neuronRadius) / 2) + (
-                                    i * brain_visualizer.neuronRadius)
+                    y_pos = ((brain_visualizer.neuron_radius * 2) + (brain_visualizer.h / 2)) - (
+                            (number_neurons * brain_visualizer.neuron_radius) / 2) + (
+                                    i * brain_visualizer.neuron_radius)
                     positions_dict[i] = [x_pos, y_pos]
         return positions_dict

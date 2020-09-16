@@ -2,7 +2,7 @@ from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
 from brain_visualizer.neurons import Neurons
 from brain_visualizer.events import Events
-from brain_visualizer.color import Colour
+from brain_visualizer.color import Colors
 from tools.configurations import IBrainCfg
 from brains.i_brain import IBrain
 
@@ -60,35 +60,61 @@ class BrainVisualizer:
         self.kit_rect = self.kit_logo.get_rect()
         self.kit_rect.center = 90, 30
 
-        # initialize & set font
+        # Initialize & set font
         pygame.font.init()
         self.my_font = pygame.font.SysFont("Helvetica", 14)
 
-        ##### Dictionary Graph Neurons
-        ##### Create Graph with Spring layout and get Positions of Neurons back
-        self.graphPositionsDict = Positions.get_graph_positions(self)
+        # Dictionary Graph Neurons
+        # Create Graph with Spring layout and get Positions of Neurons back
+        self.graph_positions_dict = Positions.get_graph_positions(self)
 
-        # define all colors
-        Colour.colors(self, display_color)
-        self.colorClippingRange = color_clipping_range
+        # Define all colors
+        # Colour.colors(self, display_color)
+        self.display_color = display_color
 
-        # variables for events
-        self.positiveWeights = True
-        self.negativeWeights = True
-        self.weightsDirection = False
-        self.inputWeights = True
-        self.outputWeights = True
-        self.weightVal = 0  # Defines how many connections will be drawn, default: every connection
-        self.neuronRadius = neuron_radius
-        self.neuronText = True
-        self.clickedNeuron = None
+        self.color_clipping_range = color_clipping_range
+
+        # Variables for events
+        self.positive_weights = True
+        self.negative_weights = True
+        self.weights_direction = False
+        self.input_weights = True
+        self.output_weights = True
+        self.weight_val = 0  # Defines how many connections will be drawn, default: every connection
+        self.neuron_radius = neuron_radius
+        self.neuron_text = True
+        self.clicked_neuron = None
+
+        # Color for Numbers
+        self.num_color = Colors.bright_grey
+
+        # Define colors used in the program
+        # Colors for Weights
+        self.color_negative_weight = Colors.custom_red
+        self.color_neutral_weight = Colors.dark_grey
+        self.color_positive_weight = Colors.light_green
+
+        # Colors Neutral Neurons
+        self.color_neutral_neuron = Colors.dark_grey
+
+        # Color Neurons in Graph
+        self.color_negative_neuron_graph = Colors.light_blue
+        self.color_positive_neuron_graph = Colors.blue
+
+        # Color Input Layer
+        self.color_negative_neuron_in = Colors.light_green
+        self.color_positive_neuron_in = Colors.green
+
+        # Color in Output Layer
+        self.color_negative_neuron_out = Colors.light_orange
+        self.color_positive_neuron_out = Colors.orange
 
     def process_update(self, in_values, out_values):
         # Fill screen with color
-        self.screen.fill(self.displayColor)
+        self.screen.fill(self.display_color)
 
         # Draw Rect for Logo and Blit Logo on the screen
-        pygame.draw.rect(self.screen, self.darkGrey, (0, 0, self.w, 60))
+        pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, 60))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
         if self.brain_config.use_bias:
@@ -107,18 +133,18 @@ class BrainVisualizer:
                                               ((self.w / 4) - 80), 5, 18)
 
         PygameBrainVisualizer.render_InfoText(self, [
-            "Positive/Negative Weights [t,w] : " + str(self.positiveWeights) + " / " + str(self.negativeWeights),
-            "Input/Output Weights [q,z] : " + str(self.inputWeights) + " / " + str(self.outputWeights),
-            "Direction [g] : " + str(self.weightsDirection)],
+            "Positive/Negative Weights [t,w] : " + str(self.positive_weights) + " / " + str(self.negative_weights),
+            "Input/Output Weights [q,z] : " + str(self.input_weights) + " / " + str(self.output_weights),
+            "Direction [g] : " + str(self.weights_direction)],
                                               ((self.w / 2) - 130), 5, 18)
 
-        if self.weightVal == 0:  # If weightVal is 0 every Connection will be drawn
+        if self.weight_val == 0:  # If weight_val is 0 every Connection will be drawn
             text = "all"
         else:
-            text = str(self.weightVal)
+            text = str(self.weight_val)
         PygameBrainVisualizer.render_InfoText(self, [
             "Weights [e,r] : " + text,
-            "Values [s] : " + str(self.neuronText),
+            "Values [s] : " + str(self.neuron_text),
             "Simulation : " + str(self.env_id)],
                                               ((3 * self.w / 4) - 80), 5, 18)
 
@@ -127,46 +153,46 @@ class BrainVisualizer:
         inputPositionsDict = Positions.get_input_output_positions(self, numberInputNeurons, True)
 
         ##### Dictionary Graph Neurons
-        # --> self.graphPositionsDict
+        # --> self.graph_positions_dict
 
         ##### Output Dictionary
         outputPositionsDict = Positions.get_input_output_positions(self, numberOutputNeurons, False)
 
         ########## Draw Weights
         ##### n-1 Linien pro Neuron ; Input zu Neuron
-        if self.inputWeights:
-            Weights.drawWeights(self, inputPositionsDict, self.graphPositionsDict, self.brain.V.todense().T,
-                                self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        if self.input_weights:
+            Weights.drawWeights(self, inputPositionsDict, self.graph_positions_dict, self.brain.V.todense().T,
+                                self.positive_weights, self.negative_weights, self.weights_direction)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
-        Weights.drawWeights(self, self.graphPositionsDict, self.graphPositionsDict, self.brain.W.todense(),
-                            self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        Weights.drawWeights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.todense(),
+                            self.positive_weights, self.negative_weights, self.weights_direction)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Output
-        if self.outputWeights:
-            Weights.drawWeights(self, self.graphPositionsDict, outputPositionsDict, self.brain.T.todense(),
-                                self.positiveWeights, self.negativeWeights, self.weightsDirection)
+        if self.output_weights:
+            Weights.drawWeights(self, self.graph_positions_dict, outputPositionsDict, self.brain.T.todense(),
+                                self.positive_weights, self.negative_weights, self.weights_direction)
 
         # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
-        Neurons.drawNeurons(self, self.graphPositionsDict, self.brain.W, 2, self.colorNegativeWeight,
-                            self.colorNeutralWeight, self.colorPositiveWeight, self.neuronRadius + self.weightVal, True,
+        Neurons.drawNeurons(self, self.graph_positions_dict, self.brain.W, 2, self.color_negative_weight,
+                            self.color_neutral_weight, self.color_positive_weight, self.neuron_radius + self.weight_val, True,
                             True)
 
         ########### Draw neurons
         ##### Draw Graph
-        Neurons.drawNeurons(self, self.graphPositionsDict, self.brain.y, self.colorClippingRange[1],
-                            self.colorNegNeuronGraph, self.colorNeutralNeuron, self.colorPosNeuronGraph,
-                            self.neuronRadius - 3, False)
+        Neurons.drawNeurons(self, self.graph_positions_dict, self.brain.y, self.color_clipping_range[1],
+                            self.color_negative_neuron_graph, self.color_neutral_neuron, self.color_positive_neuron_graph,
+                            self.neuron_radius - 3, False)
 
         ##### draw ob-values (input)
         # minMax = clipping Range
-        Neurons.drawNeurons(self, inputPositionsDict, in_values, self.colorClippingRange[0], self.colorNegNeuronIn,
-                            self.colorNeutralNeuron, self.colorPosNeuronIn, self.neuronRadius)
+        Neurons.drawNeurons(self, inputPositionsDict, in_values, self.color_clipping_range[0], self.color_negative_neuron_in,
+                            self.color_neutral_neuron, self.color_positive_neuron_in, self.neuron_radius)
 
         ##### draw action-values (out)
         # minMax = clipping Range
-        Neurons.drawNeurons(self, outputPositionsDict, out_values, self.colorClippingRange[2], self.colorNegNeuronOut,
-                            self.colorNeutralNeuron, self.colorPosNeuronOut, self.neuronRadius)
+        Neurons.drawNeurons(self, outputPositionsDict, out_values, self.color_clipping_range[2], self.color_negative_neuron_out,
+                            self.color_neutral_neuron, self.color_positive_neuron_out, self.neuron_radius)
 
         ######### Events: Close when x-Button, Show Number of Neuron when click on it
         for event in pygame.event.get():
