@@ -14,7 +14,8 @@
     "lambda_": 600,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
-    "fix_seed_for_generation": true
+    "fix_seed_for_generation": true,
+    "strategy_parameter_per_gene": false
   },
   "brain": {
     "type": "CTRNN",
@@ -43,7 +44,8 @@
     "number_fitness_runs": 1,
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,
-    "reuse_env": true
+    "reuse_env": true,
+    "use_autoencoder": false
   },
   "novelty": {
     "behavioral_interval": 10,
