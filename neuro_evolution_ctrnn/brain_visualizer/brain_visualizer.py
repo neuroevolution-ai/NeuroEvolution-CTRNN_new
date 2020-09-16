@@ -6,45 +6,40 @@ from brain_visualizer.color import Colour
 from tools.configurations import IBrainCfg
 from brains.i_brain import IBrain
 
-
-import json
-import pygame, sys
+import pygame
 import numpy as np
 import os
 from typing import Tuple
 
 
-# class BrainVisualizerHandler(object):
-#     def __init__(self):
-#         self.current_visualizer = None
-#
-#     # colorClippingRange for colorClipping Input [0], Graph [1] and Output [2]
-#     def launch_new_visualization(self, brain, brain_config, width=1800, height=800, displayColor=(0, 0, 0),
-#                                  colorClippingRange=(1, 1, 1), neuronRadius=30):
-#         self.current_visualizer = PygameBrainVisualizer(brain, width, height, displayColor, neuronRadius,
-#                                                         colorClippingRange, brain_config=brain_config)
-#         return self.current_visualizer
+class BrainVisualizerHandler:
+    def __init__(self):
+        self.current_visualizer = None
+
+    # color_clipping_range for colorClipping Input [0], Graph [1] and Output [2]
+    def launch_new_visualization(self,
+                                 brain: IBrain,
+                                 brain_config: IBrainCfg,
+                                 env_id: str,
+                                 width: int = 1800,
+                                 height: int = 800,
+                                 display_color: Tuple[int, int, int] = (0, 0, 0),
+                                 neuron_radius: int = 30,
+                                 color_clipping_range: Tuple[int, int, int] = (1, 1, 1)):
+
+        self.current_visualizer = BrainVisualizer(brain=brain, brain_config=brain_config, env_id=env_id, width=width,
+                                                  height=height, display_color=display_color,
+                                                  neuron_radius=neuron_radius,
+                                                  color_clipping_range=color_clipping_range)
+        return self.current_visualizer
 
 
 class BrainVisualizer:
-    def __init__(self, brain: IBrain, brain_config: IBrainCfg, env_id: str, width: int, height: int, displayColor: Tuple[int, int, int], neuronRadius: int, colorClippingRange: Tuple[int, int, int]):
+    def __init__(self, brain: IBrain, brain_config: IBrainCfg, env_id: str, width: int, height: int,
+                 display_color: Tuple[int, int, int], neuron_radius: int, color_clipping_range: Tuple[int, int, int]):
         self.brain = brain
         self.brain_config = brain_config
-
-        # Get directory of results and read Configuration file
-        # self.environment = None
-        # list = sys.argv
-        # for i in list:
-        #     if i.startswith('results/data/'):
-        #         index = list.index(i)
-        #         dir = sys.argv[index]
-        #         with open(dir + "/Configuration.json", "r", encoding='utf-8') as read_file:
-        #             file = json.load(read_file)
-        #             self.environment = file["environment"]
-        #             read_file.close()
-        # if self.environment == None:
-        #     self.environment = "Couldn't read Configuration.json"
-        self.environment = env_id
+        self.env_id = env_id
 
         # Initial pygame module
         successes, failures = pygame.init()
@@ -52,29 +47,30 @@ class BrainVisualizer:
             print("{0} successes and{1} failures".format(successes, failures))
 
         # Set position of screen (x, y) & create screen (length, width)
+        # TODO remove the following when finished debugging
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (2500, 510)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
 
         # Give it a name
-        pygame.display.set_caption('Neurobotics - Brain Visualizer')
+        pygame.display.set_caption('Neurorobotics - Brain Visualizer')
 
-        self.kitLogo = pygame.image.load("kit_grey_50.png")
-        self.kitLogo.convert()
-        self.kitRect = self.kitLogo.get_rect()
-        self.kitRect.center = 90, 30
+        self.kit_logo = pygame.image.load("resources/kit_grey_50.png")
+        self.kit_logo.convert()
+        self.kit_rect = self.kit_logo.get_rect()
+        self.kit_rect.center = 90, 30
 
         # initialize & set font
         pygame.font.init()
-        self.myfont = pygame.font.SysFont("Helvetica", 14)
+        self.my_font = pygame.font.SysFont("Helvetica", 14)
 
         ##### Dictionary Graph Neurons
         ##### Create Graph with Spring layout and get Positions of Neurons back
-        self.graphPositionsDict = Positions.getGraphPositions(self)
+        self.graphPositionsDict = Positions.get_graph_positions(self)
 
         # define all colors
-        Colour.colors(self, displayColor)
-        self.colorClippingRange = colorClippingRange
+        Colour.colors(self, display_color)
+        self.colorClippingRange = color_clipping_range
 
         # variables for events
         self.positiveWeights = True
@@ -83,7 +79,7 @@ class BrainVisualizer:
         self.inputWeights = True
         self.outputWeights = True
         self.weightVal = 0  # Defines how many connections will be drawn, default: every connection
-        self.neuronRadius = neuronRadius
+        self.neuronRadius = neuron_radius
         self.neuronText = True
         self.clickedNeuron = None
 
@@ -93,7 +89,7 @@ class BrainVisualizer:
 
         # Draw Rect for Logo and Blit Logo on the screen
         pygame.draw.rect(self.screen, self.darkGrey, (0, 0, self.w, 60))
-        self.screen.blit(self.kitLogo, self.kitRect)
+        self.screen.blit(self.kit_logo, self.kit_rect)
 
         if self.brain_config.use_bias:
             in_values = np.r_[in_values, [1]]
@@ -123,18 +119,18 @@ class BrainVisualizer:
         PygameBrainVisualizer.render_InfoText(self, [
             "Weights [e,r] : " + text,
             "Values [s] : " + str(self.neuronText),
-            "Simulation : " + str(self.environment)],
+            "Simulation : " + str(self.env_id)],
                                               ((3 * self.w / 4) - 80), 5, 18)
 
         ########## Create Dictionaries with Positions
         ##### Input Dictionary
-        inputPositionsDict = Positions.getInputOutputPositions(self, numberInputNeurons, True)
+        inputPositionsDict = Positions.get_input_output_positions(self, numberInputNeurons, True)
 
         ##### Dictionary Graph Neurons
         # --> self.graphPositionsDict
 
         ##### Output Dictionary
-        outputPositionsDict = Positions.getInputOutputPositions(self, numberOutputNeurons, False)
+        outputPositionsDict = Positions.get_input_output_positions(self, numberOutputNeurons, False)
 
         ########## Draw Weights
         ##### n-1 Linien pro Neuron ; Input zu Neuron
@@ -182,6 +178,6 @@ class BrainVisualizer:
     def render_InfoText(self, list_of_strings, x_pos, initial_y_pos, y_step):
         y_pos = initial_y_pos
         for s in list_of_strings:
-            textSurface = self.myfont.render(s, False, self.numColor)
+            textSurface = self.my_font.render(s, False, self.numColor)
             self.screen.blit(textSurface, (x_pos, y_pos))
             y_pos += y_step

@@ -59,8 +59,9 @@ class EpisodeRunner:
                 env.render()
 
             if neuron_vis:
-                brain_vis = brain_vis_handler.launch_new_visualization(brain, self.brain_config, width=1800, height=900,
-                                                                       colorClippingRange=(2.5, 0.5, 2.5))
+                brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
+                                                                       env_id=self.env_id, width=1800, height=900,
+                                                                       color_clipping_range=(2.5, 0.5, 2.5))
             else:
                 brain_vis = None
 
@@ -104,7 +105,7 @@ class EpisodeRunner:
                 compressor = BZ2Compressor(2)
                 compressed_behavior = b''
                 for i in range(self.config.novelty.behavioral_max_length):
-                    aggregate = np.zeros(len(brain_state_history[0]),  dtype=np.float32)
+                    aggregate = np.zeros(len(brain_state_history[0]), dtype=np.float32)
                     for j in range(self.config.novelty.behavioral_interval):
                         if len(brain_state_history) > j + i * self.config.novelty.behavioral_interval:
                             state = brain_state_history[j + i * self.config.novelty.behavioral_interval]
