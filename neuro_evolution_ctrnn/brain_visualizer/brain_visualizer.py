@@ -168,17 +168,17 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            Weights.drawWeights(self, input_positions_dict, self.graph_positions_dict, self.brain.V.todense().T,
-                                self.positive_weights, self.negative_weights, self.weights_direction)
+            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.V.todense().T,
+                                 self.positive_weights, self.negative_weights, self.weights_direction)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
-        Weights.drawWeights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.todense(),
-                            self.positive_weights, self.negative_weights, self.weights_direction)
+        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.todense(),
+                             self.positive_weights, self.negative_weights, self.weights_direction)
 
         # ##### n-1 Linien pro Neuron ; Neuron zu Output
         if self.output_weights:
-            Weights.drawWeights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.todense(),
-                                self.positive_weights, self.negative_weights, self.weights_direction)
+            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.todense(),
+                                 self.positive_weights, self.negative_weights, self.weights_direction)
 
         # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
         Neurons.drawNeurons(self, self.graph_positions_dict, self.brain.W, 2, self.color_negative_weight,

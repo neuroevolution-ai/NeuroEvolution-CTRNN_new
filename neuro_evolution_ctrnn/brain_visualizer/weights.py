@@ -3,44 +3,42 @@ import numpy
 import math
 
 
-class Weights():
-    def drawWeights(self, startPosDict, endPosDict, weightMatrix, positiveWeights, negativeWeights, direction):
-        for (startNeruon, endNeuron), weight in numpy.ndenumerate(weightMatrix):
-            if weight != 0:
-                if (weight > 0.0 and positiveWeights) or (weight < 0.0 and negativeWeights):
-                    startPos = startPosDict[startNeruon]
-                    startPosX = int(startPos[0])
-                    startPosY = int(startPos[1])
+class Weights:
 
-                    endPos = endPosDict[endNeuron]
-                    endPosX = int(endPos[0])
-                    endPosY = int(endPos[1])
+    @staticmethod
+    def draw_weights(brain_visualizer, start_pos_dict, end_pos_dict, weight_matrix, positive_weights, negative_weights, direction):
+        for (start_neuron, end_neuron), weight in numpy.ndenumerate(weight_matrix):
+            if weight != 0:
+                if (weight > 0.0 and positive_weights) or (weight < 0.0 and negative_weights):
+                    start_pos = start_pos_dict[start_neuron]
+                    end_pos = end_pos_dict[end_neuron]
 
                     if weight > 0.0:
-                        weightColor = self.colorPositiveWeight
+                        weight_color = brain_visualizer.color_positive_weight
                     else:
-                        weightColor = self.colorNegativeWeight
+                        weight_color = brain_visualizer.color_negative_weight
 
-                    width = int(abs(weight)) + self.weightVal
-                    if self.weightVal == 0 and width < 1:
+                    width = int(abs(weight)) + brain_visualizer.weight_val
+                    if brain_visualizer.weight_val == 0 and width < 1:
                         width = 1
 
                     if direction:
                         # Winkel der Linien zwischen den beiden Punkten zur x-Achse
-                        rotation = math.atan2((endPos[1] - startPos[1]), (endPos[0] - startPos[0]))
+                        rotation = math.atan2((end_pos[1] - start_pos[1]), (end_pos[0] - start_pos[0]))
                         # Punkt, Winkel und Länge der Linie für Endpunkt des Pfeils
                         trirad = 5 + width
-                        arrowLength = (-1 * (self.neuronRadius + trirad + 5))
+                        arrowLength = (-1 * (brain_visualizer.neuron_radius + trirad + 5))
 
                         arrowEnd = (
-                            endPos[0] + arrowLength * math.cos(rotation), endPos[1] + arrowLength * math.sin(rotation))
+                            end_pos[0] + arrowLength * math.cos(rotation), end_pos[1] + arrowLength * math.sin(rotation))
                         if rotation != 0:
-                            Weights.arrow(self, self.screen, weightColor, weightColor, startPos, arrowEnd, trirad,
+                            Weights.arrow(brain_visualizer.screen, weight_color, weight_color, start_pos, arrowEnd, trirad,
                                           width)
                     elif not direction:
-                        pygame.draw.line(self.screen, weightColor, (startPosX, startPosY), (endPosX, endPosY), width)
+                        pygame.draw.line(brain_visualizer.screen, weight_color, (start_pos[0], start_pos[1]), (endPosX, endPosY), width)
 
-    def arrow(self, screen, color, tricolor, start, end, trirad, width):
+    @staticmethod
+    def arrow(screen, color, tricolor, start, end, trirad, width):
         if width >= 1:
             pygame.draw.line(screen, color, start, end, width)
             rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90

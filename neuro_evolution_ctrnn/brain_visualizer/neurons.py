@@ -1,6 +1,6 @@
 import pygame
 import logging
-from brain_visualizer.color import Colour
+from brain_visualizer.color import Colors
 
 
 class Neurons():
@@ -30,11 +30,11 @@ class Neurons():
 
             if colorVal <= 0:
                 # grau zu hell
-                interpolierteFarbe = Colour.interpolate_color(grau, hell, abs(colorVal))
+                interpolierteFarbe = Colors.interpolate_color(grau, hell, abs(colorVal))
                 textSurface = self.myfont.render(('%.5s' % val), False, self.black)
             else:
                 # grau zu grün
-                interpolierteFarbe = Colour.interpolate_color(grau, grell, colorVal)
+                interpolierteFarbe = Colors.interpolate_color(grau, grell, colorVal)
                 textSurface = self.myfont.render(('%.5s' % val), False, self.white)
 
             # Draw Circle and Text
