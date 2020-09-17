@@ -1,7 +1,7 @@
 {
   "environment": "QbertNoFrameskip-v4",
   "random_seed": 0,
-  "number_generations": 500,
+  "number_generations": 100,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
@@ -16,16 +16,6 @@
     "efficiency_weight": 0,
     "fix_seed_for_generation": true,
     "strategy_parameter_per_gene": false
-  },
-  "novelty": {
-    "behavior_source": "observation",
-    "distance": "NCD",
-    "max_recorded_behaviors": 100,
-    "recorded_behaviors_per_generation": 2,
-    "novelty_nearest_k": 50,
-    "novelty_weight": 1.0,
-    "behavioral_interval": 20,
-    "behavioral_max_length": 10
   },
   "brain": {
     "type": "CTRNN",
