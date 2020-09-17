@@ -171,11 +171,11 @@ class BrainVisualizer:
             Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.V.todense().T,
                                  self.positive_weights, self.negative_weights, self.weights_direction)
 
-        # ##### n-1 Linien pro Neuron ; Neuron zu Neuron
+        # Connections between the Neurons
         Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.todense(),
                              self.positive_weights, self.negative_weights, self.weights_direction)
 
-        # ##### n-1 Linien pro Neuron ; Neuron zu Output
+        # Connections between the Neurons and the Output
         if self.output_weights:
             Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.todense(),
                                  self.positive_weights, self.negative_weights, self.weights_direction)
