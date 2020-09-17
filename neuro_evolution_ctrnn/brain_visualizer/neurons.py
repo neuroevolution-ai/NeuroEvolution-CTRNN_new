@@ -1,52 +1,57 @@
 import pygame
 import logging
+from typing import Tuple
+
 from brain_visualizer.color import Colors
 
 
-class Neurons():
-    def drawNeurons(self, positions, valueDict, minMax, hell, grau, grell, radius, matrix=False, weightNeruon=False):
+class Neurons:
+
+    @staticmethod
+    def draw_neurons(brain_visualizer, positions: dict, value_dict: dict, color_clipping_range: int,
+                     negative_color: Tuple[int, int, int], neutral_color: Tuple[int, int, int], positive_color: Tuple[int, int, int],
+                     radius: int, matrix: bool = False, weight_neuron: bool = False):
         for neuron in range(len(positions)):
             position = positions[neuron]
             pos_x = int(position[0])
             pos_y = int(position[1])
 
-            if matrix == True:
-                val = valueDict[neuron, neuron]
-                colorVal = valueDict[neuron, neuron] / minMax
+            if matrix:
+                val = value_dict[neuron, neuron]
+                color_val = val / color_clipping_range
             else:
-                val = valueDict[neuron]
-                colorVal = valueDict[neuron] / minMax
+                val = value_dict[neuron]
+                color_val = val / color_clipping_range
 
-            if weightNeruon:
-                radius = radius + int(abs(val))
+            if weight_neuron:
+                radius += int(abs(val))
 
-            # Damit das Programm nicht abbricht wenn klipping range nicht passt
-            if colorVal > 1:
-                colorVal = 1
-                Neurons.color_logging(self, minMax)
-            if colorVal < -1:
-                colorVal = 1
-                Neurons.color_logging(self, minMax)
+            # Avoid program crash if clipping range is invalid
+            if color_val > 1 or color_val < -1:
+                color_val = 1
+                Neurons.color_logging(brain_visualizer, color_clipping_range)
 
-            if colorVal <= 0:
-                # grau zu hell
-                interpolierteFarbe = Colors.interpolate_color(grau, hell, abs(colorVal))
-                textSurface = self.myfont.render(('%.5s' % val), False, self.black)
+            if color_val <= 0:
+                interpolated_color = Colors.interpolate_color(neutral_color, negative_color, abs(color_val))
+                text_surface = brain_visualizer.my_font.render(("%.5s" % val), False, Colors.black)
             else:
-                # grau zu grün
-                interpolierteFarbe = Colors.interpolate_color(grau, grell, colorVal)
-                textSurface = self.myfont.render(('%.5s' % val), False, self.white)
+                interpolated_color = Colors.interpolate_color(neutral_color, positive_color, color_val)
+                text_surface = brain_visualizer.my_font.render(("%.5s" % val), False, Colors.white)
 
             # Draw Circle and Text
-            pygame.draw.circle(self.screen, interpolierteFarbe, (pos_x, pos_y), radius)
-            if self.neuronText == True:
-                self.screen.blit(textSurface, ((pos_x - 16), (pos_y - 7)))
+            pygame.draw.circle(brain_visualizer.screen, interpolated_color, (pos_x, pos_y), radius)
+            if brain_visualizer.neuron_text:
+                brain_visualizer.screen.blit(text_surface, ((pos_x - 16), (pos_y - 7)))
 
-    def color_logging(self, minMax):
-        if minMax == self.colorClippingRange[0]:
+    @staticmethod
+    def color_logging(brain_visualizer, min_max: int):
+        if min_max == brain_visualizer.colorClippingRange[0]:
             var = "Input"
-        if minMax == self.colorClippingRange[1]:
+        elif min_max == brain_visualizer.colorClippingRange[1]:
             var = "Graph"
-        if minMax == self.colorClippingRange[2]:
+        elif min_max == brain_visualizer.colorClippingRange[2]:
             var = "Output"
-        logging.warning("Please Increase Clipping Range for: " + var)
+        else:
+            var = "Other"
+
+        logging.warning("Please increase the clipping range for: " + var)

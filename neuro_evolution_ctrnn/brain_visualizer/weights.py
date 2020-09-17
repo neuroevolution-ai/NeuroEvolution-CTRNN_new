@@ -39,8 +39,8 @@ class Weights:
                             Weights.arrow(brain_visualizer.screen, weight_color, weight_color, start_pos, arrow_end,
                                           trirad, width)
                     else:
-                        pygame.draw.line(brain_visualizer.screen, weight_color, (start_pos[0], start_pos[1]),
-                                         (end_pos[0], end_pos[1]), width)
+                        pygame.draw.line(brain_visualizer.screen, weight_color, (int(start_pos[0]), int(start_pos[1])),
+                                         (int(end_pos[0]), int(end_pos[1])), width)
 
     @staticmethod
     def arrow(screen: pygame.Surface, color: Tuple[int, int, int], tricolor: Tuple[int, int, int],

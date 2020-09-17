@@ -1,3 +1,8 @@
+import pygame
+import numpy as np
+import os
+from typing import Tuple
+
 from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
 from brain_visualizer.neurons import Neurons
@@ -5,11 +10,6 @@ from brain_visualizer.events import Events
 from brain_visualizer.color import Colors
 from tools.configurations import IBrainCfg
 from brains.continuous_time_rnn import ContinuousTimeRNN
-
-import pygame
-import numpy as np
-import os
-from typing import Tuple
 
 
 class BrainVisualizerHandler:
@@ -54,7 +54,7 @@ class BrainVisualizer:
 
         # Set position of screen (x, y) & create screen (length, width)
         # TODO remove the following when finished debugging
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (2500, 510)  # for a fixed position of the window
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
 
@@ -121,7 +121,7 @@ class BrainVisualizer:
             y_pos += y_step
 
     def process_update(self, in_values, out_values):
-        # Fill screen with color
+        # Fill screen with neutral_color
         self.screen.fill(self.display_color)
 
         # Draw Rect for Logo and Blit Logo on the screen
@@ -159,7 +159,7 @@ class BrainVisualizer:
         input_positions_dict = Positions.get_input_output_positions(self, number_input_neurons, True)
 
         # TODO what is this exactly? I think it can be removed
-        ##### Dictionary Graph Neurons
+        # Dictionary Graph Neurons
         # --> self.graph_positions_dict
 
         # Output Dictionary
@@ -180,30 +180,50 @@ class BrainVisualizer:
             Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.todense(),
                                  self.positive_weights, self.negative_weights, self.weights_direction)
 
-        # #### 1 Kreis pro Neuron ; Neuron zu sich selbst ; Radius +5 damit Kreis größer als Neuron ist
-        Neurons.drawNeurons(self, self.graph_positions_dict, self.brain.W, 2, self.color_negative_weight,
-                            self.color_neutral_weight, self.color_positive_weight, self.neuron_radius + self.weight_val,
-                            True,
-                            True)
+        # Draw neurons
 
-        ########### Draw neurons
-        ##### Draw Graph
-        Neurons.drawNeurons(self, self.graph_positions_dict, self.brain.y, self.color_clipping_range[1],
-                            self.color_negative_neuron_graph, self.color_neutral_neuron,
-                            self.color_positive_neuron_graph,
-                            self.neuron_radius - 3, False)
+        # Draws one circle per neuron, and connections from neurons to itself
+        # Radius is increased so that the circle is bigger than the neuron itself
+        Neurons.draw_neurons(brain_visualizer=self,
+                             positions=self.graph_positions_dict,
+                             value_dict=self.brain.W,
+                             color_clipping_range=2,
+                             negative_color=self.color_negative_weight,
+                             neutral_color=self.color_neutral_weight,
+                             positive_color=self.color_positive_weight,
+                             radius=self.neuron_radius + self.weight_val,
+                             matrix=True,
+                             weight_neuron=True)
 
-        ##### draw ob-values (input)
-        # minMax = clipping Range
-        Neurons.drawNeurons(self, input_positions_dict, in_values, self.color_clipping_range[0],
-                            self.color_negative_neuron_in,
-                            self.color_neutral_neuron, self.color_positive_neuron_in, self.neuron_radius)
+        # Draw graph
+        Neurons.draw_neurons(brain_visualizer=self,
+                             positions=self.graph_positions_dict,
+                             value_dict=self.brain.y,
+                             color_clipping_range=self.color_clipping_range[1],
+                             negative_color=self.color_negative_neuron_graph,
+                             neutral_color=self.color_neutral_neuron,
+                             positive_color=self.color_positive_neuron_graph,
+                             radius=self.neuron_radius - 3)
 
-        ##### draw action-values (out)
-        # minMax = clipping Range
-        Neurons.drawNeurons(self, output_positions_dict, out_values, self.color_clipping_range[2],
-                            self.color_negative_neuron_out,
-                            self.color_neutral_neuron, self.color_positive_neuron_out, self.neuron_radius)
+        # Draw the inputs to the brain
+        Neurons.draw_neurons(brain_visualizer=self,
+                             positions=input_positions_dict,
+                             value_dict=in_values,
+                             color_clipping_range=self.color_clipping_range[0],
+                             negative_color=self.color_negative_neuron_in,
+                             neutral_color=self.color_neutral_neuron,
+                             positive_color=self.color_positive_neuron_in,
+                             radius=self.neuron_radius)
+
+        # Draw the output(s) of the brain
+        Neurons.draw_neurons(brain_visualizer=self,
+                             positions=output_positions_dict,
+                             value_dict=out_values,
+                             color_clipping_range=self.color_clipping_range[2],
+                             negative_color=self.color_negative_neuron_out,
+                             neutral_color=self.color_neutral_neuron,
+                             positive_color=self.color_positive_neuron_out,
+                             radius=self.neuron_radius)
 
         ######### Events: Close when x-Button, Show Number of Neuron when click on it
         for event in pygame.event.get():
