@@ -45,11 +45,11 @@ class Neurons:
 
     @staticmethod
     def color_logging(brain_visualizer, min_max: int):
-        if min_max == brain_visualizer.colorClippingRange[0]:
+        if min_max == brain_visualizer.color_clipping_range[0]:
             var = "Input"
-        elif min_max == brain_visualizer.colorClippingRange[1]:
+        elif min_max == brain_visualizer.color_clipping_range[1]:
             var = "Graph"
-        elif min_max == brain_visualizer.colorClippingRange[2]:
+        elif min_max == brain_visualizer.color_clipping_range[2]:
             var = "Output"
         else:
             var = "Other"

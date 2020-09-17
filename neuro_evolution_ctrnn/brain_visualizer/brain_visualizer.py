@@ -54,7 +54,7 @@ class BrainVisualizer:
 
         # Set position of screen (x, y) & create screen (length, width)
         # TODO remove the following when finished debugging
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
+        #os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
 
@@ -225,9 +225,9 @@ class BrainVisualizer:
                              positive_color=self.color_positive_neuron_out,
                              radius=self.neuron_radius)
 
-        ######### Events: Close when x-Button, Show Number of Neuron when click on it
+        # Handles keyboard and mouse events in the program
         for event in pygame.event.get():
-            Events.handleEvents(self, event, input_positions_dict, output_positions_dict)
+            Events.handle_events(self, event, input_positions_dict, output_positions_dict)
 
         # Updates the content of the window
         pygame.display.flip()
