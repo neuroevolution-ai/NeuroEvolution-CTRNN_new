@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class Colors:
     black = (0, 0, 0)
     white = (255, 255, 255)
@@ -13,7 +16,8 @@ class Colors:
     orange = (255, 142, 46)
 
     @staticmethod
-    def interpolate_color(color1, color2, val):
+    def interpolate_color(
+            color1: Tuple[int, int, int], color2: Tuple[int, int, int], val: float) -> Tuple[int, int, int]:
         r = int((color2[0] - color1[0]) * abs(val) + color1[0])
         g = int((color2[1] - color1[1]) * abs(val) + color1[1])
         b = int((color2[2] - color1[2]) * abs(val) + color1[2])

@@ -53,8 +53,7 @@ class BrainVisualizer:
             print("{0} successes and{1} failures".format(successes, failures))
 
         # Set position of screen (x, y) & create screen (length, width)
-        # TODO remove the following when finished debugging
-        #os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
+        # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
 
@@ -168,23 +167,38 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.V.todense().T,
-                                 self.positive_weights, self.negative_weights, self.weights_direction)
+            Weights.draw_weights(visualizer=self,
+                                 start_pos_dict=input_positions_dict,
+                                 end_pos_dict=self.graph_positions_dict,
+                                 weight_matrix=self.brain.V.todense().T,
+                                 positive_weights=self.positive_weights,
+                                 negative_weights=self.negative_weights,
+                                 direction=self.weights_direction)
 
         # Connections between the Neurons
-        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.todense(),
-                             self.positive_weights, self.negative_weights, self.weights_direction)
+        Weights.draw_weights(visualizer=self,
+                             start_pos_dict=self.graph_positions_dict,
+                             end_pos_dict=self.graph_positions_dict,
+                             weight_matrix=self.brain.W.todense(),
+                             positive_weights=self.positive_weights,
+                             negative_weights=self.negative_weights,
+                             direction=self.weights_direction)
 
         # Connections between the Neurons and the Output
         if self.output_weights:
-            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.todense(),
-                                 self.positive_weights, self.negative_weights, self.weights_direction)
+            Weights.draw_weights(visualizer=self,
+                                 start_pos_dict=self.graph_positions_dict,
+                                 end_pos_dict=output_positions_dict,
+                                 weight_matrix=self.brain.T.todense(),
+                                 positive_weights=self.positive_weights,
+                                 negative_weights=self.negative_weights,
+                                 direction=self.weights_direction)
 
         # Draw neurons
 
         # Draws one circle per neuron, and connections from neurons to itself
         # Radius is increased so that the circle is bigger than the neuron itself
-        Neurons.draw_neurons(brain_visualizer=self,
+        Neurons.draw_neurons(visualizer=self,
                              positions=self.graph_positions_dict,
                              value_dict=self.brain.W,
                              color_clipping_range=2,
@@ -196,7 +210,7 @@ class BrainVisualizer:
                              weight_neuron=True)
 
         # Draw graph
-        Neurons.draw_neurons(brain_visualizer=self,
+        Neurons.draw_neurons(visualizer=self,
                              positions=self.graph_positions_dict,
                              value_dict=self.brain.y,
                              color_clipping_range=self.color_clipping_range[1],
@@ -206,7 +220,7 @@ class BrainVisualizer:
                              radius=self.neuron_radius - 3)
 
         # Draw the inputs to the brain
-        Neurons.draw_neurons(brain_visualizer=self,
+        Neurons.draw_neurons(visualizer=self,
                              positions=input_positions_dict,
                              value_dict=in_values,
                              color_clipping_range=self.color_clipping_range[0],
@@ -216,7 +230,7 @@ class BrainVisualizer:
                              radius=self.neuron_radius)
 
         # Draw the output(s) of the brain
-        Neurons.draw_neurons(brain_visualizer=self,
+        Neurons.draw_neurons(visualizer=self,
                              positions=output_positions_dict,
                              value_dict=out_values,
                              color_clipping_range=self.color_clipping_range[2],
