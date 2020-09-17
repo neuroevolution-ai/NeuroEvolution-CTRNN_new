@@ -13,7 +13,7 @@ import gym
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
                                   LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
-                                  ConcatenatedBrainLSTMCfg,CnnCtrnnCfg,ConvolutionalNNCfg)
+                                  ConcatenatedBrainLSTMCfg,CnnCtrnnCfg,ConvolutionalNNCfg, AtariEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):
@@ -111,6 +111,11 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
 
     if config_dict["environment"] == "ReacherMemory-v0" or config_dict["environment"] == "ReacherMemoryDynamic-v0":
         config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
+            **config_dict["episode_runner"]["environment_attributes"])
+
+
+    if config_dict["environment"].endswith("NoFrameskip-v4") or config_dict["environment"].startswith('Qbert'):
+        config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg(
             **config_dict["episode_runner"]["environment_attributes"])
 
     # turn json into nested class so python's type-hinting can do its magic

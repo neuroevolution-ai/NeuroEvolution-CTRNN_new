@@ -3,7 +3,7 @@ import pybullet_envs  # unused import is needed to register pybullet envs
 import gym_memory_environments
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg
+from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
 from gym import Wrapper
 from bz2 import BZ2Compressor
@@ -52,13 +52,20 @@ class EnvHandler:
             if env.spec.id.endswith("NoFrameskip-v4"):
                 logging.info("wrapping env in AtariPreprocessing")
 
+                assert isinstance(self.config.environment_attributes, AtariEnvAttributesCfg), \
+                    "For atari environment one must provide the AtariEnvAttributesCfg" \
+                    " (config.environment_attributes)"
+
                 # terminal_on_life_loss behaves different than EpisodicLifeEnv
                 # terminal_on_life_loss resets the env when the first life is loss so the next agent will start fresh
                 # EpisodicLifeEnv does not reset the env, so the next agent will continue where the last one died.
                 # env = AtariPreprocessing(env, screen_size=32, scale_obs=True, terminal_on_life_loss=False)
                 # env = EpisodicLifeEnv(env)
-                env = AtariPreprocessing(env, screen_size=64, scale_obs=True, terminal_on_life_loss=True,
-                                         grayscale_obs=False)
+                env = AtariPreprocessing(env,
+                                         screen_size=self.config.environment_attributes.screen_size,
+                                         scale_obs=self.config.environment_attributes.scale_obs,
+                                         terminal_on_life_loss=self.config.environment_attributes.terminal_on_life_loss,
+                                         grayscale_obs=self.config.environment_attributes.grayscale_obs)
 
         if env_id == "Reverse-v0":
             # these options are specific to reverse-v0 and aren't important enough to be part of the

@@ -37,6 +37,14 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class AtariEnvAttributesCfg(IEnvAttributesCfg):
+    screen_size: int = 64
+    scale_obs: bool = True
+    terminal_on_life_loss: bool = True
+    grayscale_obs: bool = False
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
 class EpisodeRunnerCfg(abc.ABC):
     number_fitness_runs: int
     reuse_env: bool
@@ -78,7 +86,6 @@ class ConvolutionalNNCfg(IBrainCfg):
     conv_feat2: int
     maxp_size2: int
     maxp_stride2: int
-
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
