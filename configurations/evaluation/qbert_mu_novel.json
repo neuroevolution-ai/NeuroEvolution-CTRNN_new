@@ -1,7 +1,7 @@
 {
   "environment": "QbertNoFrameskip-v4",
   "random_seed": 0,
-  "number_generations": 100,
+  "number_generations": 10000,
   "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
