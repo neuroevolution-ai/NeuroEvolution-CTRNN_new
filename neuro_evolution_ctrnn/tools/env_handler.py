@@ -177,7 +177,7 @@ class BehaviorWrapper(Wrapper):
 
     def _record(self, data):
         if self.behavioral_interval < 0:
-            # in this case  the actual recording is handled by reset
+            # in this case  the actual recording is handled by get_compressed_behavior
             self.aggregate = np.array(data)
             return
 
