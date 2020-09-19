@@ -134,7 +134,7 @@ class MaxStepWrapper(Wrapper):
         self.steps += 1
         ob, rew, done, info = super(MaxStepWrapper, self).step(action)
         if self.steps > self.max_steps:
-            logging.info("step limit reached")
+            logging.debug("step limit reached")
             done = True
             rew += self.penalty
         return ob, rew, done, info
