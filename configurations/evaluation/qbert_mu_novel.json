@@ -11,15 +11,15 @@
     "initial_gene_range": 2,
     "tournsize": 0,
     "mu": 30,
-    "lambda_": 10000,
+    "lambda_": 100,
     "mutpb": 0.8,
     "efficiency_weight": 0,
     "fix_seed_for_generation": true,
     "strategy_parameter_per_gene": false
   },
   "novelty": {
-    "behavioral_interval": 1,
-    "behavioral_max_length": -1,
+    "behavioral_interval": -1,
+    "behavioral_max_length": 1,
     "behavior_source": "observation",
     "distance": "euclid",
     "max_recorded_behaviors": 100,
