@@ -43,7 +43,7 @@
     "keep_env_seed_fixed_during_generation": true,
     "number_fitness_runs": 1,
     "reuse_env": true,
-    "max_steps_per_run": 0,
+    "max_steps_per_run": 1000,
     "max_steps_penalty": 0,
     "use_autoencoder": false,
     "environment_attributes": {
