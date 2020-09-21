@@ -1,5 +1,5 @@
 {
-  "environment": "Reacher-v0",
+  "environment": "Reacher-v2",
   "random_seed": 0,
   "number_generations": 2500,
   "use_worker_processes": true,
