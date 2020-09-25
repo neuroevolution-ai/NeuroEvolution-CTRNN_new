@@ -84,6 +84,9 @@ class BrainVisualizer:
         self.neuron_text = True
         self.clicked_neuron = None
 
+        # Threshold for drawing connections
+        self.draw_threshold = 2.0
+
         # Define colors used in the program
         self.display_color = display_color
 
@@ -135,6 +138,7 @@ class BrainVisualizer:
         number_output_neurons = 1 if isinstance(out_values, np.int64) else len(out_values)
 
         # Draw Legend
+        # TODO refine this text rendering to use some kind of layout, maybe pygame offers something like a GridLayout
         self.render_info_text(
             ["Input Neurons: " + str(number_input_neurons),
              "Graph Neurons: " + str(number_neurons),
@@ -153,6 +157,9 @@ class BrainVisualizer:
             ["Weights [e,r] : " + text, "Values [s] : " + str(self.neuron_text), "Simulation : " + str(self.env_id)],
             x_pos=((3 * self.w / 4) - 80), initial_y_pos=5, y_step=18)
 
+        self.render_info_text(["Threshold: {}".format(self.draw_threshold)], x_pos=(3 * self.w / 4) + 150,
+                              initial_y_pos=5, y_step=18)
+
         # Create Dictionaries with Positions
         # Input Dictionary
         input_positions_dict = Positions.get_input_output_positions(self, number_input_neurons, True)
@@ -170,29 +177,20 @@ class BrainVisualizer:
             Weights.draw_weights(visualizer=self,
                                  start_pos_dict=input_positions_dict,
                                  end_pos_dict=self.graph_positions_dict,
-                                 weight_matrix=self.brain.V.todense().T,
-                                 positive_weights=self.positive_weights,
-                                 negative_weights=self.negative_weights,
-                                 direction=self.weights_direction)
+                                 weight_matrix=self.brain.V.todense().T)
 
         # Connections between the Neurons
         Weights.draw_weights(visualizer=self,
                              start_pos_dict=self.graph_positions_dict,
                              end_pos_dict=self.graph_positions_dict,
-                             weight_matrix=self.brain.W.todense(),
-                             positive_weights=self.positive_weights,
-                             negative_weights=self.negative_weights,
-                             direction=self.weights_direction)
+                             weight_matrix=self.brain.W.todense())
 
         # Connections between the Neurons and the Output
         if self.output_weights:
             Weights.draw_weights(visualizer=self,
                                  start_pos_dict=self.graph_positions_dict,
                                  end_pos_dict=output_positions_dict,
-                                 weight_matrix=self.brain.T.todense(),
-                                 positive_weights=self.positive_weights,
-                                 negative_weights=self.negative_weights,
-                                 direction=self.weights_direction)
+                                 weight_matrix=self.brain.T.todense())
 
         # Draw neurons
 

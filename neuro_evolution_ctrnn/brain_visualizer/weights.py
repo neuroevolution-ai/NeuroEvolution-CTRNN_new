@@ -10,39 +10,43 @@ class Weights:
 
     @staticmethod
     def draw_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
-                     weight_matrix, positive_weights: bool, negative_weights: bool, direction: bool) -> None:
+                     weight_matrix) -> None:
         for (start_neuron, end_neuron), weight in np.ndenumerate(weight_matrix):
-            if weight != 0:
-                if (weight > 0.0 and positive_weights) or (weight < 0.0 and negative_weights):
-                    start_pos = start_pos_dict[start_neuron]
-                    end_pos = end_pos_dict[end_neuron]
+            if weight != 0 and (
+                    (weight > 0.0 and visualizer.positive_weights) or (weight < 0.0 and visualizer.negative_weights)):
 
-                    if weight > 0.0:
-                        weight_color = visualizer.color_positive_weight
-                    else:
-                        weight_color = visualizer.color_negative_weight
+                if visualizer.draw_threshold and abs(weight) < visualizer.draw_threshold:
+                    continue
 
-                    width = int(abs(weight)) + visualizer.weight_val
+                start_pos = start_pos_dict[start_neuron]
+                end_pos = end_pos_dict[end_neuron]
 
-                    if visualizer.weight_val == 0 and width < 1:
-                        width = 1
+                if weight > 0.0:
+                    weight_color = visualizer.color_positive_weight
+                else:
+                    weight_color = visualizer.color_negative_weight
 
-                    if direction:
-                        # Angle of the line between both points to the x-axis
-                        rotation = math.atan2((end_pos[1] - start_pos[1]), (end_pos[0] - start_pos[0]))
+                width = int(abs(weight)) + visualizer.weight_val
 
-                        # Point, angle and length of the line for the endpoint of the arrow
-                        trirad = 5 + width
-                        arrow_length = (-1 * (visualizer.neuron_radius + trirad + 5))
-                        arrow_end = (end_pos[0] + arrow_length * math.cos(rotation),
-                                     end_pos[1] + arrow_length * math.sin(rotation))
+                if visualizer.weight_val == 0 and width < 1:
+                    width = 1
 
-                        if rotation != 0:
-                            Weights.arrow(visualizer.screen, weight_color, weight_color, start_pos, arrow_end,
-                                          trirad, width)
-                    else:
-                        pygame.draw.line(visualizer.screen, weight_color, (int(start_pos[0]), int(start_pos[1])),
-                                         (int(end_pos[0]), int(end_pos[1])), width)
+                if visualizer.weights_direction:
+                    # Angle of the line between both points to the x-axis
+                    rotation = math.atan2((end_pos[1] - start_pos[1]), (end_pos[0] - start_pos[0]))
+
+                    # Point, angle and length of the line for the endpoint of the arrow
+                    trirad = 5 + width
+                    arrow_length = (-1 * (visualizer.neuron_radius + trirad + 5))
+                    arrow_end = (end_pos[0] + arrow_length * math.cos(rotation),
+                                 end_pos[1] + arrow_length * math.sin(rotation))
+
+                    if rotation != 0:
+                        Weights.arrow(visualizer.screen, weight_color, weight_color, start_pos, arrow_end,
+                                      trirad, width)
+                else:
+                    pygame.draw.line(visualizer.screen, weight_color, (int(start_pos[0]), int(start_pos[1])),
+                                     (int(end_pos[0]), int(end_pos[1])), width)
 
     @staticmethod
     def arrow(screen: pygame.Surface, color: Tuple[int, int, int], tricolor: Tuple[int, int, int],

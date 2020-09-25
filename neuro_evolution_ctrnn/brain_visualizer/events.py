@@ -72,6 +72,10 @@ class Events:
                         visualizer.output_weights = False
                     else:
                         visualizer.output_weights = True
+                if event.key == pygame.K_PLUS:
+                    visualizer.draw_threshold = round(visualizer.draw_threshold + 0.05, 2)
+                if event.key == pygame.K_MINUS:
+                    visualizer.draw_threshold = round(visualizer.draw_threshold - 0.05, 2)
                 if event.key == pygame.K_SPACE:
                     pause = True
                     pygame.event.clear(KEYDOWN)
