@@ -74,9 +74,9 @@ class BrainVisualizer:
         self.graph_positions_dict = Positions.get_graph_positions(self)
 
         # Variables for events
-        self.positive_weights = True
-        self.negative_weights = True
-        self.weights_direction = False
+        self.positive_weights = True  # Draws positive weights
+        self.negative_weights = True  # Draws negative weights
+        self.weights_direction = True  # Activates arrows for the edges
         self.input_weights = True
         self.output_weights = True
         self.weight_val = 0  # Defines how many connections will be drawn, default: every connection
