@@ -45,29 +45,31 @@ class Positions:
             x = ((1 * visualizer.w) / 12)
             x2 = ((1 * visualizer.w) / 18)
             x3 = ((2 * visualizer.w) / 18)
+            radius = visualizer.input_neuron_radius
         else:
             x = ((11 * visualizer.w) / 12)
             x2 = ((16 * visualizer.w) / 18)
             x3 = ((17 * visualizer.w) / 18)
+            radius = visualizer.neuron_radius
 
         # Place Neurons in one row if there is enough place, else take two rows
         for i in range(number_neurons):
-            if ((visualizer.h - 100) / (number_neurons * visualizer.neuron_radius * 2)) > 1:
+            if ((visualizer.h - 100) / (number_neurons * radius * 2)) > 1:
                 x_pos = x
-                y_pos = (((visualizer.neuron_radius * 2) + (visualizer.h / 2)) - (
-                        number_neurons * visualizer.neuron_radius) + (i * visualizer.neuron_radius * 2))
+                y_pos = (((radius * 2) + (visualizer.h / 2)) - (
+                        number_neurons * radius) + (i * radius * 2))
                 positions_dict[i] = [x_pos, y_pos]
             else:
                 if i % 2:
                     x_pos = x2
-                    y_pos = ((visualizer.neuron_radius * 2) + (visualizer.h / 2)) - (
-                            (number_neurons * visualizer.neuron_radius) / 2) + (
-                                    i * visualizer.neuron_radius)
+                    y_pos = ((radius * 2) + (visualizer.h / 2)) - (
+                            (number_neurons * radius) / 2) + (
+                                    i * radius)
                     positions_dict[i] = [x_pos, y_pos]
                 else:
                     x_pos = x3
-                    y_pos = ((visualizer.neuron_radius * 2) + (visualizer.h / 2)) - (
-                            (number_neurons * visualizer.neuron_radius) / 2) + (
-                                    i * visualizer.neuron_radius)
+                    y_pos = ((radius * 2) + (visualizer.h / 2)) - (
+                            (number_neurons * radius) / 2) + (
+                                    i * radius)
                     positions_dict[i] = [x_pos, y_pos]
         return positions_dict

@@ -61,7 +61,7 @@ class EpisodeRunner:
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
                                                                        env_id=self.env_id, width=1800, height=900,
-                                                                       color_clipping_range=(2.5, 0.5, 2.5))
+                                                                       color_clipping_range=(255, 2.5, 2.5))
             else:
                 brain_vis = None
 

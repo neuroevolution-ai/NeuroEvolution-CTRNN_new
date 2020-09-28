@@ -80,6 +80,8 @@ class BrainVisualizer:
         self.input_weights = True
         self.output_weights = True
         self.weight_val = 0  # Defines how many connections will be drawn, default: every connection
+        self.input_neuron_radius = neuron_radius
+        self.output_neuron_radius = neuron_radius
         self.neuron_radius = neuron_radius
         self.neuron_text = True
         self.clicked_neuron = None
@@ -225,7 +227,7 @@ class BrainVisualizer:
                              negative_color=self.color_negative_neuron_in,
                              neutral_color=self.color_neutral_neuron,
                              positive_color=self.color_positive_neuron_in,
-                             radius=self.neuron_radius)
+                             radius=self.input_neuron_radius)
 
         # Draw the output(s) of the brain
         Neurons.draw_neurons(visualizer=self,

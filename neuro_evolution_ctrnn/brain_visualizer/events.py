@@ -37,11 +37,12 @@ class Events:
                 if event.key == pygame.K_r:
                     visualizer.weight_val = visualizer.weight_val + 1
                 if event.key == pygame.K_d:
-                    if visualizer.neuron_radius > 5:
-                        visualizer.neuron_radius = visualizer.neuron_radius - 5
-                        print(visualizer.neuron_radius)
+                    if visualizer.input_neuron_radius > 5:
+                        # visualizer.neuron_radius = visualizer.neuron_radius - 5
+                        visualizer.input_neuron_radius -= 5
+                        print(visualizer.input_neuron_radius)
                 if event.key == pygame.K_f:
-                    visualizer.neuron_radius = visualizer.neuron_radius + 5
+                    visualizer.input_neuron_radius += 5
                 if event.key == pygame.K_s:
                     if visualizer.neuron_text:
                         visualizer.neuron_text = False
