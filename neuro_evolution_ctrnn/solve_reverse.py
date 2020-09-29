@@ -2,7 +2,7 @@
 The goal is to demonstrate, that CTRNN can solve algorithmical problems very efficiently"""
 
 from tools.experiment import Experiment
-from brain_visualizer import BrainVisualizerHandler
+from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 
 from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, StandardEpisodeRunnerCfg
 from tools.helper import config_from_file

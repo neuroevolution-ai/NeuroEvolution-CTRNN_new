@@ -6,7 +6,7 @@ import logging
 from tap import Tap
 
 from tools.experiment import Experiment
-from brain_visualizer import BrainVisualizerHandler
+from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_dict
 
 
@@ -22,7 +22,7 @@ class RenderArgs(Tap):
     neuron_vis: bool = False  # show neuron visualizer?
     hof: int = 1  # how many members of hall-of-fame should be shown?
     rounds: int = 1  # how many episodes should be shown per HOF-member?
-    slow_down: int = 0 # how many milliseconds should be pause between time steps?
+    slow_down: int = 0  # how many milliseconds should be pause between time steps?
 
 
 args = RenderArgs().parse_args()
