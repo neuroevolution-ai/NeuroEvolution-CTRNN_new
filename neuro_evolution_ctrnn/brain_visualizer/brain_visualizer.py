@@ -56,6 +56,7 @@ class BrainVisualizer:
         # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
+        self.info_box_size = 60
 
         # Give it a name
         pygame.display.set_caption('Neurorobotics - Brain Visualizer')
@@ -80,7 +81,7 @@ class BrainVisualizer:
         self.input_weights = True
         self.output_weights = True
         self.weight_val = 0  # Defines how many connections will be drawn, default: every connection
-        self.input_neuron_radius = neuron_radius
+        self.input_neuron_radius = 5
         self.output_neuron_radius = neuron_radius
         self.neuron_radius = neuron_radius
         self.neuron_text = True
@@ -95,7 +96,7 @@ class BrainVisualizer:
         self.color_clipping_range = color_clipping_range
 
         # Color for Numbers
-        self.num_color = Colors.bright_grey
+        self.color_numbers = Colors.bright_grey
 
         # Colors for Weights
         self.color_negative_weight = Colors.custom_red
@@ -120,7 +121,7 @@ class BrainVisualizer:
     def render_info_text(self, list_of_strings, x_pos, initial_y_pos, y_step):
         y_pos = initial_y_pos
         for s in list_of_strings:
-            text_surface = self.my_font.render(s, False, self.num_color)
+            text_surface = self.my_font.render(s, True, self.color_numbers)
             self.screen.blit(text_surface, (x_pos, y_pos))
             y_pos += y_step
 
@@ -129,7 +130,7 @@ class BrainVisualizer:
         self.screen.fill(self.display_color)
 
         # Draw Rect for Logo and Blit Logo on the screen
-        pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, 60))
+        pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_size))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
         if self.brain_config.use_bias:
@@ -176,23 +177,28 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            Weights.draw_weights(visualizer=self,
-                                 start_pos_dict=input_positions_dict,
-                                 end_pos_dict=self.graph_positions_dict,
-                                 weight_matrix=self.brain.V.todense().T)
+            # Weights.draw_weights(visualizer=self,
+            #                      start_pos_dict=input_positions_dict,
+            #                      end_pos_dict=self.graph_positions_dict,
+            #                      weight_matrix=self.brain.V.todense().T)
+
+            Weights.draw_maximum_weights(
+                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T)
 
         # Connections between the Neurons
-        Weights.draw_weights(visualizer=self,
-                             start_pos_dict=self.graph_positions_dict,
-                             end_pos_dict=self.graph_positions_dict,
-                             weight_matrix=self.brain.W.todense())
+        # Weights.draw_weights(visualizer=self,
+        #                      start_pos_dict=self.graph_positions_dict,
+        #                      end_pos_dict=self.graph_positions_dict,
+        #                      weight_matrix=self.brain.W.todense())
+        Weights.draw_maximum_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.toarray())
 
         # Connections between the Neurons and the Output
         if self.output_weights:
-            Weights.draw_weights(visualizer=self,
-                                 start_pos_dict=self.graph_positions_dict,
-                                 end_pos_dict=output_positions_dict,
-                                 weight_matrix=self.brain.T.todense())
+            # Weights.draw_weights(visualizer=self,
+            #                      start_pos_dict=self.graph_positions_dict,
+            #                      end_pos_dict=output_positions_dict,
+            #                      weight_matrix=self.brain.T.todense())
+            Weights.draw_maximum_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.toarray())
 
         # Draw neurons
 
