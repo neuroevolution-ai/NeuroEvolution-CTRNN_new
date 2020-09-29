@@ -35,10 +35,10 @@ class Neurons:
 
             if color_val <= 0:
                 interpolated_color = Colors.interpolate_color(neutral_color, negative_color, abs(color_val))
-                text_surface = visualizer.my_font.render(("%.5s" % val), False, Colors.black)
+                text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.black)
             else:
                 interpolated_color = Colors.interpolate_color(neutral_color, positive_color, color_val)
-                text_surface = visualizer.my_font.render(("%.5s" % val), False, Colors.white)
+                text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.white)
 
             # Draw Circle and Text
             pygame.draw.circle(visualizer.screen, interpolated_color, (pos_x, pos_y), radius)
