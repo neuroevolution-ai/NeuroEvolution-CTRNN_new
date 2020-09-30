@@ -1,8 +1,11 @@
 import math
+from typing import Tuple
+
 import networkx as nx
 import numpy as np
 
 from brain_visualizer import brain_visualizer
+from tools.configurations import IBrainCfg
 
 
 class Positions:
@@ -21,7 +24,7 @@ class Positions:
         for index, value in np.ndenumerate(brain_weight):
             g.add_edges_from([(index[0], index[1], {'myweight': value})])
 
-        pos = nx.spring_layout(g, k=1, weight="myweight", iterations=50, scale=visualizer.h / 2 - 100)
+        pos = nx.spring_layout(g, k=1.5, weight="myweight", iterations=50, scale=visualizer.h / 2 - 100)
 
         # Adapt positions from spring-layout Method to pygame windows
         graph_positions_dict = {}
@@ -37,10 +40,85 @@ class Positions:
 
         return graph_positions_dict
 
+    @staticmethod
+    def calculate_input_positions(visualizer: "brain_visualizer.BrainVisualizer", in_values: np.ndarray):
+        # Height and width of the "Input Box" which is the part of the window which contains the input neurons, below
+        # the info box
+        input_box_height = visualizer.h - visualizer.info_box_size
+        input_box_width = visualizer.input_box_width
+
+        if len(in_values.shape) == 1:
+            height_space = max(visualizer.input_neuron_radius * 2, 20)
+            neurons_per_column = round((input_box_height - height_space) / (2 * visualizer.input_neuron_radius))
+            columns = math.ceil(in_values.size / neurons_per_column)
+            input_neuron_width = columns * visualizer.input_neuron_radius * 2
+            width_space = 2 * visualizer.input_neuron_radius
+
+            current_x = round(width_space / 2)
+            current_y = visualizer.info_box_size + round(height_space / 2)
+
+            positions_dict = {}
+            column_counter = 0
+
+            for i in range(len(in_values)):
+                positions_dict[i] = [current_x, current_y]
+                column_counter += 1
+                current_y += visualizer.input_neuron_radius * 2
+
+                if column_counter > neurons_per_column:
+                    column_counter = 0
+                    current_x += visualizer.input_neuron_radius * 2
+                    current_y = visualizer.info_box_size + round(height_space / 2)
+
+            return positions_dict
+
+        elif len(in_values.shape) == 3:
+            rows_per_block, columns_per_block, blocks = in_values.shape
+
+            # Use empty space on top and bottom and left and right end of the boxes respectively
+            space = 25
+
+            block_height = int(input_box_height / 3.0) - space
+            block_width = input_box_width - space
+
+            visualizer.input_neuron_radius = min(block_height / rows_per_block, block_width / columns_per_block)
+            visualizer.input_neuron_radius = round(visualizer.input_neuron_radius / 2)
+
+            if visualizer.input_neuron_radius == 0:
+                raise RuntimeError("""Too many input values provided. They cannot be drawn, please consider increasing
+                 the windows size or decreasing the number of input values.""")
+
+            positions_dict = {}
+            current_x = 0
+            current_y = 0
+            index = 0
+            # Iterate through the blocks, x value is always the same, y value needs to be adjusted accordingly
+            for i in range(blocks):
+                current_x = int(space / 2.0)
+                current_y = visualizer.info_box_size + int(space / 2.0) + i * (block_height + space)
+                # Draw the rows, therefore increase the current y value by the neuron diameter and reset the x value
+                for x in range(rows_per_block):
+                    # Draw the columns, therefore increase the x value by the neuron diameter
+                    for y in range(columns_per_block):
+                        positions_dict[index] = [current_x, current_y]
+                        index += 1
+                        current_x += visualizer.input_neuron_radius * 2
+                    current_x = int(space / 2.0)
+                    current_y += visualizer.input_neuron_radius * 2
+
+            # Simply add one neuron to the last block if a bias is used
+            if visualizer.brain_config.use_bias:
+                positions_dict[index] = [current_x, current_y]
+
+            return positions_dict
+        else:
+            # Only one dimensional or three dimensional input is allowed
+            raise RuntimeError("Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
+
     # Calculate Input or Output Positions based on number of Neurons and radius of Neurons
     @staticmethod
     def get_input_output_positions(visualizer: "brain_visualizer.BrainVisualizer", number_neurons: int,
-                                   is_input: bool) -> dict:
+                                   is_input: bool, rgb_shape: Tuple[int, int, int] = None) -> dict:
         # Sum of space between the info box and bottom of the window and the neurons
         # extra_space = 20
 
@@ -67,6 +145,28 @@ class Positions:
         # current_y = visualizer.info_box_size + extra_space
         # j = 0
         positions_dict = {}
+
+        if rgb_shape is not None:
+            current_y = visualizer.info_box_size + 20
+            index = 0
+            x, y, rgb = rgb_shape
+            for _ in range(rgb):
+                current_x = 20
+
+                for i in range(x):
+                    for j in range(y):
+                        positions_dict[index] = [current_x, current_y]
+                        index += 1
+                        current_x += radius * 2 + 5
+                    current_x = 20
+                    current_y += radius * 2 + 5
+                current_y += 90
+
+            positions_dict[index] = [current_x, current_y]
+            return positions_dict
+
+            # for i in range(number_neurons):
+            #     np.array_equal(in_values[:, :, 0].flatten(), in_values.flatten()[0::3])
 
         # Place Neurons in one row if there is enough place, else take two rows
         for i in range(number_neurons):

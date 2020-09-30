@@ -57,6 +57,7 @@ class BrainVisualizer:
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
         self.info_box_size = 60
+        self.input_box_width = int(self.w * 0.3)
 
         # Give it a name
         pygame.display.set_caption('Neurorobotics - Brain Visualizer')
@@ -81,7 +82,7 @@ class BrainVisualizer:
         self.input_weights = True
         self.output_weights = True
         self.weight_val = 0  # Defines how many connections will be drawn, default: every connection
-        self.input_neuron_radius = 5
+        self.input_neuron_radius = neuron_radius
         self.output_neuron_radius = neuron_radius
         self.neuron_radius = neuron_radius
         self.neuron_text = True
@@ -133,10 +134,8 @@ class BrainVisualizer:
         pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_size))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
-        if self.brain_config.use_bias:
-            in_values = np.r_[in_values, [1]]
-
-        number_input_neurons = len(in_values)
+        number_input_neurons = in_values.size
+        number_input_neurons += 1 if self.brain_config.use_bias else 0
         number_neurons = len(self.brain.W.todense())
         number_output_neurons = 1 if isinstance(out_values, np.int64) else len(out_values)
 
@@ -160,12 +159,18 @@ class BrainVisualizer:
             ["Weights [e,r] : " + text, "Values [s] : " + str(self.neuron_text), "Simulation : " + str(self.env_id)],
             x_pos=((3 * self.w / 4) - 80), initial_y_pos=5, y_step=18)
 
-        self.render_info_text(["Threshold: {}".format(self.draw_threshold)], x_pos=(3 * self.w / 4) + 150,
-                              initial_y_pos=5, y_step=18)
+        # self.render_info_text(["Threshold: {}".format(self.draw_threshold)], x_pos=(3 * self.w / 4) + 150,
+        #                       initial_y_pos=5, y_step=18)
+
+        if len(in_values.shape) == 1 and self.brain_config.use_bias:
+            # Add 1 to the end of the input values so that thed bias can be added, is needed because the weight
+            # matrix of the brain has one additional value (the bias)
+            in_values = np.r_[in_values, [1]]
 
         # Create Dictionaries with Positions
         # Input Dictionary
-        input_positions_dict = Positions.get_input_output_positions(self, number_input_neurons, True)
+        # input_positions_dict = Positions.get_input_output_positions(self, number_input_neurons, True, rgb_shape=None)
+        input_positions_dict = Positions.calculate_input_positions(self, in_values)
 
         # TODO what is this exactly? I think it can be removed
         # Dictionary Graph Neurons

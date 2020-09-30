@@ -1,6 +1,8 @@
-import pygame
 import logging
 from typing import Tuple
+
+import numpy as np
+import pygame
 
 from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
@@ -9,10 +11,15 @@ from brain_visualizer import brain_visualizer
 class Neurons:
 
     @staticmethod
-    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer", positions: dict, value_dict: dict,
+    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer", positions: dict, value_dict: np.ndarray,
                      color_clipping_range: int, negative_color: Tuple[int, int, int],
                      neutral_color: Tuple[int, int, int], positive_color: Tuple[int, int, int], radius: int,
                      matrix: bool = False, weight_neuron: bool = False) -> None:
+        if len(value_dict.shape) == 3:
+            value_dict = np.concatenate((value_dict[:, :, 0].flatten(), value_dict[:, :, 1].flatten(), value_dict[:, :, 2].flatten()))
+            if visualizer.brain_config.use_bias:
+                value_dict = np.r_[value_dict, [1]]
+
         for neuron in range(len(positions)):
             position = positions[neuron]
             pos_x = int(position[0])
