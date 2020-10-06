@@ -243,7 +243,7 @@ class BrainVisualizer:
                              negative_color=self.color_negative_neuron_out,
                              neutral_color=self.color_neutral_neuron,
                              positive_color=self.color_positive_neuron_out,
-                             radius=self.neuron_radius)
+                             radius=self.output_neuron_radius)
 
         # Handles keyboard and mouse events in the program
         for event in pygame.event.get():
