@@ -183,7 +183,8 @@ class BrainVisualizer:
             #                      weight_matrix=self.brain.V.todense().T)
 
             Weights.draw_maximum_weights(
-                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T)
+                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T, rgb_input=True,
+                _input=in_values)
 
         # Connections between the Neurons
         # Weights.draw_weights(visualizer=self,

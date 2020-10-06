@@ -54,8 +54,28 @@ class Weights:
                              (int(end_pos[0]), int(end_pos[1])), width)
 
     @staticmethod
-    def draw_maximum_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict, weight_matrix) -> None:
+    def draw_maximum_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
+                             weight_matrix, rgb_input: bool = False, _input: np.ndarray = None) -> None:
+        if rgb_input:
+            # If RGB input is present the weight matrix needs to be reordered a bit. In the brain the RGB values get
+            # flattened, therefore three consecutive values in the weight_matrix form one pixel (red, green and blue).
+            # The input although is ordered in red, green and blue blocks separately in the BrainVisualizer. So
+            # simply concatenate first the red values, then the green values and then the blue values
+            bias = weight_matrix[-1]
+            weight_matrix = weight_matrix[:-1]
+            weight_matrix = np.concatenate((weight_matrix[::3], weight_matrix[1::3], weight_matrix[2::3], [bias]))
+
+        if _input is not None:
+            _input = np.concatenate(
+                (_input[:, :, 0].flatten(), _input[:, :, 1].flatten(), _input[:, :, 2].flatten()))
+            if visualizer.brain_config.use_bias:
+                _input = np.r_[_input, [1]]
+
         for start_neuron, start_neuron_weights in enumerate(weight_matrix):
+            if _input is not None:
+                if _input[start_neuron] == 0:
+                    continue
+
             max_end_neuron = np.argmax(np.abs(start_neuron_weights))
             weight = start_neuron_weights[max_end_neuron]
 
