@@ -46,11 +46,11 @@ class Neurons:
                 radius += int(abs(val))
 
             if rgb_color:
-                visualizer.neuron_text = False
+                draw_text = False
                 color_val = min(255, int(val * 256))
                 if counter < number_neurons_per_color:
                     interpolated_color = (color_val, 0, 0)
-                elif number_neurons_per_color <= counter < 2 * number_neurons_per_color:
+                elif counter < 2 * number_neurons_per_color:
                     interpolated_color = (0, color_val, 0)
                 else:
                     interpolated_color = (0, 0, color_val)
@@ -58,7 +58,6 @@ class Neurons:
                 counter += 1
                 text_surface = None
             else:
-                visualizer.neuron_text = True
                 # Avoid program crash if clipping range is invalid
                 if color_val > 1 or color_val < -1:
                     color_val = 1
