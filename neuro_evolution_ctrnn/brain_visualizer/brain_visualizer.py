@@ -169,15 +169,10 @@ class BrainVisualizer:
 
         # Create Dictionaries with Positions
         # Input Dictionary
-        # input_positions_dict = Positions.get_input_output_positions(self, number_input_neurons, True, rgb_shape=None)
-        input_positions_dict = Positions.calculate_input_positions(self, in_values)
-
-        # TODO what is this exactly? I think it can be removed
-        # Dictionary Graph Neurons
-        # --> self.graph_positions_dict
+        input_positions_dict = Positions.calculate_positions(self, in_values, is_input=True)
 
         # Output Dictionary
-        output_positions_dict = Positions.get_input_output_positions(self, number_output_neurons, False)
+        output_positions_dict = Positions.calculate_positions(self, out_values, is_input=False)
 
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
