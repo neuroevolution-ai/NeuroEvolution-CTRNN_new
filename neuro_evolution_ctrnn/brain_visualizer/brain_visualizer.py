@@ -57,7 +57,7 @@ class BrainVisualizer:
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
         self.info_box_size = 60
-        self.input_box_width = int(self.w * 0.3)
+        self.input_box_width = int(self.w * 0.2)
 
         # Give it a name
         pygame.display.set_caption('Neurorobotics - Brain Visualizer')

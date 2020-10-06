@@ -48,27 +48,51 @@ class Positions:
         input_box_width = visualizer.input_box_width
 
         if len(in_values.shape) == 1:
-            height_space = max(visualizer.input_neuron_radius * 2, 20)
-            neurons_per_column = round((input_box_height - height_space) / (2 * visualizer.input_neuron_radius))
-            columns = math.ceil(in_values.size / neurons_per_column)
-            input_neuron_width = columns * visualizer.input_neuron_radius * 2
-            width_space = 2 * visualizer.input_neuron_radius
+            # Leave space on the borders
+            space = 25
+            input_box_height -= 2 * space
+            input_box_width -= 2 * space
 
-            current_x = round(width_space / 2)
-            current_y = visualizer.info_box_size + round(height_space / 2)
+            size_fits = False
+            neurons_per_column = -1
+            while not size_fits:
+                neurons_per_column = math.floor(input_box_height / (2 * visualizer.input_neuron_radius))
+                columns = math.ceil(in_values.size / neurons_per_column)
+                input_neuron_width = columns * visualizer.input_neuron_radius * 2
+
+                if input_neuron_width > input_box_width:
+                    visualizer.input_neuron_radius -= 5
+
+                    if visualizer.input_neuron_radius <= 0:
+                        visualizer.input_neuron_radius = 1
+                        break
+                else:
+                    size_fits = True
+
+            if neurons_per_column <= 0:
+                # Hacky way to avoid an error
+                neurons_per_column = 5
+
+            # Add another spacer, so that the input_box is centered with respect to the height
+            adjusted_height_space = round(
+                (input_box_height - neurons_per_column * visualizer.input_neuron_radius * 2) / 2)
+
+            current_x = space
+            current_y = visualizer.info_box_size + space + adjusted_height_space
 
             positions_dict = {}
-            column_counter = 0
+            current_neurons_in_column = 0
 
             for i in range(len(in_values)):
                 positions_dict[i] = [current_x, current_y]
-                column_counter += 1
+                current_neurons_in_column += 1
                 current_y += visualizer.input_neuron_radius * 2
 
-                if column_counter > neurons_per_column:
-                    column_counter = 0
+                # If a column is full reset the y-value and shift the x-value by one diameter of a neuron
+                if current_neurons_in_column > neurons_per_column:
+                    current_neurons_in_column = 0
                     current_x += visualizer.input_neuron_radius * 2
-                    current_y = visualizer.info_box_size + round(height_space / 2)
+                    current_y = visualizer.info_box_size + space + adjusted_height_space
 
             return positions_dict
 
