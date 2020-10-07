@@ -78,7 +78,7 @@ class Cnn(nn.Module):
         with torch.no_grad():
             self.conv1, self.conv2 = self._make_convs(config)
             self.maxpool1 = nn.MaxPool2d(kernel_size=config.maxp_size1, stride=config.maxp_stride1)
-            self.maxpool2 = nn.MaxPool2d(kernel_size=config.maxp_size1, stride=config.maxp_stride1)
+            self.maxpool2 = nn.MaxPool2d(kernel_size=config.maxp_size2, stride=config.maxp_stride2)
 
             index = 0
             size = self.conv1.weight.size().numel()
