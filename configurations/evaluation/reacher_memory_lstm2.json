@@ -1,0 +1,62 @@
+{
+  "environment": "ReacherMemory-v0",
+  "random_seed": 0,
+  "number_generations": 2500,
+  "use_worker_processes": true,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 200,
+    "sigma": 1.0,
+    "checkpoint_frequency": 10,
+    "hof_size": 10,
+    "mu": 25,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": false
+  },
+  "brain": {
+    "type": "ConcatenatedBrain_LSTM",
+    "normalize_input": false,
+    "normalize_input_target": 5,
+    "use_bias": true,
+    "feed_forward_front": {
+      "type": "FeedForward_NumPy",
+      "normalize_input": false,
+      "normalize_input_target": 2,
+      "use_bias": true,
+      "hidden_layers": [16],
+      "non_linearity": "relu",
+      "indirect_encoding": false,
+      "cppn_hidden_layers": [10, 10]
+    },
+    "lstm": {
+      "type": "LSTMNumPy",
+      "normalize_input": false,
+      "normalize_input_target": 5,
+      "use_bias": true,
+      "lstm_num_layers": 10
+    },
+    "feed_forward_back": {
+      "type": "FeedForward_NumPy",
+      "normalize_input": false,
+      "normalize_input_target": 2,
+      "use_bias": true,
+      "hidden_layers": [8],
+      "non_linearity": "relu",
+      "indirect_encoding": false,
+      "cppn_hidden_layers": [10, 10]
+    }
+  },
+  "episode_runner": {
+    "number_fitness_runs": 25,
+    "reuse_env": true,
+    "keep_env_seed_fixed_during_generation": true,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "use_autoencoder": false,
+    "environment_attributes": {
+      "observation_frames": 20,
+      "memory_frames": 20,
+      "action_frames": 50
+    }
+  }
+}
