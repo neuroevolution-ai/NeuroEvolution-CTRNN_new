@@ -1,7 +1,9 @@
-import pygame
-import numpy as np
+# noinspection PyUnresolvedReferences
 import os
 from typing import Tuple
+
+import pygame
+import numpy as np
 
 from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
@@ -36,9 +38,6 @@ class BrainVisualizerHandler:
 
 
 class BrainVisualizer:
-    WEIGHT_ALL = "draw_all_weights"
-    WEIGHT_MAX = "draw_max_weights"
-    WEIGHT_THRESHOLD = "draw_weights_threshold"
 
     def __init__(self,
                  brain: ContinuousTimeRNN,
@@ -57,7 +56,7 @@ class BrainVisualizer:
         # Initial pygame module
         successes, failures = pygame.init()
         if failures:
-            print("{0} successes and{1} failures".format(successes, failures))
+            print("{0} successes and {1} failures".format(successes, failures))
 
         # Set position of screen (x, y) & create screen (length, width)
         # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
@@ -96,9 +95,9 @@ class BrainVisualizer:
         self.clicked_neuron = None
 
         # Settings for drawing the weights
-        self.draw_weight_mode = BrainVisualizer.WEIGHT_MAX
-        # Threshold for drawing connections
-        self.draw_threshold = 2.0
+        self.draw_weight_mode = Weights.WEIGHT_MAX
+        # Threshold for drawing connections, 0 means it is disabled
+        self.draw_threshold = 0.0
 
         self.rgb_input = False
         self.input_shape = None
@@ -110,6 +109,7 @@ class BrainVisualizer:
                 self.rgb_input = False
             elif len(initial_observation.shape) == 3:
                 self.rgb_input = True
+                self.draw_weight_mode = self.draw_weight_mode | Weights.IGNORE_ZERO_INPUT
             else:
                 # Only one dimensional or three dimensional input is allowed
                 raise RuntimeError(
@@ -208,28 +208,17 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            # Weights.draw_weights(visualizer=self,
-            #                      start_pos_dict=input_positions_dict,
-            #                      end_pos_dict=self.graph_positions_dict,
-            #                      weight_matrix=self.brain.V.todense().T)
-
-            Weights.draw_maximum_weights(
-                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T, _input=in_values)
+            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T,
+                                 is_input=True, in_values=in_values)
 
         # Connections between the Neurons
-        # Weights.draw_weights(visualizer=self,
-        #                      start_pos_dict=self.graph_positions_dict,
-        #                      end_pos_dict=self.graph_positions_dict,
-        #                      weight_matrix=self.brain.W.todense())
-        Weights.draw_maximum_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.toarray())
+        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.W.toarray(),
+                             is_input=False, in_values=None)
 
         # Connections between the Neurons and the Output
         if self.output_weights:
-            # Weights.draw_weights(visualizer=self,
-            #                      start_pos_dict=self.graph_positions_dict,
-            #                      end_pos_dict=output_positions_dict,
-            #                      weight_matrix=self.brain.T.todense())
-            Weights.draw_maximum_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.toarray())
+            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.T.toarray(),
+                                 is_input=False, in_values=None)
 
         # Draw neurons
 
