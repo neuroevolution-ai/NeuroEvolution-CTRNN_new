@@ -21,23 +21,30 @@ class BrainVisualizerHandler:
                                  brain: ContinuousTimeRNN,
                                  brain_config: IBrainCfg,
                                  env_id: str,
+                                 initial_observation: np.ndarray,
                                  width: int = 1800,
                                  height: int = 800,
                                  display_color: Tuple[int, int, int] = (0, 0, 0),
                                  neuron_radius: int = 30,
                                  color_clipping_range: Tuple[int, int, int] = (1, 1, 1)):
-        self.current_visualizer = BrainVisualizer(brain=brain, brain_config=brain_config, env_id=env_id, width=width,
-                                                  height=height, display_color=display_color,
+        self.current_visualizer = BrainVisualizer(brain=brain, brain_config=brain_config, env_id=env_id,
+                                                  initial_observation=initial_observation, width=width, height=height,
+                                                  display_color=display_color,
                                                   neuron_radius=neuron_radius,
                                                   color_clipping_range=color_clipping_range)
         return self.current_visualizer
 
 
 class BrainVisualizer:
+    WEIGHT_ALL = "draw_all_weights"
+    WEIGHT_MAX = "draw_max_weights"
+    WEIGHT_THRESHOLD = "draw_weights_threshold"
+
     def __init__(self,
                  brain: ContinuousTimeRNN,
                  brain_config: IBrainCfg,
                  env_id: str,
+                 initial_observation: np.ndarray,
                  width: int,
                  height: int,
                  display_color: Tuple[int, int, int],
@@ -88,8 +95,27 @@ class BrainVisualizer:
         self.neuron_text = True
         self.clicked_neuron = None
 
+        # Settings for drawing the weights
+        self.draw_weight_mode = BrainVisualizer.WEIGHT_MAX
         # Threshold for drawing connections
         self.draw_threshold = 2.0
+
+        self.rgb_input = False
+        self.input_shape = None
+
+        # If the dimension of the input (the observation) is three-dimensional we assume that the environment delivers
+        # RGB pixels as inputs of kind [Width, Height, RGB]
+        if initial_observation is not None:
+            if len(initial_observation.shape) == 1:
+                self.rgb_input = False
+            elif len(initial_observation.shape) == 3:
+                self.rgb_input = True
+            else:
+                # Only one dimensional or three dimensional input is allowed
+                raise RuntimeError(
+                    "Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
+
+            self.input_shape = initial_observation.shape
 
         # Define colors used in the program
         self.display_color = display_color
@@ -103,6 +129,8 @@ class BrainVisualizer:
         self.color_negative_weight = Colors.custom_red
         self.color_neutral_weight = Colors.dark_grey
         self.color_positive_weight = Colors.light_green
+        self.color_input_connections_positive = Colors.less_dark_green
+        self.color_input_connections_negative = Colors.less_dark_blue
 
         # Colors Neutral Neurons
         self.color_neutral_neuron = Colors.dark_grey
@@ -126,7 +154,7 @@ class BrainVisualizer:
             self.screen.blit(text_surface, (x_pos, y_pos))
             y_pos += y_step
 
-    def process_update(self, in_values, out_values):
+    def process_update(self, in_values: np.ndarray, out_values: np.ndarray):
         # Fill screen with neutral_color
         self.screen.fill(self.display_color)
 
@@ -134,8 +162,16 @@ class BrainVisualizer:
         pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_size))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
+        if self.rgb_input:
+            in_values = np.concatenate(
+                (in_values[:, :, 0].flatten(), in_values[:, :, 1].flatten(), in_values[:, :, 2].flatten()))
+
+        if self.brain_config.use_bias:
+            # Add 1 to the end of the input values so that the bias can be added. This is needed because the weight
+            # matrix of the brain has one additional value (the bias)
+            in_values = np.concatenate((in_values, [1]))
+
         number_input_neurons = in_values.size
-        number_input_neurons += 1 if self.brain_config.use_bias else 0
         number_neurons = len(self.brain.W.todense())
         number_output_neurons = 1 if isinstance(out_values, np.int64) else len(out_values)
 
@@ -162,11 +198,6 @@ class BrainVisualizer:
         # self.render_info_text(["Threshold: {}".format(self.draw_threshold)], x_pos=(3 * self.w / 4) + 150,
         #                       initial_y_pos=5, y_step=18)
 
-        if len(in_values.shape) == 1 and self.brain_config.use_bias:
-            # Add 1 to the end of the input values so that thed bias can be added, is needed because the weight
-            # matrix of the brain has one additional value (the bias)
-            in_values = np.r_[in_values, [1]]
-
         # Create Dictionaries with Positions
         # Input Dictionary
         input_positions_dict = Positions.calculate_positions(self, in_values, is_input=True)
@@ -183,8 +214,7 @@ class BrainVisualizer:
             #                      weight_matrix=self.brain.V.todense().T)
 
             Weights.draw_maximum_weights(
-                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T, rgb_input=True,
-                _input=in_values)
+                self, input_positions_dict, self.graph_positions_dict, self.brain.V.toarray().T, _input=in_values)
 
         # Connections between the Neurons
         # Weights.draw_weights(visualizer=self,

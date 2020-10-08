@@ -1,11 +1,9 @@
 import math
-from typing import Tuple
 
 import networkx as nx
 import numpy as np
 
 from brain_visualizer import brain_visualizer
-from tools.configurations import IBrainCfg
 
 
 class Positions:
@@ -75,7 +73,7 @@ class Positions:
         box_height = visualizer.h - visualizer.info_box_size
         box_width = visualizer.input_box_width
 
-        if len(values.shape) == 1:
+        if not visualizer.rgb_input:
             # Leave space on the borders
             space = 25
             box_height -= 2 * space
@@ -118,8 +116,8 @@ class Positions:
 
             return positions_dict
 
-        elif len(values.shape) == 3:
-            rows_per_block, columns_per_block, blocks = values.shape
+        else:
+            rows_per_block, columns_per_block, blocks = visualizer.input_shape
 
             # Use empty space on top and bottom and left and right end of the boxes respectively
             space = 25
@@ -132,12 +130,13 @@ class Positions:
 
             if visualizer.input_neuron_radius == 0:
                 raise RuntimeError("""Too many input values provided. They cannot be drawn, please consider increasing
-                 the windows size or decreasing the number of input values.""")
+                 the window size or decreasing the number of input values.""")
 
             positions_dict = {}
             current_x = 0
             current_y = 0
             index = 0
+
             # Iterate through the blocks, x value is always the same, y value needs to be adjusted accordingly
             for i in range(blocks):
                 current_x = int(space / 2.0)
@@ -157,6 +156,3 @@ class Positions:
                 positions_dict[index] = [current_x, current_y]
 
             return positions_dict
-        else:
-            # Only one dimensional or three dimensional input is allowed
-            raise RuntimeError("Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")

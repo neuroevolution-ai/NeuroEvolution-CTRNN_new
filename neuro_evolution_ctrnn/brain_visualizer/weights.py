@@ -25,11 +25,18 @@ class Weights:
                     end[1] + trirad * math.cos(math.radians(rotation + 120)))))
 
     @staticmethod
-    def draw_connection(visualizer: "brain_visualizer.BrainVisualizer", start_pos, end_pos, weight):
+    def draw_connection(visualizer: "brain_visualizer.BrainVisualizer", start_pos, end_pos, weight,
+                        is_input: bool = False):
         if weight > 0.0:
             weight_color = visualizer.color_positive_weight
         else:
             weight_color = visualizer.color_negative_weight
+
+        if is_input:
+            if weight > 0.0:
+                weight_color = visualizer.color_input_connections_positive
+            else:
+                weight_color = visualizer.color_input_connections_negative
 
         width = int(abs(weight)) + visualizer.weight_val
 
@@ -55,21 +62,21 @@ class Weights:
 
     @staticmethod
     def draw_maximum_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
-                             weight_matrix, rgb_input: bool = False, _input: np.ndarray = None) -> None:
-        if rgb_input:
+                             weight_matrix, _input: np.ndarray = None) -> None:
+        if visualizer.rgb_input:
             # If RGB input is present the weight matrix needs to be reordered a bit. In the brain the RGB values get
             # flattened, therefore three consecutive values in the weight_matrix form one pixel (red, green and blue).
             # The input although is ordered in red, green and blue blocks separately in the BrainVisualizer. So
             # simply concatenate first the red values, then the green values and then the blue values
-            bias = weight_matrix[-1]
-            weight_matrix = weight_matrix[:-1]
-            weight_matrix = np.concatenate((weight_matrix[::3], weight_matrix[1::3], weight_matrix[2::3], [bias]))
-
-        if _input is not None:
-            _input = np.concatenate(
-                (_input[:, :, 0].flatten(), _input[:, :, 1].flatten(), _input[:, :, 2].flatten()))
             if visualizer.brain_config.use_bias:
-                _input = np.r_[_input, [1]]
+                bias = weight_matrix[-1]
+                weight_matrix = weight_matrix[:-1]
+
+            weight_matrix = np.concatenate((weight_matrix[::3], weight_matrix[1::3], weight_matrix[2::3]))
+
+            if visualizer.brain_config.use_bias:
+                # noinspection PyUnboundLocalVariable
+                weight_matrix = np.concatenate((weight_matrix, [bias]))
 
         for start_neuron, start_neuron_weights in enumerate(weight_matrix):
             if _input is not None:

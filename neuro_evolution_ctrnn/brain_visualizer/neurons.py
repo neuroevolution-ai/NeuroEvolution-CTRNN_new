@@ -15,19 +15,12 @@ class Neurons:
                      color_clipping_range: int, negative_color: Tuple[int, int, int],
                      neutral_color: Tuple[int, int, int], positive_color: Tuple[int, int, int], radius: int,
                      matrix: bool = False, weight_neuron: bool = False) -> None:
-        rgb_color = False
         number_neurons_per_color = 0
-
         draw_text = visualizer.neuron_text
 
-        if len(value_dict.shape) == 3:
-            rgb_color = True
+        if visualizer.rgb_input:
             draw_text = False
-            number_neurons_per_color = value_dict[:, :, 0].size
-            value_dict = np.concatenate(
-                (value_dict[:, :, 0].flatten(), value_dict[:, :, 1].flatten(), value_dict[:, :, 2].flatten()))
-            if visualizer.brain_config.use_bias:
-                value_dict = np.r_[value_dict, [1]]
+            number_neurons_per_color = visualizer.input_shape[0] * visualizer.input_shape[1]
 
         counter = 0
         for neuron in range(len(positions)):
@@ -45,7 +38,7 @@ class Neurons:
             if weight_neuron:
                 radius += int(abs(val))
 
-            if rgb_color:
+            if visualizer.rgb_input:
                 draw_text = False
                 color_val = min(255, int(val * 256))
                 if counter < number_neurons_per_color:
