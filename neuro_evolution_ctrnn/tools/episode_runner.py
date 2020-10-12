@@ -104,15 +104,19 @@ class EpisodeRunner:
                 # todo: remove code duplication. This code is also in BehaviorWrapper
                 compressor = BZ2Compressor(2)
                 compressed_behavior = b''
-                for i in range(self.config.novelty.behavioral_max_length):
-                    aggregate = np.zeros(len(brain_state_history[0]), dtype=np.float32)
-                    for j in range(self.config.novelty.behavioral_interval):
-                        if len(brain_state_history) > j + i * self.config.novelty.behavioral_interval:
-                            state = brain_state_history[j + i * self.config.novelty.behavioral_interval]
-                            aggregate += state / self.config.novelty.behavioral_interval
-                        else:
-                            break
-                    compressed_behavior += compressor.compress(aggregate.astype(np.float16).tobytes())
-                compressed_behavior += compressor.flush()
+                if self.config.novelty.behavioral_max_length < 0:
+                    compressor.compress(brain_state_history[-1].astype(np.float16).tobytes())
+                    compressed_behavior += compressor.flush()
+                else:
+                    for i in range(self.config.novelty.behavioral_max_length):
+                        aggregate = np.zeros(len(brain_state_history[0]), dtype=np.float32)
+                        for j in range(self.config.novelty.behavioral_interval):
+                            if len(brain_state_history) > j + i * self.config.novelty.behavioral_interval:
+                                state = brain_state_history[j + i * self.config.novelty.behavioral_interval]
+                                aggregate += state / self.config.novelty.behavioral_interval
+                            else:
+                                break
+                        compressed_behavior += compressor.compress(aggregate.astype(np.float16).tobytes())
+                    compressed_behavior += compressor.flush()
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
