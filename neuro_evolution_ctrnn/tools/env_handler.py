@@ -42,6 +42,17 @@ class EnvHandler:
         elif env_id == 'QbertHard-v0':
             logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
+        elif env_id == 'ReverseShaped-v0':
+            env = gym.make('Reverse-v0')
+            # these options are specific to reverse-v0 and aren't important enough to be part of the
+            # global configuration file.
+            env.env.last = 15
+            env.env.min_length = 7
+            logging.info("creating env with min_length " + str(
+                env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
+
+            logging.info("wrapping env in ReverseWrapper")
+            env = ReverseWrapper(env)
         else:
             env = gym.make(env_id)
 
@@ -67,17 +78,6 @@ class EnvHandler:
                                          terminal_on_life_loss=self.config.environment_attributes.terminal_on_life_loss,
                                          grayscale_obs=self.config.environment_attributes.grayscale_obs)
 
-        if env_id == "Reverse-v0":
-            # these options are specific to reverse-v0 and aren't important enough to be part of the
-            # global configuration file.
-            env.env.last = 15
-            env.env.min_length = 7
-            logging.info("creating env with min_length " + str(
-                env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
-
-        if env_id == "Reverse-v0":
-            logging.info("wrapping env in ReverseWrapper")
-            env = ReverseWrapper(env)
 
         if str(env_id).startswith("BipedalWalker"):
             logging.info("wrapping env in Box2DWalkerWrapper")
