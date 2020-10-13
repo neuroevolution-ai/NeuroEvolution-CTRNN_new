@@ -1,6 +1,8 @@
-import pygame
 import logging
 from typing import Tuple
+
+import numpy as np
+import pygame
 
 from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
@@ -9,10 +11,18 @@ from brain_visualizer import brain_visualizer
 class Neurons:
 
     @staticmethod
-    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer", positions: dict, value_dict: dict,
+    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer", positions: dict, value_dict: np.ndarray,
                      color_clipping_range: int, negative_color: Tuple[int, int, int],
                      neutral_color: Tuple[int, int, int], positive_color: Tuple[int, int, int], radius: int,
                      matrix: bool = False, weight_neuron: bool = False) -> None:
+        number_neurons_per_color = 0
+        draw_text = visualizer.neuron_text
+
+        if visualizer.rgb_input:
+            draw_text = False
+            number_neurons_per_color = visualizer.input_shape[0] * visualizer.input_shape[1]
+
+        counter = 0
         for neuron in range(len(positions)):
             position = positions[neuron]
             pos_x = int(position[0])
@@ -28,21 +38,35 @@ class Neurons:
             if weight_neuron:
                 radius += int(abs(val))
 
-            # Avoid program crash if clipping range is invalid
-            if color_val > 1 or color_val < -1:
-                color_val = 1
-                Neurons.color_logging(visualizer, color_clipping_range)
+            if visualizer.rgb_input:
+                draw_text = False
+                color_val = min(255, int(val * 256))
+                if counter < number_neurons_per_color:
+                    interpolated_color = (color_val, 0, 0)
+                elif counter < 2 * number_neurons_per_color:
+                    interpolated_color = (0, color_val, 0)
+                else:
+                    interpolated_color = (0, 0, color_val)
 
-            if color_val <= 0:
-                interpolated_color = Colors.interpolate_color(neutral_color, negative_color, abs(color_val))
-                text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.black)
+                counter += 1
+                text_surface = None
             else:
-                interpolated_color = Colors.interpolate_color(neutral_color, positive_color, color_val)
-                text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.white)
+                # Avoid program crash if clipping range is invalid
+                if color_val > 1 or color_val < -1:
+                    color_val = 1
+                    Neurons.color_logging(visualizer, color_clipping_range)
+
+                if color_val <= 0:
+                    interpolated_color = Colors.interpolate_color(neutral_color, negative_color, abs(color_val))
+                    text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.black)
+                else:
+                    interpolated_color = Colors.interpolate_color(neutral_color, positive_color, color_val)
+                    text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.white)
 
             # Draw Circle and Text
             pygame.draw.circle(visualizer.screen, interpolated_color, (pos_x, pos_y), radius)
-            if visualizer.neuron_text:
+
+            if draw_text:
                 visualizer.screen.blit(text_surface, ((pos_x - 16), (pos_y - 7)))
 
     @staticmethod

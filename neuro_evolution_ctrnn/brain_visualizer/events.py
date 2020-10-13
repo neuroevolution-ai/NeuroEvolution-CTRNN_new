@@ -40,7 +40,6 @@ class Events:
                     if visualizer.input_neuron_radius > 5:
                         # visualizer.neuron_radius = visualizer.neuron_radius - 5
                         visualizer.input_neuron_radius -= 5
-                        print(visualizer.input_neuron_radius)
                 if event.key == pygame.K_f:
                     visualizer.input_neuron_radius += 5
                 if event.key == pygame.K_s:
