@@ -231,7 +231,7 @@ class BrainVisualizer:
                              negative_color=self.color_negative_weight,
                              neutral_color=self.color_neutral_weight,
                              positive_color=self.color_positive_weight,
-                             radius=self.neuron_radius + self.weight_val,
+                             radius=self.neuron_radius + self.weight_val,  # TODO weight_val necessary here?
                              matrix=True,
                              weight_neuron=True)
 
@@ -253,7 +253,8 @@ class BrainVisualizer:
                              negative_color=self.color_negative_neuron_in,
                              neutral_color=self.color_neutral_neuron,
                              positive_color=self.color_positive_neuron_in,
-                             radius=self.input_neuron_radius)
+                             radius=self.input_neuron_radius,
+                             is_input=True)
 
         # Draw the output(s) of the brain
         Neurons.draw_neurons(visualizer=self,

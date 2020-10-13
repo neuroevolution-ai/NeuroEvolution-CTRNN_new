@@ -11,14 +11,21 @@ from brain_visualizer import brain_visualizer
 class Neurons:
 
     @staticmethod
-    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer", positions: dict, value_dict: np.ndarray,
-                     color_clipping_range: int, negative_color: Tuple[int, int, int],
-                     neutral_color: Tuple[int, int, int], positive_color: Tuple[int, int, int], radius: int,
-                     matrix: bool = False, weight_neuron: bool = False) -> None:
+    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer",
+                     positions: dict,
+                     value_dict: np.ndarray,
+                     color_clipping_range: int,
+                     negative_color: Tuple[int, int, int],
+                     neutral_color: Tuple[int, int, int],
+                     positive_color: Tuple[int, int, int],
+                     radius: int,
+                     matrix: bool = False,
+                     weight_neuron: bool = False,
+                     is_input: bool = False) -> None:
         number_neurons_per_color = 0
         draw_text = visualizer.neuron_text
 
-        if visualizer.rgb_input:
+        if visualizer.rgb_input and is_input:
             draw_text = False
             number_neurons_per_color = visualizer.input_shape[0] * visualizer.input_shape[1]
 
@@ -38,9 +45,9 @@ class Neurons:
             if weight_neuron:
                 radius += int(abs(val))
 
-            if visualizer.rgb_input:
+            if visualizer.rgb_input and is_input:
                 draw_text = False
-                color_val = min(255, int(val * 256))
+                color_val = max(0, min(255, int(val * 256)))
                 if counter < number_neurons_per_color:
                     interpolated_color = (color_val, 0, 0)
                 elif counter < 2 * number_neurons_per_color:

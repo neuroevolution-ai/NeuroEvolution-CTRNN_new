@@ -73,7 +73,46 @@ class Positions:
         box_height = visualizer.h - visualizer.info_box_size
         box_width = visualizer.input_box_width
 
-        if not visualizer.rgb_input:
+        positions_dict = {}
+
+        if is_input and visualizer.rgb_input:
+            rows_per_block, columns_per_block, blocks = visualizer.input_shape
+
+            # Use empty space on top and bottom and left and right end of the boxes respectively
+            space = 25
+
+            block_height = int(box_height / 3.0) - space
+            block_width = box_width - space
+
+            visualizer.input_neuron_radius = min(block_height / rows_per_block, block_width / columns_per_block)
+            visualizer.input_neuron_radius = round(visualizer.input_neuron_radius / 2)
+
+            if visualizer.input_neuron_radius == 0:
+                raise RuntimeError("""Too many input values provided. They cannot be drawn, please consider increasing
+                 the window size or decreasing the number of input values.""")
+
+            current_x = 0
+            current_y = 0
+            index = 0
+
+            # Iterate through the blocks, x value is always the same, y value needs to be adjusted accordingly
+            for i in range(blocks):
+                current_x = int(space / 2.0)
+                current_y = visualizer.info_box_size + int(space / 2.0) + i * (block_height + space)
+                # Draw the rows, therefore increase the current y value by the neuron diameter and reset the x value
+                for x in range(rows_per_block):
+                    # Draw the columns, therefore increase the x value by the neuron diameter
+                    for y in range(columns_per_block):
+                        positions_dict[index] = [current_x, current_y]
+                        index += 1
+                        current_x += visualizer.input_neuron_radius * 2
+                    current_x = int(space / 2.0)
+                    current_y += visualizer.input_neuron_radius * 2
+
+            # Simply add one neuron to the last block if a bias is used
+            if visualizer.brain_config.use_bias:
+                positions_dict[index] = [current_x, current_y]
+        else:
             # Leave space on the borders
             space = 25
             box_height -= 2 * space
@@ -100,7 +139,6 @@ class Positions:
 
             default_y = current_y = visualizer.info_box_size + space + adjusted_height_space
 
-            positions_dict = {}
             current_neurons_in_column = 0
 
             for i in range(len(values)):
@@ -114,45 +152,4 @@ class Positions:
                     current_x += adjusted_neuron_radius * 2
                     current_y = default_y
 
-            return positions_dict
-
-        else:
-            rows_per_block, columns_per_block, blocks = visualizer.input_shape
-
-            # Use empty space on top and bottom and left and right end of the boxes respectively
-            space = 25
-
-            block_height = int(box_height / 3.0) - space
-            block_width = box_width - space
-
-            visualizer.input_neuron_radius = min(block_height / rows_per_block, block_width / columns_per_block)
-            visualizer.input_neuron_radius = round(visualizer.input_neuron_radius / 2)
-
-            if visualizer.input_neuron_radius == 0:
-                raise RuntimeError("""Too many input values provided. They cannot be drawn, please consider increasing
-                 the window size or decreasing the number of input values.""")
-
-            positions_dict = {}
-            current_x = 0
-            current_y = 0
-            index = 0
-
-            # Iterate through the blocks, x value is always the same, y value needs to be adjusted accordingly
-            for i in range(blocks):
-                current_x = int(space / 2.0)
-                current_y = visualizer.info_box_size + int(space / 2.0) + i * (block_height + space)
-                # Draw the rows, therefore increase the current y value by the neuron diameter and reset the x value
-                for x in range(rows_per_block):
-                    # Draw the columns, therefore increase the x value by the neuron diameter
-                    for y in range(columns_per_block):
-                        positions_dict[index] = [current_x, current_y]
-                        index += 1
-                        current_x += visualizer.input_neuron_radius * 2
-                    current_x = int(space / 2.0)
-                    current_y += visualizer.input_neuron_radius * 2
-
-            # Simply add one neuron to the last block if a bias is used
-            if visualizer.brain_config.use_bias:
-                positions_dict[index] = [current_x, current_y]
-
-            return positions_dict
+        return positions_dict
