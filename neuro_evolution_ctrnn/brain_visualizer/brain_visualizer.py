@@ -226,14 +226,15 @@ class BrainVisualizer:
         # Radius is increased so that the circle is bigger than the neuron itself
         Neurons.draw_neurons(visualizer=self,
                              positions=self.graph_positions_dict,
-                             value_dict=self.brain.W,
+                             value_dict=self.brain.W.toarray(),
                              color_clipping_range=2,
                              negative_color=self.color_negative_weight,
                              neutral_color=self.color_neutral_weight,
                              positive_color=self.color_positive_weight,
                              radius=self.neuron_radius + self.weight_val,  # TODO weight_val necessary here?
-                             matrix=True,
-                             weight_neuron=True)
+                             weight_neuron=True,
+                             is_input=False,
+                             is_neuron_to_neuron=True)
 
         # Draw graph
         Neurons.draw_neurons(visualizer=self,
