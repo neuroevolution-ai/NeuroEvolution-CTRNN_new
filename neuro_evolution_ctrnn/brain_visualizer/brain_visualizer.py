@@ -77,10 +77,6 @@ class BrainVisualizer:
         pygame.font.init()
         self.my_font = pygame.font.SysFont("Helvetica", 14)
 
-        # Dictionary Graph Neurons
-        # Create Graph with Spring layout and get Positions of Neurons back
-        self.graph_positions_dict = Positions.get_graph_positions(self)
-
         # Variables for events
         self.positive_weights = True  # Draws positive weights
         self.negative_weights = True  # Draws negative weights
@@ -146,6 +142,10 @@ class BrainVisualizer:
         # Color in Output Layer
         self.color_negative_neuron_out = Colors.light_orange
         self.color_positive_neuron_out = Colors.orange
+
+        # Dictionary Graph Neurons
+        # Create Graph with Spring layout and get Positions of Neurons back
+        self.graph_positions_dict = Positions.get_graph_positions(self)
 
     def render_info_text(self, list_of_strings, x_pos, initial_y_pos, y_step):
         y_pos = initial_y_pos

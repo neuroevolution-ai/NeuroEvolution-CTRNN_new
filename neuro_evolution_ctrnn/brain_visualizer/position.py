@@ -20,20 +20,16 @@ class Positions:
             g.add_node(i)
 
         for index, value in np.ndenumerate(brain_weight):
-            g.add_edges_from([(index[0], index[1], {'myweight': value})])
+            g.add_edges_from([(index[0], index[1], {'edge_weight': value})])
 
-        pos = nx.spring_layout(g, k=1.5, weight="myweight", iterations=50, scale=visualizer.h / 2 - 100)
+        pos = nx.spring_layout(g, k=1.5, weight="edge_weight", scale=visualizer.h / 2 - 100, seed=0)
 
         # Adapt positions from spring-layout Method to pygame windows
         graph_positions_dict = {}
         for each in pos:
             position = pos[each]
             pos_x = int(position[0] + (visualizer.w / 2))
-            if pos_x > (visualizer.w / 2):
-                pos_x = pos_x + 50
-            if pos_x < (visualizer.w / 2):
-                pos_x = pos_x - 50
-            pos_y = int(position[1] + (visualizer.h / 2)) + 60
+            pos_y = int(position[1] + (visualizer.h / 2)) + visualizer.info_box_size
             graph_positions_dict[each] = [pos_x, pos_y]
 
         return graph_positions_dict
