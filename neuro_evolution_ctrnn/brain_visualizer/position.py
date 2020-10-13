@@ -29,7 +29,7 @@ class Positions:
         for each in pos:
             position = pos[each]
             pos_x = int(position[0] + (visualizer.w / 2))
-            pos_y = int(position[1] + (visualizer.h / 2)) + visualizer.info_box_size
+            pos_y = int(position[1] + (visualizer.h / 2)) + visualizer.info_box_height
             graph_positions_dict[each] = [pos_x, pos_y]
 
         return graph_positions_dict
@@ -66,7 +66,7 @@ class Positions:
     def calculate_positions(visualizer: "brain_visualizer.BrainVisualizer", values: np.ndarray, is_input: bool = False):
         # Height and width of the "Input Box" which is the part of the window which contains the input neurons, below
         # the info box
-        box_height = visualizer.h - visualizer.info_box_size
+        box_height = visualizer.h - visualizer.info_box_height
         box_width = visualizer.input_box_width
 
         positions_dict = {}
@@ -94,7 +94,7 @@ class Positions:
             # Iterate through the blocks, x value is always the same, y value needs to be adjusted accordingly
             for i in range(blocks):
                 current_x = int(space / 2.0)
-                current_y = visualizer.info_box_size + int(space / 2.0) + i * (block_height + space)
+                current_y = visualizer.info_box_height + int(space / 2.0) + i * (block_height + space)
                 # Draw the rows, therefore increase the current y value by the neuron diameter and reset the x value
                 for x in range(rows_per_block):
                     # Draw the columns, therefore increase the x value by the neuron diameter
@@ -133,7 +133,7 @@ class Positions:
             adjusted_height_space = round(
                 (box_height - min(neurons_per_column, values.size) * adjusted_neuron_radius * 2) / 2)
 
-            default_y = current_y = visualizer.info_box_size + space + adjusted_height_space
+            default_y = current_y = visualizer.info_box_height + space + adjusted_height_space
 
             current_neurons_in_column = 0
 

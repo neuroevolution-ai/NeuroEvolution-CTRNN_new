@@ -28,12 +28,14 @@ class BrainVisualizerHandler:
                                  height: int = 800,
                                  display_color: Tuple[int, int, int] = (0, 0, 0),
                                  neuron_radius: int = 30,
-                                 color_clipping_range: Tuple[int, int, int] = (1, 1, 1)):
+                                 color_clipping_range: Tuple[int, int, int] = (1, 1, 1),
+                                 slow_down: int = 0):
         self.current_visualizer = BrainVisualizer(brain=brain, brain_config=brain_config, env_id=env_id,
                                                   initial_observation=initial_observation, width=width, height=height,
                                                   display_color=display_color,
                                                   neuron_radius=neuron_radius,
-                                                  color_clipping_range=color_clipping_range)
+                                                  color_clipping_range=color_clipping_range,
+                                                  slow_down=slow_down)
         return self.current_visualizer
 
 
@@ -48,10 +50,12 @@ class BrainVisualizer:
                  height: int,
                  display_color: Tuple[int, int, int],
                  neuron_radius: int,
-                 color_clipping_range: Tuple[int, int, int]):
+                 color_clipping_range: Tuple[int, int, int],
+                 slow_down: int = 0):
         self.brain = brain
         self.brain_config = brain_config
         self.env_id = env_id
+        self.slow_down = slow_down
 
         # Initial pygame module
         successes, failures = pygame.init()
@@ -62,7 +66,6 @@ class BrainVisualizer:
         # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (3839, 2159)  # for a fixed position of the window
         self.screen = pygame.display.set_mode([width, height])
         self.w, self.h = pygame.display.get_surface().get_size()
-        self.info_box_size = 60
         self.input_box_width = int(self.w * 0.2)
 
         # Give it a name
@@ -71,7 +74,11 @@ class BrainVisualizer:
         self.kit_logo = pygame.image.load("resources/kit_grey_50.png")
         self.kit_logo.convert()
         self.kit_rect = self.kit_logo.get_rect()
-        self.kit_rect.center = 90, 30
+        self.kit_rect_x = self.kit_rect.x = 5
+        self.kit_rect_y = self.kit_rect.y = 5
+
+        self.info_box_height = 60
+        self.info_box_width = self.w - self.kit_rect_x - self.kit_rect.width
 
         # Initialize & set font
         pygame.font.init()
@@ -154,29 +161,13 @@ class BrainVisualizer:
             self.screen.blit(text_surface, (x_pos, y_pos))
             y_pos += y_step
 
-    def process_update(self, in_values: np.ndarray, out_values: np.ndarray):
-        # Fill screen with neutral_color
-        self.screen.fill(self.display_color)
+    def render_info_box(self, number_input_neurons, number_neurons, number_output_neurons):
+        # TODO refine this text rendering to use some kind of layout, maybe pygame offers something like a GridLayout
 
         # Draw Rect for Logo and Blit Logo on the screen
-        pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_size))
+        pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_height))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
-        if self.rgb_input:
-            in_values = np.concatenate(
-                (in_values[:, :, 0].flatten(), in_values[:, :, 1].flatten(), in_values[:, :, 2].flatten()))
-
-        if self.brain_config.use_bias:
-            # Add 1 to the end of the input values so that the bias can be added. This is needed because the weight
-            # matrix of the brain has one additional value (the bias)
-            in_values = np.concatenate((in_values, [1]))
-
-        number_input_neurons = in_values.size
-        number_neurons = len(self.brain.W.todense())
-        number_output_neurons = 1 if isinstance(out_values, np.int64) else len(out_values)
-
-        # Draw Legend
-        # TODO refine this text rendering to use some kind of layout, maybe pygame offers something like a GridLayout
         self.render_info_text(
             ["Input Neurons: " + str(number_input_neurons),
              "Graph Neurons: " + str(number_neurons),
@@ -195,8 +186,29 @@ class BrainVisualizer:
             ["Weights [e,r] : " + text, "Values [s] : " + str(self.neuron_text), "Simulation : " + str(self.env_id)],
             x_pos=((3 * self.w / 4) - 80), initial_y_pos=5, y_step=18)
 
-        # self.render_info_text(["Threshold: {}".format(self.draw_threshold)], x_pos=(3 * self.w / 4) + 150,
-        #                       initial_y_pos=5, y_step=18)
+        # self.render_info_text(["Threshold: {}".format(self.draw_threshold), "Slow-Down: {}".format(self.slow_down),
+        #                        "Weight Mode: {}".format(Weights.weight_flag_to_str(self.draw_weight_mode))],
+        #                       x_pos=(3 * self.w / 4) + 150, initial_y_pos=5, y_step=18)
+
+    def process_update(self, in_values: np.ndarray, out_values: np.ndarray):
+        # Fill screen with neutral_color
+        self.screen.fill(self.display_color)
+
+        if self.rgb_input:
+            in_values = np.concatenate(
+                (in_values[:, :, 0].flatten(), in_values[:, :, 1].flatten(), in_values[:, :, 2].flatten()))
+
+        if self.brain_config.use_bias:
+            # Add 1 to the end of the input values so that the bias can be added. This is needed because the weight
+            # matrix of the brain has one additional value (the bias)
+            in_values = np.concatenate((in_values, [1]))
+
+        number_input_neurons = in_values.size
+        number_neurons = len(self.brain.W.todense())
+        number_output_neurons = 1 if isinstance(out_values, np.int64) else len(out_values)
+
+        # Draw Legend
+        self.render_info_box(number_input_neurons, number_neurons, number_output_neurons)
 
         # Create Dictionaries with Positions
         # Input Dictionary

@@ -8,9 +8,24 @@ from brain_visualizer import brain_visualizer
 
 
 class Weights:
+    # Initialize weight mode flags
     WEIGHT_ALL = 1 << 0
     WEIGHT_MAX = 1 << 1
     IGNORE_ZERO_INPUT = 1 << 2
+
+    @staticmethod
+    def weight_flag_to_str(weight_flag: int):
+        output_str = ""
+        if weight_flag & Weights.WEIGHT_ALL:
+            output_str += "All weights"
+        elif weight_flag & Weights.WEIGHT_MAX:
+            output_str += "Maximum weights"
+        elif weight_flag & Weights.IGNORE_ZERO_INPUT:
+            output_str += ", ignore inputs with zero value"
+        else:
+            raise RuntimeError("Weight flag '{}' not known.".format(weight_flag))
+
+        return output_str
 
     @staticmethod
     def arrow(screen: pygame.Surface, color: Tuple[int, int, int], tricolor: Tuple[int, int, int],

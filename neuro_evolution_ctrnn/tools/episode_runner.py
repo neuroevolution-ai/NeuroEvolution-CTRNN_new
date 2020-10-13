@@ -62,7 +62,8 @@ class EpisodeRunner:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
                                                                        env_id=self.env_id, initial_observation=ob,
                                                                        width=1600, height=900,
-                                                                       color_clipping_range=(255, 2.5, 2.5))
+                                                                       color_clipping_range=(255, 2.5, 2.5),
+                                                                       slow_down=slow_down)
             else:
                 brain_vis = None
 
