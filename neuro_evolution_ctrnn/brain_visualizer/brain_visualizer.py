@@ -162,33 +162,64 @@ class BrainVisualizer:
             y_pos += y_step
 
     def render_info_box(self, number_input_neurons, number_neurons, number_output_neurons):
-        # TODO refine this text rendering to use some kind of layout, maybe pygame offers something like a GridLayout
-
         # Draw Rect for Logo and Blit Logo on the screen
         pygame.draw.rect(self.screen, Colors.dark_grey, (0, 0, self.w, self.info_box_height))
         self.screen.blit(self.kit_logo, self.kit_rect)
 
-        self.render_info_text(
-            ["Input Neurons: " + str(number_input_neurons),
-             "Graph Neurons: " + str(number_neurons),
-             "Output Neurons: " + str(number_output_neurons)], x_pos=((self.w / 4) - 80), initial_y_pos=5, y_step=18)
+        info_text_columns = [[
+            "Input Neurons: {}".format(number_input_neurons),
+            "Graph Neurons: {}".format(number_neurons),
+            "Output Neurons: {}".format(number_output_neurons)], [
+            "Positive/Negative Weights [t,w]: {} / {} ".format(self.positive_weights, self.negative_weights),
+            "Input/Output Weights [q,z]: {} / {}".format(self.input_weights, self.output_weights),
+            "Direction [g]: {}".format(self.weights_direction)], [
+            "Weights: {}".format(Weights.weight_flag_to_str(self.draw_weight_mode)),
+            "Values [s]: {}".format(self.neuron_text),
+            "Simulation: {}".format(self.env_id)], [
+            "Threshold: {}".format(self.draw_threshold),
+            "Slow-Down: {} ms".format(self.slow_down),
+            "RGB-Input: {}".format(self.rgb_input)]]
 
-        self.render_info_text(
-            ["Positive/Negative Weights [t,w] : " + str(self.positive_weights) + " / " + str(self.negative_weights),
-             "Input/Output Weights [q,z] : " + str(self.input_weights) + " / " + str(self.output_weights),
-             "Direction [g] : " + str(self.weights_direction)], x_pos=((self.w / 2) - 130), initial_y_pos=5, y_step=18)
+        longest_text_widths = []
 
-        if self.weight_val == 0:  # If weight_val is 0 every Connection will be drawn
-            text = "all"
-        else:
-            text = str(self.weight_val)
-        self.render_info_text(
-            ["Weights [e,r] : " + text, "Values [s] : " + str(self.neuron_text), "Simulation : " + str(self.env_id)],
-            x_pos=((3 * self.w / 4) - 80), initial_y_pos=5, y_step=18)
+        for i, column in enumerate(info_text_columns):
+            longest_width_per_column = np.NINF
+            for j, text in enumerate(column):
+                # Convert list of strings to pygame.Surface
+                text_surface = self.my_font.render(text, True, self.color_numbers)
+                longest_width_per_column = max(longest_width_per_column, text_surface.get_size()[0])
+                info_text_columns[i][j] = text_surface
+            longest_text_widths.append(longest_width_per_column)
 
-        # self.render_info_text(["Threshold: {}".format(self.draw_threshold), "Slow-Down: {}".format(self.slow_down),
-        #                        "Weight Mode: {}".format(Weights.weight_flag_to_str(self.draw_weight_mode))],
-        #                       x_pos=(3 * self.w / 4) + 150, initial_y_pos=5, y_step=18)
+        text_width = sum(longest_text_widths)
+        additional_space = 20
+
+        # Calculate if the width of the info box is large enough so that the columns can be displayed
+        # Attention: This only checks the width but not the height. A too large font could lead to the text being
+        # rendered below the info box
+        while text_width > (self.info_box_width - additional_space) and len(info_text_columns) > 1:
+            info_text_columns = info_text_columns[:-1]
+            longest_text_widths = longest_text_widths[:-1]
+
+            text_width = sum(longest_text_widths)
+
+        # Edge case where only one column is left but even this column does not fit. No text will be displayed
+        if text_width > (self.info_box_width - additional_space):
+            return
+
+        number_columns = len(info_text_columns)
+
+        x_offset = (self.info_box_width - additional_space) / number_columns
+        # Set the initial x position to be to the right of the KIT logo with additional space
+        x_pos = self.kit_rect_x + self.kit_rect.width + additional_space
+        y_pos = 5
+        for column in info_text_columns:
+            for text_surface in column:
+                self.screen.blit(text_surface, (x_pos, y_pos))
+                # Move y position exactly the height of the text plus 1 pixel
+                y_pos += text_surface.get_size()[1] + 1
+            x_pos += x_offset
+            y_pos = 5
 
     def process_update(self, in_values: np.ndarray, out_values: np.ndarray):
         # Fill screen with neutral_color
