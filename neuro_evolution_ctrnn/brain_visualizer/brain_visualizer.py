@@ -107,18 +107,17 @@ class BrainVisualizer:
 
         # If the dimension of the input (the observation) is three-dimensional we assume that the environment delivers
         # RGB pixels as inputs of kind [Width, Height, RGB]
-        if initial_observation is not None:
-            if len(initial_observation.shape) == 1:
-                self.rgb_input = False
-            elif len(initial_observation.shape) == 3:
-                self.rgb_input = True
-                self.draw_weight_mode = self.draw_weight_mode | Weights.IGNORE_ZERO_INPUT
-            else:
-                # Only one dimensional or three dimensional input is allowed
-                raise RuntimeError(
-                    "Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
+        self.input_shape = initial_observation.shape
 
-            self.input_shape = initial_observation.shape
+        if len(self.input_shape) == 1:
+            self.rgb_input = False
+        elif len(self.input_shape) == 3:
+            self.rgb_input = True
+            self.draw_weight_mode = self.draw_weight_mode | Weights.IGNORE_ZERO_INPUT
+        else:
+            # Only one dimensional or three dimensional input is allowed
+            raise RuntimeError(
+                "Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
 
         # Define colors used in the program
         self.display_color = display_color

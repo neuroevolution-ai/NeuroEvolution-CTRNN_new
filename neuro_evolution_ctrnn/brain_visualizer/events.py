@@ -1,14 +1,31 @@
-import pygame
 import sys
 import math
-from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONUP, MOUSEBUTTONDOWN, KEYDOWN
 from typing import Tuple
+
+import pygame
+from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONUP, MOUSEBUTTONDOWN, KEYDOWN
 
 from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
 
 
 class Events:
+
+    KEY_QUIT = pygame.K_ESCAPE
+    KEY_INCREASE_WEIGHT_VAL = pygame.K_e
+    KEY_DECREASE_WEIGHT_VAL = pygame.K_r
+    KEY_INCREASE_INPUT_NEURON_RADIUS = pygame.K_d
+    KEY_DECREASE_INPUT_NEURON_RADIUS = pygame.K_f
+    KEY_DISPLAY_NEURON_TEXT = pygame.K_s
+    KEY_TOGGLE_POSITIVE_WEIGHTS = pygame.K_t
+    KEY_TOGGLE_NEGATIVE_WEIGHTS = pygame.K_w
+    KEY_TOGGLE_WEIGHT_ARROWS = pygame.K_g
+    KEY_TOGGLE_INPUTS = pygame.K_q
+    KEY_TOGGLE_OUTPUTS = pygame.K_z
+    KEY_INCREASE_THRESHOLD = pygame.K_PLUS
+    KEY_DECREASE_THRESHOLD = pygame.K_MINUS
+    KEY_PAUSE_VISUALIZATION = pygame.K_SPACE
+    KEY_CONTINUE_VISUALIZATION = pygame.K_c
 
     @staticmethod
     def handle_events(visualizer: "brain_visualizer.BrainVisualizer", event: pygame.event.EventType,
@@ -18,71 +35,54 @@ class Events:
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == MOUSEMOTION:
+            elif event.type == MOUSEMOTION:
                 Events.draw_neuron_number(visualizer, input_positions_dict, visualizer.graph_positions_dict,
                                           output_positions_dict,
                                           pygame.mouse.get_pos())
-            if event.type == MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONDOWN:
                 visualizer.clicked_neuron = Events.get_neuron_on_click(pygame.mouse.get_pos(),
                                                                        visualizer.graph_positions_dict)
-            if event.type == MOUSEBUTTONUP and isinstance(visualizer.clicked_neuron, int):
+            elif event.type == MOUSEBUTTONUP and isinstance(visualizer.clicked_neuron, int):
                 Events.change_neuron_pos(visualizer.clicked_neuron, pygame.mouse.get_pos(),
                                          visualizer.graph_positions_dict)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+            elif event.type == pygame.KEYDOWN:
+                if event.key == Events.KEY_QUIT:
                     pygame.quit()
                     sys.exit()
-                if event.key == pygame.K_e:
+                elif event.key == Events.KEY_DECREASE_WEIGHT_VAL:
                     visualizer.weight_val = visualizer.weight_val - 1
-                if event.key == pygame.K_r:
+                elif event.key == Events.KEY_INCREASE_WEIGHT_VAL:
                     visualizer.weight_val = visualizer.weight_val + 1
-                if event.key == pygame.K_d:
+                elif event.key == Events.KEY_DECREASE_INPUT_NEURON_RADIUS:
                     if visualizer.input_neuron_radius > 5:
                         # visualizer.neuron_radius = visualizer.neuron_radius - 5
                         visualizer.input_neuron_radius -= 5
-                if event.key == pygame.K_f:
+                elif event.key == Events.KEY_INCREASE_INPUT_NEURON_RADIUS:
                     visualizer.input_neuron_radius += 5
-                if event.key == pygame.K_s:
-                    if visualizer.neuron_text:
-                        visualizer.neuron_text = False
-                    else:
-                        visualizer.neuron_text = True
-                if event.key == pygame.K_t:
-                    if visualizer.positive_weights:
-                        visualizer.positive_weights = False
-                    else:
-                        visualizer.positive_weights = True
-                if event.key == pygame.K_w:
-                    if visualizer.negative_weights:
-                        visualizer.negative_weights = False
-                    else:
-                        visualizer.negative_weights = True
-                if event.key == pygame.K_g:
-                    if visualizer.weights_direction:
-                        visualizer.weights_direction = False
-                    else:
-                        visualizer.weights_direction = True
-                if event.key == pygame.K_q:
-                    if visualizer.input_weights:
-                        visualizer.input_weights = False
-                    else:
-                        visualizer.input_weights = True
-                if event.key == pygame.K_z:
-                    if visualizer.output_weights:
-                        visualizer.output_weights = False
-                    else:
-                        visualizer.output_weights = True
-                if event.key == pygame.K_PLUS:
+                elif event.key == Events.KEY_DISPLAY_NEURON_TEXT:
+                    visualizer.neuron_text = not visualizer.neuron_text
+                elif event.key == Events.KEY_TOGGLE_POSITIVE_WEIGHTS:
+                    visualizer.positive_weights = not visualizer.positive_weights
+                elif event.key == Events.KEY_TOGGLE_NEGATIVE_WEIGHTS:
+                    visualizer.negative_weights = not visualizer.negative_weights
+                elif event.key == Events.KEY_TOGGLE_WEIGHT_ARROWS:
+                    visualizer.weights_direction = not visualizer.weights_direction
+                elif event.key == Events.KEY_TOGGLE_INPUTS:
+                    visualizer.input_weights = not visualizer.input_weights
+                elif event.key == Events.KEY_TOGGLE_OUTPUTS:
+                    visualizer.output_weights = not visualizer.output_weights
+                elif event.key == Events.KEY_INCREASE_THRESHOLD:
                     visualizer.draw_threshold = round(visualizer.draw_threshold + 0.05, 2)
-                if event.key == pygame.K_MINUS:
+                elif event.key == Events.KEY_DECREASE_THRESHOLD:
                     visualizer.draw_threshold = round(visualizer.draw_threshold - 0.05, 2)
-                if event.key == pygame.K_SPACE:
+                elif event.key == Events.KEY_PAUSE_VISUALIZATION:
+                    # TODO refine this so that this is not spinning forever
                     pause = True
                     pygame.event.clear(KEYDOWN)
                     while pause:
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN:
-                                if event.key == pygame.K_c:
+                                if event.key == Events.KEY_CONTINUE_VISUALIZATION:
                                     pause = False
 
         except AttributeError:
