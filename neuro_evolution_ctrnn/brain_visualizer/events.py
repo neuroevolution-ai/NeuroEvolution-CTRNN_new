@@ -3,7 +3,6 @@ import math
 from typing import Tuple
 
 import pygame
-from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONUP, MOUSEBUTTONDOWN, KEYDOWN
 
 from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
@@ -26,23 +25,24 @@ class Events:
     KEY_DECREASE_THRESHOLD = pygame.K_MINUS
     KEY_PAUSE_VISUALIZATION = pygame.K_SPACE
     KEY_CONTINUE_VISUALIZATION = pygame.K_c
+    KEY_DISPLAY_KEYMAP = pygame.K_i
 
     @staticmethod
     def handle_events(visualizer: "brain_visualizer.BrainVisualizer", event: pygame.event.EventType,
                       input_positions_dict: dict, output_positions_dict: dict) -> None:
         try:
             # TODO maybe instead of if-if-... make it to if-elif-elif-... so only one action is processed
-            if event.type == QUIT:
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == MOUSEMOTION:
+            elif event.type == pygame.MOUSEMOTION:
                 Events.draw_neuron_number(visualizer, input_positions_dict, visualizer.graph_positions_dict,
                                           output_positions_dict,
                                           pygame.mouse.get_pos())
-            elif event.type == MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 visualizer.clicked_neuron = Events.get_neuron_on_click(pygame.mouse.get_pos(),
                                                                        visualizer.graph_positions_dict)
-            elif event.type == MOUSEBUTTONUP and isinstance(visualizer.clicked_neuron, int):
+            elif event.type == pygame.MOUSEBUTTONUP and isinstance(visualizer.clicked_neuron, int):
                 Events.change_neuron_pos(visualizer.clicked_neuron, pygame.mouse.get_pos(),
                                          visualizer.graph_positions_dict)
             elif event.type == pygame.KEYDOWN:
@@ -78,12 +78,17 @@ class Events:
                 elif event.key == Events.KEY_PAUSE_VISUALIZATION:
                     # TODO refine this so that this is not spinning forever
                     pause = True
-                    pygame.event.clear(KEYDOWN)
+                    pygame.event.clear(pygame.KEYDOWN)
                     while pause:
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN:
                                 if event.key == Events.KEY_CONTINUE_VISUALIZATION:
                                     pause = False
+                elif event.key == Events.KEY_DISPLAY_KEYMAP:
+                    pygame.event.clear(pygame.KEYDOWN)
+                    pygame.draw.rect(visualizer.screen, Colors.dark_grey, (0, visualizer.info_box_height))
+                    # TODO render text here, all keys and their descriptions, then when key is pressed again, remove rect
+                    # TODO and continue
 
         except AttributeError:
             print("Failure on Pygame-Event")
