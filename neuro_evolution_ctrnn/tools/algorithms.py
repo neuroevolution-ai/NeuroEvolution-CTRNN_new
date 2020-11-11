@@ -74,7 +74,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     population = toolbox.population
     halloffame = toolbox.hof
 
-    for gen in range(toolbox.initial_generation, ngen + 1):
+    for gen in range(toolbox.initial_generation, ngen):
         record_individuals(toolbox, population)
         extra = []
         if halloffame.items:
@@ -137,7 +137,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         # set_random_seeds(toolbox.initial_seed, env=None)
         pass
 
-    for gen in range(toolbox.initial_generation, ngen + 1):
+    for gen in range(toolbox.initial_generation, ngen):
         population: Collection = toolbox.generate()
 
         for ind in population:
