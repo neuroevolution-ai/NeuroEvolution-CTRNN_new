@@ -43,7 +43,7 @@ class EpisodeRunner:
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
                      neuron_vis=False, slow_down=0, rounds=None):
         env = self._get_env(record, record_force)
-        set_random_seeds(seed, env)
+        set_random_seeds(0, env)
         fitness_total = 0
         steps_total = 0
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
@@ -51,6 +51,7 @@ class EpisodeRunner:
         for i in range(number_of_rounds):
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
+            env.seed(0)
             ob = env.reset()
             done = False
             t = 0
@@ -68,7 +69,7 @@ class EpisodeRunner:
             while not done:
                 brain_output = brain.step(ob)
                 action = output_to_action(brain_output, self.output_space)
-                ob, rew, done, info = env.step(action)
+                ob, rew, done, info = env.step(np.zeros(8))
                 t += 1
                 fitness_current += rew
 

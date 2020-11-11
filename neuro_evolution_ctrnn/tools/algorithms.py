@@ -137,7 +137,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         # set_random_seeds(toolbox.initial_seed, env=None)
         pass
 
-    for gen in range(toolbox.initial_generation, ngen + 1):
+    for gen in range(toolbox.initial_generation, ngen):
         population: Collection = toolbox.generate()
 
         for ind in population:

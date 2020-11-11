@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import time
 from deap import tools
 import logging
@@ -116,6 +117,9 @@ class Experiment(object):
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,
                                             config_raw=self.config.raw_dict)
+
+        if os.path.exists("episode_times.txt"):
+            os.remove("episode_times.txt")
 
     def run(self):
         self.result_handler.check_path()

@@ -72,7 +72,8 @@ class DaskHandler:
         # And because lower the thread-count from the default, we must increase the number of workers
         cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
                                     silence_logs=worker_log_level,
-                                    n_workers=multiprocessing.cpu_count(),
+                                    #n_workers=multiprocessing.cpu_count(),
+                                    n_workers=7,
                                     interface='lo')
         cls._client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')

@@ -6,6 +6,7 @@ import logging
 import math
 from brains.i_brain import IBrain
 from scipy import sparse
+import time
 
 
 # noinspection PyPep8Naming
@@ -100,48 +101,61 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
-        if self.config.normalize_input:
-            ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
+        W = self.W.toarray()
+        V = self.V.toarray()
+        T = self.T.toarray()
 
-        if isinstance(self.input_space, Discrete):
-            ob_new = np.zeros(self.input_space.n)
-            ob_new[ob] = 1
-            ob = ob_new
-        else:
-            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
-            ob = ob.flatten()
+        time_measurement_s = time.time()
+        # if self.config.normalize_input:
+        #     ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
+        #
+        # if isinstance(self.input_space, Discrete):
+        #     ob_new = np.zeros(self.input_space.n)
+        #     ob_new[ob] = 1
+        #     ob = ob_new
+        # else:
+        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+        #ob = ob.flatten()
 
-        if self.config.use_bias:
-            ob = np.r_[ob, [1]]
+        # if self.config.use_bias:
+        #     ob = np.r_[ob, [1]]
 
         # Differential equation
-        if self.config.neuron_activation == "relu":
-            y_ = np.maximum(0, self.y)
-        elif self.config.neuron_activation == "tanh":
-            y_ = np.tanh(self.y)
-        elif self.config.neuron_activation == "learned":
-            # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-            raise NotImplementedError("learned activations are not yet implemented")
-        else:
-            raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+        # if self.config.neuron_activation == "relu":
+        #     y_ = np.maximum(0, self.y)
+        # elif self.config.neuron_activation == "tanh":
+        #y_ = np.tanh(self.y)
+        # elif self.config.neuron_activation == "learned":
+        #     # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
+        #     raise NotImplementedError("learned activations are not yet implemented")
+        # else:
+        #     raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
 
-        if self.config.neuron_activation_inplace:
-            self.y = y_  # type:ignore
-        dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
+        # if self.config.neuron_activation_inplace:
+        #     self.y = y_  # type:ignore
+        #dydt: np.ndarray = W.dot(y_) + V.dot(ob)
+        dydt: np.ndarray = np.dot(W, np.tanh(self.y)) + np.dot(V, ob)
+
 
         # Euler forward discretization
         self.y = self.y + self.delta_t * dydt
 
-        if self.config.parameter_perturbations:
-            self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
+        #if self.config.parameter_perturbations:
+            #self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
 
-        if self.config.optimize_state_boundaries == "legacy":
-            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
-                self.y = np.clip(self.y, y_min, y_max)
-        else:
-            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+        # if self.config.optimize_state_boundaries == "legacy":
+        # for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
+        #     self.y = np.clip(self.y, y_min, y_max)
+        self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
+        #o: Union[np.ndarray, np.generic] = np.tanh(T.T.dot(self.y))
+        o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, T))
+
+        time_measurement_e = time.time() - time_measurement_s
+
+        with open("episode_times.txt", "a") as file:
+            file.write(str(time_measurement_e) + "\n")
+
         return o
 
     @classmethod
