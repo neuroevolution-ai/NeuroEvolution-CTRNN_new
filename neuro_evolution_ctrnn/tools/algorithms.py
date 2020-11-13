@@ -74,7 +74,7 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     population = toolbox.population
     halloffame = toolbox.hof
 
-    for gen in range(toolbox.initial_generation, ngen + 1):
+    for gen in range(toolbox.initial_generation, ngen):
         record_individuals(toolbox, population)
         extra = []
         if halloffame.items:
