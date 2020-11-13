@@ -8,6 +8,8 @@ from deap import tools
 from bz2 import compress, decompress
 from itertools import tee
 import copy
+import sys
+import multiprocessing as mp
 
 
 def evaluate_candidates(candidates, toolbox):
@@ -28,7 +30,10 @@ def evaluate_candidates(candidates, toolbox):
     brain_genomes = toolbox.strip_strategy_from_population(candidates)
     brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
     nevals = len(brain_genomes) + len(brain_genomes_recorded)
-    results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
+    #results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
+
+    with mp.Pool(processes=4) as pool:
+        results = pool.starmap(toolbox.evaluate, zip(brain_genomes, seeds_for_evaluation))
 
     if toolbox.conf.novelty:
         results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))

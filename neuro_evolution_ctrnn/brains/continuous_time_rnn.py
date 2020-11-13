@@ -43,26 +43,43 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
         self.delta_t = delta_t
 
-        # insert weights-values into weight-masks to receive weight-matrices
-        # explanation here: https://stackoverflow.com/a/61968524/5132456
-        V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
-        W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
-        T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
-        self.V = sparse.csr_matrix(self.v_mask, dtype=float)
-        self.W = sparse.csr_matrix(self.w_mask, dtype=float)
-        self.T = sparse.csr_matrix(self.t_mask, dtype=float)
-        self.V.data[:] = [element for element in individual[0:V_size]]
-        self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
-        self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+        # # insert weights-values into weight-masks to receive weight-matrices
+        # # explanation here: https://stackoverflow.com/a/61968524/5132456
+        # V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
+        # W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
+        # T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
+        # self.V = sparse.csr_matrix(self.v_mask, dtype=float)
+        # self.W = sparse.csr_matrix(self.w_mask, dtype=float)
+        # self.T = sparse.csr_matrix(self.t_mask, dtype=float)
+        # self.V.data[:] = [element for element in individual[0:V_size]]
+        # self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
+        # self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
-        if self.config.v_mask == 'learned':
-            self.V = self.learned_sparse(self.V, self.config.v_mask_param)
+        input_size = self._size_from_space(input_space)
+        output_size = self._size_from_space(output_space)
+        number_neurons = self.config.number_neurons
 
-        if self.config.w_mask == 'learned':
-            self.W = self.learned_sparse(self.W, self.config.w_mask_param)
+        V_size = input_size * number_neurons
+        W_size = number_neurons * number_neurons
+        T_size = number_neurons * output_size
 
-        if self.config.t_mask == 'learned':
-            self.T = self.learned_sparse(self.T, self.config.t_mask_param)
+        # Get weight matrizes of current individual
+        self.V = np.array([[element] for element in individual[0:V_size]])
+        self.W = np.array([[element] for element in individual[V_size:V_size + W_size]])
+        self.T = np.array([[element] for element in individual[V_size + W_size:V_size + W_size + T_size]])
+
+        self.V = self.V.reshape([number_neurons, input_size])
+        self.W = self.W.reshape([number_neurons, number_neurons])
+        self.T = self.T.reshape([number_neurons, output_size])
+
+        # if self.config.v_mask == 'learned':
+        #     self.V = self.learned_sparse(self.V, self.config.v_mask_param)
+        #
+        # if self.config.w_mask == 'learned':
+        #     self.W = self.learned_sparse(self.W, self.config.w_mask_param)
+        #
+        # if self.config.t_mask == 'learned':
+        #     self.T = self.learned_sparse(self.T, self.config.t_mask_param)
 
         index: int = V_size + W_size + T_size
 
@@ -98,6 +115,10 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             for j in range(N_n):
                 if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
                     self.W[j, j] = -abs(self.W[j, j])
+
+        # self.W = self.W.toarray()
+        # self.V = self.V.toarray()
+        # self.T = self.T.toarray()
 
     # def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
     #     time_measurement_s = time.time()
@@ -153,11 +174,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
-        W = self.W.toarray()
-        V = self.V.toarray()
-        T = self.T.toarray()
 
-        time_measurement_s = time.time()
+
+
         # if self.config.normalize_input:
         #     ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
         #
@@ -176,7 +195,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # if self.config.neuron_activation == "relu":
         #     y_ = np.maximum(0, self.y)
         # elif self.config.neuron_activation == "tanh":
-        y_ = np.tanh(self.y)
+        #y_ = np.tanh(self.y)
         # elif self.config.neuron_activation == "learned":
         #     # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
         #     raise NotImplementedError("learned activations are not yet implemented")
@@ -185,12 +204,12 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
         # if self.config.neuron_activation_inplace:
         #     self.y = y_  # type:ignore
-        dydt: np.ndarray = W.dot(y_) + V.dot(ob)
+        #dydt: np.ndarray = W.dot(np.tanh(self.y)) + V.dot(ob)
         #dydt: np.ndarray = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
 
 
         # Euler forward discretization
-        self.y = self.y + self.delta_t * dydt
+        #self.y = self.y + self.delta_t * dydt
 
         #if self.config.parameter_perturbations:
             #self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
@@ -198,10 +217,25 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # if self.config.optimize_state_boundaries == "legacy":
         # for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
         #     self.y = np.clip(self.y, y_min, y_max)
+        #self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+
+        #o: Union[np.ndarray, np.generic] = np.tanh(T.T.dot(self.y))
+        #o: Union[np.ndarray, np.generic] = np.tanh(self.y, T)
+        #o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, T))
+        time_measurement_s = time.time()
+
+        #u = ob[:, np.newaxis]
+
+        dydt = np.dot(self.W, np.tanh(self.y)) + np.dot(self.V, ob)
+
+        # Euler forward discretization
+        self.y = self.y + self.delta_t * dydt
+
+        # Clip y to state boundaries
         self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(T.T.dot(self.y))
-        #o: Union[np.ndarray, np.generic] = np.tanh(np.dot(self.y, T))
+        # Calculate outputs
+        o = np.tanh(np.dot(self.y.T, self.T))
 
         time_measurement_e = time.time() - time_measurement_s
 
@@ -212,7 +246,11 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     @classmethod
     def get_individual_size(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
+        #individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
+        input_size = cls._size_from_space(input_space)
+        output_size = cls._size_from_space(output_space)
+        number_neurons = config.number_neurons
+        individual_size = input_size * number_neurons + number_neurons * number_neurons + number_neurons * output_size
         if config.optimize_y0:
             individual_size += config.number_neurons
 

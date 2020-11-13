@@ -125,9 +125,9 @@ class Experiment(object):
         self.result_handler.check_path()
         start_time = time.time()
 
-        DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-        if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
+        #DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
+        #if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
+            #DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
@@ -137,5 +137,5 @@ class Experiment(object):
             output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
-        DaskHandler.stop_dask()
+        #DaskHandler.stop_dask()
         print("Done")
