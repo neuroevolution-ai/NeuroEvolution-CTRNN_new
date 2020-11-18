@@ -1,8 +1,11 @@
-import numpy as np
-import time
-from deap import tools
 import logging
+import multiprocessing as mp
+import os
+import time
 from typing import Type
+
+import numpy as np
+from deap import tools
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
@@ -18,6 +21,7 @@ from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import ExperimentCfg
 from tools.dask_handler import DaskHandler
+from tools.mp_handler import MPHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
 
@@ -27,10 +31,13 @@ from brains.CNN_CTRNN import CnnCtrnn
 
 class Experiment(object):
 
-    def __init__(self, configuration: ExperimentCfg, result_path, from_checkpoint=None):
+    def __init__(self, configuration: ExperimentCfg, result_path, parallel_framework,
+                 number_of_workers=os.cpu_count(), from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
+        self.parallel_framework = parallel_framework
+        self.number_of_workers: int = number_of_workers
         self.brain_class: Type[IBrain]
         if self.config.brain.type == "CTRNN":
             self.brain_class = ContinuousTimeRNN
@@ -100,12 +107,31 @@ class Experiment(object):
         stats.register("avg", np.mean)
         stats.register("std", np.std)
         stats.register("max", np.max)
-        if self.config.use_worker_processes:
-            map_func = DaskHandler.dask_map
-        else:
+
+        if self.number_of_workers <= 1:
+            logging.warning("Continuing with 1 worker")
+            self.number_of_workers = 1
             map_func = map
+        else:
+            system_cpu_count = os.cpu_count()
+            if self.number_of_workers > system_cpu_count:
+                logging.warning(
+                    """You specified {} workers but your system supports only {} parallel processes. Continuing with """
+                    """{} workers.""".format(self.number_of_workers, system_cpu_count, system_cpu_count))
+                self.number_of_workers = os.cpu_count()
+
             if self.config.episode_runner.reuse_env:
+                # TODO should this be renamed to multiprocessing instead of multithreading?
                 logging.warning("Cannot reuse an environment on workers without multithreading.")
+
+            if self.parallel_framework == "dask":
+                map_func = DaskHandler.dask_map
+                DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
+                if self.config.episode_runner.reuse_env:
+                    DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
+            else:
+                self.mp_handler = MPHandler(self.number_of_workers)
+                map_func = self.mp_handler.map
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
@@ -117,13 +143,16 @@ class Experiment(object):
                                             neural_network_type=self.config.brain.type,
                                             config_raw=self.config.raw_dict)
 
+    def cleanup(self):
+        if self.number_of_workers > 1:
+            if self.parallel_framework == "dask":
+                DaskHandler.stop_dask()
+            else:
+                self.mp_handler.cleanup()
+
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-
-        DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-        if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
@@ -133,5 +162,5 @@ class Experiment(object):
             output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
-        DaskHandler.stop_dask()
+        self.cleanup()
         print("Done")

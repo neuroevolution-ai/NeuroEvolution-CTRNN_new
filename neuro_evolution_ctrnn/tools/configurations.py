@@ -151,4 +151,4 @@ class ExperimentCfg:
     episode_runner: EpisodeRunnerCfg
     optimizer: IOptimizerCfg
     raw_dict: dict
-    use_worker_processes: bool
+    use_worker_processes: bool  # TODO delete this as this is now done through CLI

@@ -12,15 +12,20 @@ logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 
 def parse_args(args=None):
-    parser = argparse.ArgumentParser(description='train CTRNN')
-    parser.add_argument('--from-checkpoint', metavar='dir', type=str,
-                        help='continues training from a checkpoint', default=None)
-    parser.add_argument('--configuration', metavar='dir', type=str,
-                        help='use an alternative configuration file', default='configurations/default.json')
-    parser.add_argument('--result-path', metavar='dir', type=os.path.abspath,
-                        help='use an alternative path for simulation results',
-                        default=os.path.join('..', 'CTRNN_Simulation_Results', 'data',
-                                             datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
+    parser = argparse.ArgumentParser(description="Train CTRNN")
+    parser.add_argument("--from-checkpoint", metavar="dir", type=str,
+                        help="Continues training from a checkpoint", default=None)
+    parser.add_argument("--configuration", metavar="dir", type=str,
+                        help="Use an alternative configuration file", default="configurations/default.json")
+    parser.add_argument("--result-path", metavar="dir", type=os.path.abspath,
+                        help="Use an alternative path for simulation results",
+                        default=os.path.join("..", "CTRNN_Simulation_Results", "data",
+                                             datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
+    parser.add_argument("-p", "--parallel-framework", metavar="dask/mp", type=str, default="mp",
+                        help="Choose the framework for the parallel processing")
+    # '\b' disables metavar, not needed for a boolean flag
+    parser.add_argument("-n", "--num-workers", metavar="int", type=int, default=os.cpu_count(),
+                        help="Specify the amount of workers for the computation")
 
     return parser.parse_args(args)
 
@@ -34,7 +39,8 @@ if __name__ == "__main__":  # pragma: no cover
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     args = parse_args()
     experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
-                            from_checkpoint=args.from_checkpoint)
+                            from_checkpoint=args.from_checkpoint, parallel_framework=args.parallel_framework,
+                            number_of_workers=args.num_workers)
 
     os.mkdir(args.result_path)
     experiment.run()
