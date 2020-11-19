@@ -115,13 +115,11 @@ class Experiment(object):
                 "1.".format(self.number_of_workers, system_cpu_count))
 
         if self.number_of_workers == 1:
-            self.number_of_workers = 1
             map_func = map
-        else:
             if self.config.episode_runner.reuse_env:
                 # TODO should this be renamed to multiprocessing instead of multithreading?
                 logging.warning("Cannot reuse an environment on workers without multithreading.")
-
+        else:
             if self.parallel_framework == "dask":
                 map_func = DaskHandler.dask_map
                 DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)

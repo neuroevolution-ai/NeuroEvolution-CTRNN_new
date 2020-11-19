@@ -17,8 +17,8 @@ get_current_worker = get_worker
 class _CreatorPlugin(WorkerPlugin):
     """Initiated global states for every worker."""
 
-    def __init__(self, class_creator_callbacm: Callable, brain_class: Union[ContinuousTimeRNN]):
-        self.callback = class_creator_callbacm
+    def __init__(self, class_creator_callback: Callable, brain_class: Union[ContinuousTimeRNN]):
+        self.callback = class_creator_callback
 
         # Get Class-Variable from main thread to re-initialize them on worker
         self.brain_class = brain_class
