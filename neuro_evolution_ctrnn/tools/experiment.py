@@ -108,18 +108,16 @@ class Experiment(object):
         stats.register("std", np.std)
         stats.register("max", np.max)
 
-        if self.number_of_workers <= 1:
-            logging.warning("Continuing with 1 worker")
+        system_cpu_count = os.cpu_count()
+        if self.number_of_workers <= 0 or self.number_of_workers > system_cpu_count:
+            raise RuntimeError(
+                "{} is an incorrect number of processes. Your system only supports {} workers and it must be at least "
+                "1.".format(self.number_of_workers, system_cpu_count))
+
+        if self.number_of_workers == 1:
             self.number_of_workers = 1
             map_func = map
         else:
-            system_cpu_count = os.cpu_count()
-            if self.number_of_workers > system_cpu_count:
-                logging.warning(
-                    """You specified {} workers but your system supports only {} parallel processes. Continuing with """
-                    """{} workers.""".format(self.number_of_workers, system_cpu_count, system_cpu_count))
-                self.number_of_workers = os.cpu_count()
-
             if self.config.episode_runner.reuse_env:
                 # TODO should this be renamed to multiprocessing instead of multithreading?
                 logging.warning("Cannot reuse an environment on workers without multithreading.")
