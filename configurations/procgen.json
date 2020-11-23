@@ -26,7 +26,15 @@
       "type": "CNN",
       "normalize_input": false,
       "normalize_input_target": 0.0,
-      "use_bias": false
+      "use_bias": false,
+      "conv_size1": 3,
+      "conv_feat1": 5,
+      "maxp_size1": 4,
+      "maxp_stride1": 2,
+      "conv_size2": 3,
+      "conv_feat2": 5,
+      "maxp_size2": 4,
+      "maxp_stride2": 1
     },
     "ctrnn_conf": {
       "type": "CTRNN",

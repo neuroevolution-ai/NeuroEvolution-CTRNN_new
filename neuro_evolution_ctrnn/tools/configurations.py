@@ -44,16 +44,16 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
-    number_fitness_runs: int
     reuse_env: bool
-    max_steps_per_run: int
-    max_steps_penalty: int
-    keep_env_seed_fixed_during_generation: bool
-    use_autoencoder: bool
+    keep_env_seed_fixed_during_generation: bool = True
     novelty: Optional[NoveltyCfg]
     environment_attributes: Optional[IEnvAttributesCfg] = None
+    number_fitness_runs: int = 1
+    max_steps_per_run: int = 0
+    max_steps_penalty: int = 0
+    use_autoencoder: bool = False
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -63,17 +63,17 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_state_boundaries: str
     set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
-    clipping_range_min: float
-    clipping_range_max: float
-    v_mask: str
-    v_mask_param: float
-    w_mask: str
-    w_mask_param: float
-    t_mask: str
-    t_mask_param: float
-    parameter_perturbations: float
     neuron_activation: str
-    neuron_activation_inplace: bool
+    neuron_activation_inplace: bool = False
+    parameter_perturbations: float = 0.0
+    v_mask: str = 'dense'
+    v_mask_param: float = 0.0
+    w_mask: str = 'dense'
+    w_mask_param: float = 0.0
+    t_mask: str = 'dense'
+    t_mask_param: float = 0.0
+    clipping_range_min: float = 0
+    clipping_range_max: float = 0
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -117,25 +117,25 @@ class ConcatenatedBrainLSTMCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IOptimizerCfg(abc.ABC):
     type: str
-    checkpoint_frequency: int
-    hof_size: int
     novelty: Optional[NoveltyCfg]
-    efficiency_weight: float
-    fix_seed_for_generation: bool
+    efficiency_weight: float = 0.0
+    fix_seed_for_generation: bool = True
+    checkpoint_frequency: int = 0
+    hof_size: int = 5
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
-    tournsize: int
     mu: int
     lambda_: int
     mutpb: float
-    extra_from_hof: int
-    strategy_parameter_per_gene: bool
+    tournsize: int = 0
+    extra_from_hof: int = 0
+    strategy_parameter_per_gene: bool = False
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
@@ -145,10 +145,10 @@ class OptimizerCmaEsCfg(IOptimizerCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ExperimentCfg:
     environment: str
-    random_seed: int
     number_generations: int
     brain: IBrainCfg
     episode_runner: EpisodeRunnerCfg
     optimizer: IOptimizerCfg
-    raw_dict: dict
     use_worker_processes: bool
+    random_seed: int = -1
+    raw_dict: dict = None  # This attribute is for internal use only

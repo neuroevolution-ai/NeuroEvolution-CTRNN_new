@@ -24,7 +24,7 @@ class TestExperiment:
         # note; this value depends on the machine
         accepted_results = [-99.11361202453168,  # result on bjoern's notebook
                             -98.95448135483025,  # result on bjoern's desktop
-                            -92.24354731262838   # result on Patrick's notebook
+                            -92.24354731262838  # result on Patrick's notebook
                             ]
         assert experiment.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
 
@@ -40,6 +40,12 @@ class TestExperiment:
         for conf_name in os.listdir(example_conf_path):
             print("next conf: " + conf_name)
             path = os.path.join(example_conf_path, conf_name)
+            if os.path.isdir(path):
+                print("skipping, because directory")
+                continue
+            if conf_name == 'temp.json':
+                print("skipping, because temp file")
+                continue
 
             if "design" in conf_name:
                 with open(path, "r") as read_file:
@@ -47,6 +53,11 @@ class TestExperiment:
                 c = config_from_dict(sample_from_design_space(design_space))
             else:
                 c = config_from_file(path)
+
+            if c.environment in ['ReacherMemory-v0']:
+                print("skipping, because Mujoco")
+                continue
+
 
             Experiment(configuration=c,
                        result_path=tmpdir,

@@ -115,8 +115,12 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
 
 
     if config_dict["environment"].endswith("NoFrameskip-v4") or config_dict["environment"].startswith('Qbert'):
-        config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg(
-            **config_dict["episode_runner"]["environment_attributes"])
+        if hasattr(config_dict["episode_runner"], 'environment_attributes'):
+            config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg(
+                **config_dict["episode_runner"]["environment_attributes"])
+        else:
+            # try to init with default values only
+            config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg()
 
     # turn json into nested class so python's type-hinting can do its magic
     config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))

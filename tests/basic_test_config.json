@@ -1,7 +1,7 @@
 {
   "environment": "BipedalWalker-v3",
   "random_seed": 123,
-  "number_generations": 2,
+  "number_generations": 3,
   "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
@@ -40,6 +40,7 @@
     "number_fitness_runs": 1,
     "reuse_env": false,
     "max_steps_per_run": 0,
-    "max_steps_penalty": 0
+    "max_steps_penalty": 0,
+    "use_autoencoder": false
   }
 }
