@@ -41,7 +41,7 @@ class EpisodeRunner:
         return env
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, rounds=None):
+                     neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None, neuron_vis_height=None):
         env = self._get_env(record, record_force)
         set_random_seeds(seed, env)
         fitness_total = 0
@@ -60,8 +60,10 @@ class EpisodeRunner:
 
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
-                                                                       env_id=self.env_id, width=1800, height=900,
-                                                                       color_clipping_range=(255, 2.5, 2.5))
+                                                                       env_id=self.env_id, initial_observation=ob,
+                                                                       width=neuron_vis_width, height=neuron_vis_height,
+                                                                       color_clipping_range=(255, 2.5, 2.5),
+                                                                       slow_down=slow_down)
             else:
                 brain_vis = None
 

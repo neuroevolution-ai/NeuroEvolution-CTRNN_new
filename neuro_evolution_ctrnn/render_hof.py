@@ -23,6 +23,8 @@ class RenderArgs(Tap):
     hof: int = 1  # how many members of hall-of-fame should be shown?
     rounds: int = 1  # how many episodes should be shown per HOF-member?
     slow_down: int = 0  # how many milliseconds should be pause between time steps?
+    neuron_vis_width: int = 1600  # how wide should the neuron_vis window be?
+    neuron_vis_height: int = 900  # how high should the neuron_vis window be?
 
 
 args = RenderArgs().parse_args()
@@ -34,7 +36,7 @@ except:
     with open(os.path.join(args.dir, "Log.json"), "r") as read_file_log:
         log = json.load(read_file_log)
 with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
-    config = config_from_dict( json.load(read_file))
+    config = config_from_dict(json.load(read_file))
 
 experiment = Experiment(configuration=config,
                         result_path="/tmp/not-used",
@@ -76,4 +78,5 @@ for i, individual in enumerate(individuals):
         record = None
 
     experiment.ep_runner.eval_fitness(individual, config.random_seed, render, record, record_force,
-                                      BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds)
+                                      BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds,
+                                      args.neuron_vis_width, args.neuron_vis_height)
