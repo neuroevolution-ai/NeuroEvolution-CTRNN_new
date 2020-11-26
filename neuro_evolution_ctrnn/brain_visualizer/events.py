@@ -139,13 +139,17 @@ class Events:
         pygame.display.flip()
 
     @staticmethod
+    def quit_game():
+        pygame.quit()
+        sys.exit()
+
+    @staticmethod
     def handle_events(visualizer: "brain_visualizer.BrainVisualizer", event: pygame.event.EventType,
                       input_positions_dict: dict, output_positions_dict: dict) -> None:
         try:
             # TODO maybe instead of if-if-... make it to if-elif-elif-... so only one action is processed
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                Events.quit_game()
             elif event.type == pygame.MOUSEMOTION:
                 Events.draw_neuron_number(visualizer, input_positions_dict, visualizer.graph_positions_dict,
                                           output_positions_dict,
@@ -158,8 +162,7 @@ class Events:
                                          visualizer.graph_positions_dict)
             elif event.type == pygame.KEYDOWN:
                 if event.key == Events.KEY_QUIT:
-                    pygame.quit()
-                    sys.exit()
+                    Events.quit_game()
                 elif event.key == Events.KEY_DECREASE_WEIGHT_VAL:
                     visualizer.weight_val = visualizer.weight_val - 1
                 elif event.key == Events.KEY_INCREASE_WEIGHT_VAL:
@@ -204,6 +207,9 @@ class Events:
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN and event.key == Events.KEY_DISPLAY_KEYMAP:
                                 pause = False
+                            elif ((event.type == pygame.KEYDOWN and event.key == Events.KEY_QUIT)
+                                  or event.type == pygame.QUIT):
+                                Events.quit_game()
 
         except AttributeError:
             print("Failure on Pygame-Event")
