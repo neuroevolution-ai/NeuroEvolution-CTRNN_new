@@ -2,7 +2,6 @@
   "environment": ["BipedalWalker-v3", "CartPole-v0"],
   "random_seed": [123, 456],
   "number_generations": [5, 6, 7],
-  "use_worker_processes": true,
   "optimizer": [
     {
       "type": "CMA_ES",

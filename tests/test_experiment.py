@@ -14,7 +14,8 @@ class TestExperiment:
     def test_run(self, tmpdir, config):
         experiment = Experiment(configuration=config,
                                 result_path=tmpdir,
-                                from_checkpoint=None)
+                                from_checkpoint=None,
+                                parallel_framework="mp")
         experiment.run()
 
         # update the expected results when it changed intentionally
@@ -34,7 +35,8 @@ class TestExperiment:
         config = evolve(config, environment='Qbert-ram-v0')
         Experiment(configuration=config,
                    result_path=tmpdir,
-                   from_checkpoint=None)
+                   from_checkpoint=None,
+                   parallel_framework="mp")
 
     def test_init_from_example_configs(self, tmpdir):
         current_directory = os.path.dirname(os.path.realpath(__file__))
@@ -62,4 +64,5 @@ class TestExperiment:
 
             Experiment(configuration=c,
                        result_path=tmpdir,
-                       from_checkpoint=None)
+                       from_checkpoint=None,
+                       parallel_framework="mp")

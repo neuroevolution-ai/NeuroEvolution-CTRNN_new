@@ -2,7 +2,6 @@
   "environment": "CartPole-v0",
   "random_seed": 123,
   "number_generations": 100,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 5,

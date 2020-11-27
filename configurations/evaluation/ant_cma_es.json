@@ -2,7 +2,6 @@
   "environment": "Ant-v2",
   "random_seed": 0,
   "number_generations": 1000,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 1000,
