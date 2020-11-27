@@ -123,8 +123,6 @@ class Experiment(object):
             if self.parallel_framework == "dask":
                 map_func = DaskHandler.dask_map
                 DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-                if self.config.episode_runner.reuse_env:
-                    DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
             else:
                 self.mp_handler = MPHandler(self.number_of_workers)
                 map_func = self.mp_handler.map

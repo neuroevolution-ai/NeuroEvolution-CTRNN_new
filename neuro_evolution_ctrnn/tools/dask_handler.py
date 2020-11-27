@@ -1,17 +1,12 @@
-from dask.distributed import Client, Worker, WorkerPlugin, LocalCluster
 from typing import Optional
 import logging
-import gym
-from dask.distributed import get_worker
 from typing import Callable, Union
-from brains.continuous_time_rnn import ContinuousTimeRNN
 import multiprocessing
 
-from tools.configurations import EpisodeRunnerCfg
-from tools.env_handler import EnvHandler
+from dask.distributed import Client, Worker, WorkerPlugin, LocalCluster
+from dask.distributed import get_worker
 
-# This is used by the episode running to get the current worker's env
-get_current_worker = get_worker
+from brains.continuous_time_rnn import ContinuousTimeRNN
 
 
 class _CreatorPlugin(WorkerPlugin):
@@ -28,28 +23,6 @@ class _CreatorPlugin(WorkerPlugin):
         logging.info("setting up classes for worker: " + str(worker))
         self.callback()
         self.brain_class.set_class_state(**self.brain_class_state)
-
-    def teardown(self, worker: Worker):
-        pass
-
-    def transition(self, key: str, start: str, finish: str, **kwargs):
-        # called whenever worker gets new task, i think
-        pass
-
-
-class _EnvPlugin(WorkerPlugin):
-    """
-    This WorkerPlugin initialized a gym-object and binds it to the worker whenever a new worker gets started
-    """
-
-    def __init__(self, env_id, config: EpisodeRunnerCfg):
-        self.env_id = env_id
-        self.env_handler = EnvHandler(config)
-
-    def setup(self, worker: Worker):
-        # called exactly once for every worker before it executes the first task
-        logging.info("creating new env for worker: " + str(worker))
-        worker.env = self.env_handler.make_env(self.env_id)
 
     def teardown(self, worker: Worker):
         pass
@@ -77,12 +50,6 @@ class DaskHandler:
         cls._client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')
         logging.info("dask-dashboard available at port: " + str(cls._client.scheduler_info()['services']['dashboard']))
-
-    @classmethod
-    def init_workers_with_env(cls, env_id: str, config: EpisodeRunnerCfg):
-        if not cls._client:
-            raise RuntimeError("Client not initialised. Please call init_dask before calling this method. ")
-        cls._client.register_worker_plugin(_EnvPlugin(env_id, config), name='env-plugin')
 
     @classmethod
     def stop_dask(cls):
