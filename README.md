@@ -89,7 +89,7 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
     
     (Assuming that you cloned the repository to the `PycharmProjects` folder.)
    
-   Mypy can now be started by running the configuration.
+    Mypy can now be started by running the configuration.
    
   * Another way can be to use PyCharm plugins
       * https://plugins.jetbrains.com/plugin/11086-mypy
@@ -97,6 +97,10 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
       * https://plugins.jetbrains.com/plugin/13348-mypy-official-
         * Config parameter `Path suffix` has to be set to the `bin` folder of the virtual environment
         * Run command: `dmypy run . -- --follow-imports skip`
+
+  * For running `pytest` add a `Python tests -> pytest` configuration. Select `Custom` as the target.
+
+    Write `tests` in the `Additional Arguments` field. Then simply select the configuration and run it.
 
 ### Generate statistics 
 

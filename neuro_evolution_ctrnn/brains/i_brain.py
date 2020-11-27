@@ -11,7 +11,10 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
-        pass
+        # todo: remove these default assignments from derived classes
+        self.input_space = input_space
+        self.output_space = output_space
+        self.config = config
 
     @abc.abstractmethod
     def step(self, ob: np.ndarray):
@@ -32,6 +35,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @staticmethod
     def _normalize_input(ob, input_space, normalize_input_target):
+        # todo: remove this
         for idx, item in enumerate(ob):
             if isinstance(input_space, Box):
                 if input_space.bounded_below[idx] and input_space.bounded_above[idx]:
@@ -48,8 +52,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         return ((x - low) / (high - low))
 
     @staticmethod
-    def _scale_observation(ob, input_space:Space, target:float):
-
+    def _scale_observation(ob, input_space: Space, target: float):
+        # todo: remove this
         if isinstance(input_space, Box):
             # note: some spaces from some envs don't define input_space.bounded_below properly so we treat
             # very high bounds as unbounded, too
@@ -59,7 +63,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
             # scaled is now between 0 and 1
             scaled = IBrain._normalize(ob[mask], input_space.low[mask],
-                                     input_space.high[mask])
+                                       input_space.high[mask])
 
             # ob[mask] is now betwen -target and +target
             ob[mask] = (scaled - 0.5) * (2 * target)
@@ -84,3 +88,10 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     @classmethod
     def set_masks_globally(cls, config: ConfigClass, input_space: Space, output_space: Space):
         pass
+
+    def discrete_to_vector(self, ob):
+        # todo: use this function in all derived classes
+        #  and maybe find a even cleaner way to do this without violating DRY
+        ob_new = np.zeros(self.input_space.n)
+        ob_new[ob] = 1
+        return ob_new

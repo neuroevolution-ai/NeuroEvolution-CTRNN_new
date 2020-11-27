@@ -2,6 +2,8 @@ pytest
 scoop
 pybullet
 gym[atari]
+gym[box2d]
+box2d-py
 # gym[box2d]
 deap
 matplotlib

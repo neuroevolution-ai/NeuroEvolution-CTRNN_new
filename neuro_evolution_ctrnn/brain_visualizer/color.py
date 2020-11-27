@@ -14,6 +14,14 @@ class Colors:
     blue = (7, 49, 129)
     light_orange = (255, 181, 118)
     orange = (255, 142, 46)
+    pink = (255, 192, 203)
+    aqua = (0, 255, 255, 10)
+    dark_green = (0, 51, 0)
+    less_dark_green = (0, 102, 0)
+    dark_red = (128, 0, 0)
+    less_dark_red = (153, 51, 51)
+    dark_blue = (0, 0, 102)
+    less_dark_blue = (0, 51, 102)
 
     @staticmethod
     def interpolate_color(
