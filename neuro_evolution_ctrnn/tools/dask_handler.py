@@ -1,7 +1,6 @@
 from typing import Optional
 import logging
 from typing import Callable, Union
-import multiprocessing
 
 from dask.distributed import Client, Worker, WorkerPlugin, LocalCluster
 from dask.distributed import get_worker
@@ -38,14 +37,14 @@ class DaskHandler:
     _cluster: Optional[LocalCluster] = None
 
     @classmethod
-    def init_dask(cls, class_cb: Callable, brain_class, worker_log_level=logging.WARN):
+    def init_dask(cls, class_cb: Callable, brain_class, n_workers, worker_log_level=logging.WARN):
         if cls._client:
             raise RuntimeError("dask client already initialized")
         # threads_per_worker must be one, because atari-env is not thread-safe.
         # And because lower the thread-count from the default, we must increase the number of workers
         cls._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
                                     silence_logs=worker_log_level,
-                                    n_workers=multiprocessing.cpu_count(),
+                                    n_workers=n_workers,
                                     interface='lo')
         cls._client = Client(cls._cluster)
         cls._client.register_worker_plugin(_CreatorPlugin(class_cb, brain_class), name='creator-plugin')

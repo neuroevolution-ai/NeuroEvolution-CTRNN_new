@@ -21,7 +21,7 @@ def parse_args(args=None):
                         help="Use an alternative path for simulation results",
                         default=os.path.join("..", "CTRNN_Simulation_Results", "data",
                                              datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
-    parser.add_argument("-p", "--parallel-framework", metavar="dask/mp", type=str, default="mp",
+    parser.add_argument("-p", "--parallel-framework", metavar="dask/mp/sequential", type=str, default="dask",
                         help="Choose the framework for the parallel processing")
     # '\b' disables metavar, not needed for a boolean flag
     parser.add_argument("-n", "--num-workers", metavar="int", type=int, default=os.cpu_count(),

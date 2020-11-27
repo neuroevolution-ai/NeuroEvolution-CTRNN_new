@@ -114,18 +114,20 @@ class Experiment(object):
                 "{} is an incorrect number of processes. Your system only supports {} workers and it must be at least "
                 "1.".format(self.number_of_workers, system_cpu_count))
 
-        if self.number_of_workers == 1:
+        if self.parallel_framework == "dask":
+            map_func = DaskHandler.dask_map
+            DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class, self.number_of_workers)
+        elif self.parallel_framework == "mp":
+            self.mp_handler = MPHandler(self.number_of_workers)
+            map_func = self.mp_handler.map
+        elif self.parallel_framework == "sequential":
             map_func = map
             if self.config.episode_runner.reuse_env:
                 # TODO should this be renamed to multiprocessing instead of multithreading?
                 logging.warning("Cannot reuse an environment on workers without multithreading.")
         else:
-            if self.parallel_framework == "dask":
-                map_func = DaskHandler.dask_map
-                DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-            else:
-                self.mp_handler = MPHandler(self.number_of_workers)
-                map_func = self.mp_handler.map
+            raise RuntimeError(
+                "The parallel processing framework '{}' is not supported.".format(self.parallel_framework))
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
@@ -141,7 +143,7 @@ class Experiment(object):
         if self.number_of_workers > 1:
             if self.parallel_framework == "dask":
                 DaskHandler.stop_dask()
-            else:
+            elif self.parallel_framework == "mp":
                 self.mp_handler.cleanup()
 
     def run(self):
