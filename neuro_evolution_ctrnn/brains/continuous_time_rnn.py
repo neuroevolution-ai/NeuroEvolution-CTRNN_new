@@ -170,7 +170,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # todo: also store masks in checkpoints and hof.
         v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
         if config.use_bias:
+            # todo: np.c_ ersetzen durch append oder pad
             v_mask = np.c_[v_mask, np.ones(config.number_neurons, dtype=bool)]
+            # v_mask = np.append(v_mask, np.ones(config.number_neurons), axis=1)
 
         w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                     config.w_mask_param)

@@ -71,8 +71,22 @@ class TestCTRNN:
                                              output_space=Box(-1, 1, shape=[2]), )
         brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                                   config=ctrnn_config)
-        brain.delta_t = 1.0
-        ob = np.array([1, 1])
+        self._step_with_identities(brain, np.array([1, 1]))
+
+    def test_step_bias(self, ctrnn_config, brain_param_identity, box2d):
+        ctrnn_config = evolve(ctrnn_config, set_principle_diagonal_elements_of_W_negative=False, use_bias=True,
+                              delta_t=1.0)
+        bp = evolve(brain_param_identity,
+                    V=np.append(brain_param_identity.V, np.zeros((1, ctrnn_config.number_neurons)), axis=0))
+
+        ContinuousTimeRNN.set_masks_globally(config=ctrnn_config, input_space=box2d,
+                                             output_space=Box(-1, 1, shape=[2]), )
+        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
+                                  config=ctrnn_config)
+        # brain.delta_t = 1.0
+        self._step_with_identities(brain, np.array([1, 1]))
+
+    def _step_with_identities(self, brain, ob):
         assert np.allclose(brain.y, np.zeros([2, 2]))
         res = brain.step(ob)
         # due to identity matrices after one iteration the internal state is now exactly the observersion
