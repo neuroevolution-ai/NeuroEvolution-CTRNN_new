@@ -33,12 +33,7 @@ class EnvHandler:
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
             logging.info("initiating procgen with memory")
-            env = gym.make(env_id,
-                           distribution_mode="memory",
-                           use_monochrome_assets=False,
-                           restrict_themes=True,
-                           use_backgrounds=False)
-            env = ProcEnvWrapper(env)
+            env = ProcEnvWrapper(env_id)
         elif env_id == 'QbertHard-v0':
             logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
@@ -78,7 +73,6 @@ class EnvHandler:
                                          terminal_on_life_loss=self.config.environment_attributes.terminal_on_life_loss,
                                          grayscale_obs=self.config.environment_attributes.grayscale_obs)
 
-
         if str(env_id).startswith("BipedalWalker"):
             logging.info("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
@@ -98,17 +92,34 @@ class EnvHandler:
 
 
 class ProcEnvWrapper(Wrapper):
+    """
+    This Wrapper scales to observation to values between 0 and 1.
+    Additionally it implements a seed method because for reasons unknown it not implemented upstream
+    """
 
-    def __init__(self, env):
-        super(ProcEnvWrapper, self).__init__(env)
-        self.screen_size = 32
+    def __init__(self, env_id):
+        self.env_id = env_id
+        super(ProcEnvWrapper, self).__init__(self._make_inner_env(start_level=0))
         self.obs_dtype = np.float16
+        self.input_high = 255
+        assert self.input_high == self.env.observation_space.high.min(), "unexpected bounds for input space"
+        assert self.input_high == self.env.observation_space.high.max(), "unexpected bounds for input space"
+        assert 0 == self.env.observation_space.low.min(), "unexpected bounds for input space"
+        assert 0 == self.env.observation_space.low.max(), "unexpected bounds for input space"
         self.observation_space = Box(low=0, high=1,
-                                     shape=(self.screen_size, self.screen_size, 3),
+                                     shape=self.env.observation_space.shape,
                                      dtype=self.obs_dtype)
 
+    def _make_inner_env(self, start_level):
+        return gym.make(self.env_id,
+                        distribution_mode="memory",
+                        use_monochrome_assets=False,
+                        restrict_themes=True,
+                        use_backgrounds=False,
+                        num_levels=0,
+                        start_level=start_level)
+
     def _transform_ob(self, ob):
-        ob = cv2.resize(ob, (self.screen_size, self.screen_size), interpolation=cv2.INTER_AREA)
         return np.asarray(ob, dtype=self.obs_dtype) / 255.0
 
     def step(self, action):
@@ -117,6 +128,10 @@ class ProcEnvWrapper(Wrapper):
 
     def reset(self):
         return self._transform_ob(super(ProcEnvWrapper, self).reset())
+
+    def seed(self, seed=0):
+        self.env = self._make_inner_env(start_level=seed)
+
 
 
 class MaxStepWrapper(Wrapper):
