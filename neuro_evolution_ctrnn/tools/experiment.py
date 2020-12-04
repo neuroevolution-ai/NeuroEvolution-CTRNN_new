@@ -107,9 +107,9 @@ class Experiment(object):
 
         system_cpu_count = os.cpu_count()
         if self.number_of_workers <= 0 or self.number_of_workers > system_cpu_count:
-            raise RuntimeError(
-                "{} is an incorrect number of processes. Your system only supports {} workers and it must be at least "
-                "1.".format(self.number_of_workers, system_cpu_count))
+            raise RuntimeError("{} is an incorrect number of workers for your system, because your CPU only supports "
+                               "running between 1 and {} processes in parallel."
+                               "".format(self.number_of_workers, system_cpu_count))
 
         if self.processing_framework == "dask":
             self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,

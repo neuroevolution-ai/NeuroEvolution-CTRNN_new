@@ -1,8 +1,9 @@
-import gym
-import time
-import logging
 from bz2 import BZ2Compressor
+import gym
+import logging
 import numpy as np
+import time
+from typing import Optional
 
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
@@ -13,7 +14,7 @@ from brains.CNN_CTRNN import CnnCtrnn
 
 class EpisodeRunner:
 
-    _env: gym.Env = None
+    _env: Optional[gym.Env] = None
 
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
@@ -31,6 +32,8 @@ class EpisodeRunner:
                 EpisodeRunner._env = env = self.env_handler.make_env(self.env_id)
             else:
                 env = EpisodeRunner._env
+                # split is needed for the procgen environments
+                assert self.env_id.split(":")[-1] == EpisodeRunner._env.spec.id
         else:
             env = self.env_handler.make_env(self.env_id)
 
