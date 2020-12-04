@@ -8,7 +8,7 @@ import logging
 from tools.experiment import Experiment
 from tools.helper import config_from_file
 
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 
 def parse_args(args=None):
@@ -21,9 +21,8 @@ def parse_args(args=None):
                         help="Use an alternative path for simulation results",
                         default=os.path.join("..", "CTRNN_Simulation_Results", "data",
                                              datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
-    parser.add_argument("-p", "--parallel-framework", metavar="dask/mp/sequential", type=str, default="dask",
-                        help="Choose the framework for the parallel processing")
-    # '\b' disables metavar, not needed for a boolean flag
+    parser.add_argument("-p", "--processing-framework", metavar="dask/mp/sequential", type=str, default="dask",
+                        help="Choose the framework used for the processing")
     parser.add_argument("-n", "--num-workers", metavar="int", type=int, default=os.cpu_count(),
                         help="Specify the amount of workers for the computation")
 
@@ -39,7 +38,7 @@ if __name__ == "__main__":  # pragma: no cover
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     args = parse_args()
     experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
-                            from_checkpoint=args.from_checkpoint, parallel_framework=args.parallel_framework,
+                            from_checkpoint=args.from_checkpoint, processing_framework=args.processing_framework,
                             number_of_workers=args.num_workers)
 
     os.mkdir(args.result_path)

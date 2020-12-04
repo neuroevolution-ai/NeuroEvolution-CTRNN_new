@@ -1,5 +1,4 @@
 import logging
-import multiprocessing as mp
 import os
 import time
 from typing import Type
@@ -13,30 +12,27 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 from brains.concatenated_brains import ConcatenatedLSTM
-from brains.CNN_CTRNN import CnnCtrnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, output_to_action
+from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
-from tools.dask_handler import DaskHandler
-from tools.mp_handler import MPHandler
+from processing_handlers.dask_handler import DaskHandler
+from processing_handlers.mp_handler import MPHandler
+from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
 
 
-# from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
-
-
 class Experiment(object):
 
-    def __init__(self, configuration: ExperimentCfg, result_path, parallel_framework,
+    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,
                  number_of_workers=os.cpu_count(), from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
-        self.parallel_framework = parallel_framework
+        self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.brain_class: Type[IBrain]
         if self.config.brain.type == "CTRNN":
@@ -76,8 +72,8 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
-        logging.info("input space: " + str(self.input_space))
-        logging.info("output space: " + str(self.output_space))
+        logging.info("Input space: " + str(self.input_space))
+        logging.info("Output space: " + str(self.output_space))
         self.brain_class.set_masks_globally(config=self.config.brain,
                                             input_space=self.input_space,
                                             output_space=self.output_space)
@@ -90,7 +86,8 @@ class Experiment(object):
             cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
                                                                              input_space=self.input_space,
                                                                              output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " + str(cnn_output_space))
+            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " +
+                         str(cnn_output_space))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
@@ -114,20 +111,18 @@ class Experiment(object):
                 "{} is an incorrect number of processes. Your system only supports {} workers and it must be at least "
                 "1.".format(self.number_of_workers, system_cpu_count))
 
-        if self.parallel_framework == "dask":
-            map_func = DaskHandler.dask_map
-            DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class, self.number_of_workers)
-        elif self.parallel_framework == "mp":
-            self.mp_handler = MPHandler(self.number_of_workers)
-            map_func = self.mp_handler.map
-        elif self.parallel_framework == "sequential":
-            map_func = map
-            if self.config.episode_runner.reuse_env:
-                # TODO should this be renamed to multiprocessing instead of multithreading?
-                logging.warning("Cannot reuse an environment on workers without multithreading.")
+        if self.processing_framework == "dask":
+            self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,
+                                                  self.brain_class, self.number_of_workers)
+        elif self.processing_framework == "mp":
+            self.processing_handler = MPHandler(self.number_of_workers)
+        elif self.processing_framework == "sequential":
+            self.processing_handler = SequentialHandler(self.number_of_workers)
         else:
             raise RuntimeError(
-                "The parallel processing framework '{}' is not supported.".format(self.parallel_framework))
+                "The processing framework '{}' is not supported.".format(self.processing_framework))
+
+        map_func = self.processing_handler.map
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
@@ -139,16 +134,10 @@ class Experiment(object):
                                             neural_network_type=self.config.brain.type,
                                             config_raw=self.config.raw_dict)
 
-    def cleanup(self):
-        if self.number_of_workers > 1:
-            if self.parallel_framework == "dask":
-                DaskHandler.stop_dask()
-            elif self.parallel_framework == "mp":
-                self.mp_handler.cleanup()
-
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
+        self.processing_handler.init_framework()
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
@@ -158,5 +147,5 @@ class Experiment(object):
             output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
-        self.cleanup()
+        self.processing_handler.cleanup_framework()
         print("Done")

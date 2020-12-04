@@ -15,7 +15,7 @@ class TestExperiment:
         experiment = Experiment(configuration=config,
                                 result_path=tmpdir,
                                 from_checkpoint=None,
-                                parallel_framework="mp")
+                                processing_framework="dask")
         experiment.run()
 
         # update the expected results when it changed intentionally
@@ -36,7 +36,7 @@ class TestExperiment:
         Experiment(configuration=config,
                    result_path=tmpdir,
                    from_checkpoint=None,
-                   parallel_framework="mp")
+                   processing_framework="dask")
 
     def test_init_from_example_configs(self, tmpdir):
         current_directory = os.path.dirname(os.path.realpath(__file__))
@@ -65,4 +65,4 @@ class TestExperiment:
             Experiment(configuration=c,
                        result_path=tmpdir,
                        from_checkpoint=None,
-                       parallel_framework="mp")
+                       processing_framework="dask")
