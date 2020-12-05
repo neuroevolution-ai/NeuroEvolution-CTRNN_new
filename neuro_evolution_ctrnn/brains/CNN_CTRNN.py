@@ -107,10 +107,10 @@ class Cnn(nn.Module):
         # This method exists because DRY and convs are needed before create the individuals
         conv1 = nn.Conv2d(cls._number_input_channels, config.conv_feat1,
                           kernel_size=config.conv_size1,
-                          stride=1)
+                          stride=config.conv_stride1)
         conv2 = nn.Conv2d(config.conv_feat1, config.conv_feat2,
                           kernel_size=config.conv_size2,
-                          stride=1)
+                          stride=config.conv_stride2)
         return conv1, conv2
 
     @classmethod
@@ -125,9 +125,9 @@ class Cnn(nn.Module):
         w = input_space.shape[1]
         d = input_space.shape[2]
         assert d == cls._number_input_channels, "Wrong input shape. CNN expects 2D image with 3 colors channels"
-        h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.conv_size1, stride=1)
+        h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.conv_size1, stride=config.conv_stride1)
         h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.maxp_size1, stride=config.maxp_stride1)
-        h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.conv_size2, stride=1)
+        h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.conv_size2, stride=config.conv_stride2)
         h, w = cls._conv_output_shape(h_w=(h, w), kernel_size=config.maxp_size2, stride=config.maxp_stride2)
         return Box(-1, 1, (h, w, config.conv_feat2), np.float32)
 
