@@ -149,6 +149,5 @@ class ExperimentCfg:
     brain: IBrainCfg
     episode_runner: EpisodeRunnerCfg
     optimizer: IOptimizerCfg
-    use_worker_processes: bool
     random_seed: int = -1
     raw_dict: dict = None  # This attribute is for internal use only
