@@ -99,6 +99,9 @@ class ProcEnvWrapper(Wrapper):
 
     def __init__(self, env_id, render):
         self.env_id = env_id
+        self.render_mode = None
+        if render:
+            self.render_mode = 'rgb_array'
         super(ProcEnvWrapper, self).__init__(self._make_inner_env(start_level=0))
         self.obs_dtype = np.float16
         self.input_high = 255
@@ -109,12 +112,8 @@ class ProcEnvWrapper(Wrapper):
         self.observation_space = Box(low=0, high=1,
                                      shape=self.env.observation_space.shape,
                                      dtype=self.obs_dtype)
-        self.render = render
 
     def _make_inner_env(self, start_level):
-        if self.render:
-            self.render_mode = 'rgb_array'
-
         env = gym.make(self.env_id,
                        distribution_mode="memory",
                        use_monochrome_assets=False,
@@ -125,9 +124,11 @@ class ProcEnvWrapper(Wrapper):
                        render_mode=self.render_mode
                        )
 
-        if self.render:
+        if self.render_mode:
+            # if we do render_mode for procgen, then for some reason it must also be declared in meta data
+            # so that the Monitor-wrapper can do it's thing
             env.metadata["render.modes"] = ["human", "rgb_array"]
-            env = gym.wrappers.Monitor(env=env, directory="./videos", force=True)
+            # env = gym.wrappers.Monitor(env=env, directory="./videos", force=True)
 
         return env
 

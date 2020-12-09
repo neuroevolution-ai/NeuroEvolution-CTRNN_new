@@ -17,25 +17,25 @@ class EpisodeRunner:
     _env: Optional[gym.Env] = None
 
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
+                 env_id):
         self.config = config
         self.brain_config = brain_config
         self.brain_class = brain_class
         self.input_space = input_space
         self.output_space = output_space
-        self.env_id = env_template.spec.id
+        self.env_id = env_id
         self.env_handler = EnvHandler(self.config)
 
     def _get_env(self, record=False, record_force=False):
         if self.config.reuse_env:
             if EpisodeRunner._env is None:
-                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id)
+                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id, render=record)
             else:
                 env = EpisodeRunner._env
                 # split is needed for the procgen environments
                 assert self.env_id.split(":")[-1] == EpisodeRunner._env.spec.id
         else:
-            env = self.env_handler.make_env(self.env_id)
+            env = self.env_handler.make_env(self.env_id, render=record)
 
         if record:
             env = gym.wrappers.Monitor(env, record, force=record_force)

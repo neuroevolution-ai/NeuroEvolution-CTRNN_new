@@ -91,7 +91,7 @@ class Experiment(object):
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
-                                       output_space=self.output_space, env_template=env)
+                                       output_space=self.output_space, env_id=self.config.environment)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness_orig)
         if self.config.episode_runner.novelty:
@@ -113,7 +113,7 @@ class Experiment(object):
 
         if self.processing_framework == "dask":
             self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,
-                                                  self.brain_class, self.number_of_workers)
+                                                  self.brain_class)
         elif self.processing_framework == "mp":
             self.processing_handler = MPHandler(self.number_of_workers)
         elif self.processing_framework == "sequential":
