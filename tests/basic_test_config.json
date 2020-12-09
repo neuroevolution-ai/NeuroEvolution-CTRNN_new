@@ -2,7 +2,6 @@
   "environment": "BipedalWalker-v3",
   "random_seed": 123,
   "number_generations": 3,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 2,

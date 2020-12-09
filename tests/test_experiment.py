@@ -12,10 +12,11 @@ def mock_eval(*nargs, **kwargs):
 class TestExperiment:
 
     def test_run(self, tmpdir, config):
-        experiment = Experiment(configuration=config,
-                                result_path=tmpdir,
-                                from_checkpoint=None)
-        experiment.run()
+        experiment_dask = Experiment(configuration=config,
+                                     result_path=tmpdir.mkdir("dask"),
+                                     from_checkpoint=None,
+                                     processing_framework="dask")
+        experiment_dask.run()
 
         # update the expected results when it changed intentionally
         # when you do, don't forget to repeat an experiment you know will yield good results to make
@@ -28,13 +29,33 @@ class TestExperiment:
                             -116.79799970080285,  # result on Github Action Public Runner
                             -99.78831700269642  # result on se-catalpa
                             ]
-        assert experiment.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
+
+        assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
+
+        experiment_mp = Experiment(configuration=config,
+                                   result_path=tmpdir.mkdir("mp"),
+                                   from_checkpoint=None,
+                                   processing_framework="mp")
+        experiment_mp.run()
+
+        experiment_sequential = Experiment(configuration=config,
+                                           result_path=tmpdir.mkdir("sequential"),
+                                           from_checkpoint=None,
+                                           processing_framework="sequential")
+        experiment_sequential.run()
+
+        assert (experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] ==
+                experiment_mp.result_handler.result_log.chapters["fitness"][-1]["max"])
+
+        assert (experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] ==
+                experiment_sequential.result_handler.result_log.chapters["fitness"][-1]["max"])
 
     def test_run_atari_setup(self, tmpdir, mocker, config):
         config = evolve(config, environment='Qbert-ram-v0')
         Experiment(configuration=config,
                    result_path=tmpdir,
-                   from_checkpoint=None)
+                   from_checkpoint=None,
+                   processing_framework="dask")
 
     def test_init_from_example_configs(self, tmpdir):
         current_directory = os.path.dirname(os.path.realpath(__file__))
@@ -62,4 +83,5 @@ class TestExperiment:
 
             Experiment(configuration=c,
                        result_path=tmpdir,
-                       from_checkpoint=None)
+                       from_checkpoint=None,
+                       processing_framework="dask")

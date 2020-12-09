@@ -1,18 +1,21 @@
-from gym import wrappers
-import time
-import logging
 from bz2 import BZ2Compressor
+import gym
+import logging
 import numpy as np
+import time
+from typing import Optional
 
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
-from tools.dask_handler import get_current_worker
 from tools.env_handler import EnvHandler
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.CNN_CTRNN import CnnCtrnn
 
 
 class EpisodeRunner:
+
+    _env: Optional[gym.Env] = None
+
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
                  env_template):
         self.config = config
@@ -25,18 +28,17 @@ class EpisodeRunner:
 
     def _get_env(self, record=False, record_force=False):
         if self.config.reuse_env:
-            try:
-                env = get_current_worker().env
-            except:
-                if hasattr(self, "env"):
-                    env = self.env
-                else:
-                    self.env = env = self.env_handler.make_env(self.env_id)
+            if EpisodeRunner._env is None:
+                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id)
+            else:
+                env = EpisodeRunner._env
+                # split is needed for the procgen environments
+                assert self.env_id.split(":")[-1] == EpisodeRunner._env.spec.id
         else:
             env = self.env_handler.make_env(self.env_id)
 
         if record:
-            env = wrappers.Monitor(env, record, force=record_force)
+            env = gym.wrappers.Monitor(env, record, force=record_force)
 
         return env
 

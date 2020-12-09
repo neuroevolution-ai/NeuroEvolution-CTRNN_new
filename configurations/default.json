@@ -2,7 +2,6 @@
   "environment": "LunarLander-v2",
   "random_seed": 0,
   "number_generations": 150,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
@@ -50,7 +49,7 @@
   "novelty": {
     "behavioral_interval": 10,
     "behavioral_max_length": 100,
-    "behavior_source": "state",
+    "behavior_source": "action",
     "distance": "euclid",
     "max_recorded_behaviors": 30,
     "recorded_behaviors_per_generation": 5,

@@ -1,8 +1,10 @@
-import numpy as np
-import time
-from deap import tools
 import logging
+import os
+import time
 from typing import Type
+
+import numpy as np
+from deap import tools
 
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
@@ -10,27 +12,28 @@ from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
 from brains.lstm import LSTMPyTorch, LSTMNumPy
 from brains.concatenated_brains import ConcatenatedLSTM
-from brains.CNN_CTRNN import CnnCtrnn
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, output_to_action
+from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
-from tools.dask_handler import DaskHandler
+from processing_handlers.dask_handler import DaskHandler
+from processing_handlers.mp_handler import MPHandler
+from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
 
 
-# from neuro_evolution_ctrnn.tools.optimizer_mu_plus_lambda import OptimizerMuPlusLambda
-
-
 class Experiment(object):
 
-    def __init__(self, configuration: ExperimentCfg, result_path, from_checkpoint=None):
+    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,
+                 number_of_workers=os.cpu_count(), from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
+        self.processing_framework = processing_framework
+        self.number_of_workers: int = number_of_workers
         self.brain_class: Type[IBrain]
         if self.config.brain.type == "CTRNN":
             self.brain_class = ContinuousTimeRNN
@@ -69,8 +72,8 @@ class Experiment(object):
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
-        logging.info("input space: " + str(self.input_space))
-        logging.info("output space: " + str(self.output_space))
+        logging.info("Input space: " + str(self.input_space))
+        logging.info("Output space: " + str(self.output_space))
         self.brain_class.set_masks_globally(config=self.config.brain,
                                             input_space=self.input_space,
                                             output_space=self.output_space)
@@ -83,7 +86,8 @@ class Experiment(object):
             cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
                                                                              input_space=self.input_space,
                                                                              output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " + str(cnn_output_space))
+            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " +
+                         str(cnn_output_space))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
@@ -100,12 +104,25 @@ class Experiment(object):
         stats.register("avg", np.mean)
         stats.register("std", np.std)
         stats.register("max", np.max)
-        if self.config.use_worker_processes:
-            map_func = DaskHandler.dask_map
+
+        system_cpu_count = os.cpu_count()
+        if self.number_of_workers <= 0 or self.number_of_workers > system_cpu_count:
+            raise RuntimeError("{} is an incorrect number of workers for your system, because your CPU only supports "
+                               "running between 1 and {} processes in parallel."
+                               "".format(self.number_of_workers, system_cpu_count))
+
+        if self.processing_framework == "dask":
+            self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,
+                                                  self.brain_class, self.number_of_workers)
+        elif self.processing_framework == "mp":
+            self.processing_handler = MPHandler(self.number_of_workers)
+        elif self.processing_framework == "sequential":
+            self.processing_handler = SequentialHandler(self.number_of_workers)
         else:
-            map_func = map
-            if self.config.episode_runner.reuse_env:
-                logging.warning("Cannot reuse an environment on workers without multithreading.")
+            raise RuntimeError(
+                "The processing framework '{}' is not supported.".format(self.processing_framework))
+
+        map_func = self.processing_handler.map
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
@@ -120,10 +137,7 @@ class Experiment(object):
     def run(self):
         self.result_handler.check_path()
         start_time = time.time()
-
-        DaskHandler.init_dask(self.optimizer_class.create_classes, self.brain_class)
-        if self.config.episode_runner.reuse_env and self.config.use_worker_processes:
-            DaskHandler.init_workers_with_env(self.config.environment, self.config.episode_runner)
+        self.processing_handler.init_framework()
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         self.result_handler.write_result(
@@ -133,5 +147,8 @@ class Experiment(object):
             output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size)
-        DaskHandler.stop_dask()
+        self.processing_handler.cleanup_framework()
+        # Creating multiple Experiment objects requires deleting the HallOfFame because otherwise this would persist
+        # in the other Experiment's
+        self.optimizer.hof.clear()
         print("Done")

@@ -2,7 +2,6 @@
   "environment": "ReacherMemory-v0",
   "random_seed": 0,
   "number_generations": 2500,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": [100, 200, 500],

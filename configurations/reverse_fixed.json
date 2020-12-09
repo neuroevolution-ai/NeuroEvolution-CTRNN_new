@@ -2,7 +2,6 @@
   "environment": "Reverse-v0",
   "random_seed":123,
   "number_generations": 0,
-  "use_worker_processes": false,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 100,

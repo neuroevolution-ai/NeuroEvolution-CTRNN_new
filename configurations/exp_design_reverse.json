@@ -2,7 +2,6 @@
   "environment": "ReverseShaped-v0",
   "random_seed": -1,
   "number_generations": 400,
-  "use_worker_processes": true,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
