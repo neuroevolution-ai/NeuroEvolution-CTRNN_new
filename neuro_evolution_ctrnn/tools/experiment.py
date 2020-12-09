@@ -148,7 +148,4 @@ class Experiment(object):
             input_space=self.input_space,
             individual_size=self.individual_size)
         self.processing_handler.cleanup_framework()
-        # Creating multiple Experiment objects requires deleting the HallOfFame because otherwise this would persist
-        # in the other Experiment's
-        self.optimizer.hof.clear()
         print("Done")

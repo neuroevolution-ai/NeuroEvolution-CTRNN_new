@@ -34,6 +34,8 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         self.register_checkpoints(toolbox, conf.checkpoint_frequency)
         self.register_novelty_distance(toolbox)
 
+        toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
+
         if conf.novelty and not conf.fix_seed_for_generation:
             logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
 
