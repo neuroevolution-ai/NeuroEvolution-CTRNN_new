@@ -20,7 +20,7 @@ class EnvHandler:
     def __init__(self, config: EpisodeRunnerCfg):
         self.config = config
 
-    def make_env(self, env_id: str):
+    def make_env(self, env_id: str, render=False):
         if env_id == "ReacherMemory-v0" or env_id == "ReacherMemoryDynamic-v0":
             assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
                 "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg" \
@@ -33,7 +33,7 @@ class EnvHandler:
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
             logging.info("initiating procgen with memory")
-            env = ProcEnvWrapper(env_id)
+            env = ProcEnvWrapper(env_id, render)
         elif env_id == 'QbertHard-v0':
             logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
@@ -97,7 +97,7 @@ class ProcEnvWrapper(Wrapper):
     Additionally it implements a seed method because for reasons unknown it not implemented upstream
     """
 
-    def __init__(self, env_id):
+    def __init__(self, env_id, render):
         self.env_id = env_id
         super(ProcEnvWrapper, self).__init__(self._make_inner_env(start_level=0))
         self.obs_dtype = np.float16
@@ -109,15 +109,27 @@ class ProcEnvWrapper(Wrapper):
         self.observation_space = Box(low=0, high=1,
                                      shape=self.env.observation_space.shape,
                                      dtype=self.obs_dtype)
+        self.render = render
 
     def _make_inner_env(self, start_level):
-        return gym.make(self.env_id,
-                        distribution_mode="memory",
-                        use_monochrome_assets=False,
-                        restrict_themes=True,
-                        use_backgrounds=False,
-                        num_levels=0,
-                        start_level=start_level)
+        if self.render:
+            self.render_mode = 'rgb_array'
+
+        env = gym.make(self.env_id,
+                       distribution_mode="memory",
+                       use_monochrome_assets=False,
+                       restrict_themes=True,
+                       use_backgrounds=False,
+                       num_levels=0,
+                       start_level=start_level,
+                       render_mode=self.render_mode
+                       )
+
+        if self.render:
+            env.metadata["render.modes"] = ["human", "rgb_array"]
+            env = gym.wrappers.Monitor(env=env, directory="./videos", force=True)
+
+        return env
 
     def _transform_ob(self, ob):
         return np.asarray(ob, dtype=self.obs_dtype) / 255.0
@@ -131,7 +143,6 @@ class ProcEnvWrapper(Wrapper):
 
     def seed(self, seed=0):
         self.env = self._make_inner_env(start_level=seed)
-
 
 
 class MaxStepWrapper(Wrapper):
