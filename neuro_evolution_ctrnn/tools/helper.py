@@ -13,7 +13,7 @@ import gym
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
                                   LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
-                                  ConcatenatedBrainLSTMCfg,CnnCtrnnCfg,ConvolutionalNNCfg, AtariEnvAttributesCfg)
+                                  ConcatenatedBrainLSTMCfg, CnnCtrnnCfg, ConvolutionalNNCfg, AtariEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):
@@ -113,9 +113,8 @@ def config_from_dict(config_dict: dict) -> ExperimentCfg:
         config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
             **config_dict["episode_runner"]["environment_attributes"])
 
-
     if config_dict["environment"].endswith("NoFrameskip-v4") or config_dict["environment"].startswith('Qbert'):
-        if hasattr(config_dict["episode_runner"], 'environment_attributes'):
+        if 'environment_attributes' in config_dict["episode_runner"]:
             config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg(
                 **config_dict["episode_runner"]["environment_attributes"])
         else:
