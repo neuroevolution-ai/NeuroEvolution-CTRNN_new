@@ -3,6 +3,12 @@ import attr
 import abc
 from typing import Dict, List, Optional
 
+registered_types: Dict = {}
+
+
+def register_type(type_id: str, type_class: type):
+    registered_types[type_id] = type_class
+
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
@@ -48,7 +54,7 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
 class EpisodeRunnerCfg(abc.ABC):
     reuse_env: bool
     keep_env_seed_fixed_during_generation: bool = True
-    novelty: Optional[NoveltyCfg]
+    novelty: Optional[NoveltyCfg] = None
     environment_attributes: Optional[IEnvAttributesCfg] = None
     number_fitness_runs: int = 1
     max_steps_per_run: int = 0
@@ -75,6 +81,8 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     clipping_range_min: float = 0
     clipping_range_max: float = 0
 
+
+register_type('CTRNN', ContinuousTimeRNNCfg)
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
@@ -117,7 +125,7 @@ class ConcatenatedBrainLSTMCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IOptimizerCfg(abc.ABC):
     type: str
-    novelty: Optional[NoveltyCfg]
+    novelty: Optional[NoveltyCfg] = None
     efficiency_weight: float = 0.0
     fix_seed_for_generation: bool = True
     checkpoint_frequency: int = 0
@@ -135,11 +143,17 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     strategy_parameter_per_gene: bool = False
 
 
+register_type('MU_ES', OptimizerMuLambdaCfg)
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
     mu: int
+
+
+register_type('CMA_ES', OptimizerCmaEsCfg)
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
