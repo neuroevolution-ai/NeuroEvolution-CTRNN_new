@@ -13,14 +13,15 @@ class ConfigReader:
         pass
 
     @classmethod
-    def _replace_dicts_with_type(cls, node, depth=0):
+    def _replace_dicts_with_types(cls, node, depth=0):
         for key, item in node.items():
             if isinstance(item, dict):
-                cls._replace_dicts_with_type(item, depth + 1)
+                # tree traversal needs to be depth first to avoid TypeError in parents nodes
+                cls._replace_dicts_with_types(item, depth + 1)
                 if 'type' in item:
                     try:
                         found_type: Type = registered_types[item["type"]]
-                        node[key] = found_type(**(item))
+                        node[key] = found_type(**item)
                     except KeyError:
                         logging.error('key "' + item["type"] + '" not found in tools.configurations.registered_types.')
                         raise
@@ -38,7 +39,7 @@ class ConfigReader:
 
     @classmethod
     def config_from_dict(cls, config_dict: dict):
-        # store the serializable version of the config so it can be later be serialized again
-        cls._replace_dicts_with_type(config_dict)
+        cls._replace_dicts_with_types(config_dict)
+        # store the serializable version of the config so it can be later be serialized again during result handling
         config_dict["raw_dict"] = copy.deepcopy(config_dict)
         return ExperimentCfg(**config_dict)
