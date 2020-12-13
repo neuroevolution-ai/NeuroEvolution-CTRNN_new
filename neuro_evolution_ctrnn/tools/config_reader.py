@@ -4,18 +4,6 @@ from typing import Type
 import logging
 
 from tools.configurations import ExperimentCfg, registered_types
-from tools.helper import walk_dict_dept_first
-
-
-def _replace_with_type(key, value, depth, is_leaf):
-    if isinstance(value, dict):
-        if 'type' in value:
-            try:
-                found_type: Type = registered_types[value["type"]]
-                value = found_type(**(value))
-            except KeyError:
-                logging.error('key "' + value["type"] + '" not found in tools.configurations.registered_types.')
-                raise
 
 
 class ConfigReader:
@@ -23,6 +11,24 @@ class ConfigReader:
 
     def __init__(self):
         pass
+
+    @classmethod
+    def _replace_dicts_with_type(cls, node, depth=0):
+        for key, item in node.items():
+            if isinstance(item, dict):
+                cls._replace_dicts_with_type(item, depth + 1)
+                if 'type' in item:
+                    try:
+                        found_type: Type = registered_types[item["type"]]
+                        node[key] = found_type(**(item))
+                    except KeyError:
+                        logging.error('key "' + item["type"] + '" not found in tools.configurations.registered_types.')
+                        raise
+                    except TypeError:
+                        logging.error('Couldn\'t turn dictionary into type. '
+                                      'See tools.configurations for a list of optional and required attributes for '
+                                      'each type.')
+                        raise
 
     @classmethod
     def config_from_file(cls, file_path: str):
@@ -33,6 +39,6 @@ class ConfigReader:
     @classmethod
     def config_from_dict(cls, config_dict: dict):
         # store the serializable version of the config so it can be later be serialized again
-        walk_dict_dept_first(config_dict, _replace_with_type)
+        cls._replace_dicts_with_type(config_dict)
         config_dict["raw_dict"] = copy.deepcopy(config_dict)
         return ExperimentCfg(**config_dict)

@@ -8,3 +8,4 @@ class TestConfigReader:
         current_directory = os.path.dirname(os.path.realpath(__file__))
         config_location = os.path.join(current_directory, "basic_test_config.json")
         config = ConfigReader.config_from_file(config_location)
+        assert config.brain.number_neurons == 2

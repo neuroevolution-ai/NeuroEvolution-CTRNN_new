@@ -40,14 +40,6 @@ def walk_dict(node, callback_node, depth=0):
         else:
             callback_node(key, item, depth, True)
 
-def walk_dict_dept_first(node, callback_node, depth=0):
-    for key, item in node.items():
-        if isinstance(item, dict):
-            walk_dict(item, callback_node, depth + 1)
-            callback_node(key, item, depth, False)
-        else:
-            callback_node(key, item, depth, True)
-
 
 def sample_from_design_space(node):
     result = {}
