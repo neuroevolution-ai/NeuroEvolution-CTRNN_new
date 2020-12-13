@@ -10,11 +10,21 @@
     "tournsize": 0,
     "mu": 10,
     "extra_from_hof": 1,
-    "lambda_": 500,
+    "lambda_": 50,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
     "fix_seed_for_generation": true,
     "strategy_parameter_per_gene": false
+  },
+  "novelty": {
+    "behavioral_interval": -1,
+    "behavioral_max_length": 1,
+    "behavior_source": "observation",
+    "distance": "euclid",
+    "max_recorded_behaviors": 100,
+    "recorded_behaviors_per_generation": 2,
+    "novelty_nearest_k": 50,
+    "novelty_weight": 1.0
   },
   "brain": {
     "type": "CNN_CTRNN",
@@ -26,16 +36,14 @@
       "normalize_input": false,
       "normalize_input_target": 0.0,
       "use_bias": false,
-      "conv_size1": 3,
-      "conv_feat1": 3,
-      "conv_stride1": 3,
-      "maxp_size1": 2,
-      "maxp_stride1": 1,
-      "conv_size2": 4,
-      "conv_feat2": 10,
-      "conv_stride2": 1,
-      "maxp_size2": 2,
-      "maxp_stride2": 2
+      "conv_size1": 5,
+      "conv_feat1": 5,
+      "maxp_size1": 4,
+      "maxp_stride1": 4,
+      "conv_size2": 5,
+      "conv_feat2": 5,
+      "maxp_size2": 4,
+      "maxp_stride2": 1
     },
     "ctrnn_conf": {
       "type": "CTRNN",
@@ -61,7 +69,7 @@
     }
   },
   "episode_runner": {
-    "number_fitness_runs": 5,
+    "number_fitness_runs": 1,
     "reuse_env": true,
     "keep_env_seed_fixed_during_generation": true
   }

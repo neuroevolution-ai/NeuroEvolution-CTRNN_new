@@ -98,6 +98,7 @@ class ProcEnvWrapper(Wrapper):
     """
 
     def __init__(self, env_id, render):
+        # todo: maybe add env specific configuration, but only after issue #20 has been implemented
         self.env_id = env_id
         self.render_mode = None
         if render:
