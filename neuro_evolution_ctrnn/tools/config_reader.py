@@ -46,6 +46,9 @@ class ConfigReader:
     @classmethod
     def config_from_dict(cls, config_dict: dict):
 
+        # store the serializable version of the config so it can be later be serialized again during result handling
+        raw_dict = copy.deepcopy(config_dict)
+
         if "novelty" in config_dict:
             novelty_cfg = NoveltyCfg(**config_dict["novelty"])
             del config_dict["novelty"]
@@ -60,6 +63,5 @@ class ConfigReader:
                 "set random_seed to a positive integer.")
             config_dict['random_seed'] = seed
         cls._replace_dicts_with_types(config_dict)
-        # store the serializable version of the config so it can be later be serialized again during result handling
-        config_dict["raw_dict"] = copy.deepcopy(config_dict)
+        config_dict["raw_dict"] = raw_dict
         return ExperimentCfg(**config_dict)
