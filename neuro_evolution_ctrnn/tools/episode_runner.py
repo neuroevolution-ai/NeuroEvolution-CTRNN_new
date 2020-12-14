@@ -26,16 +26,16 @@ class EpisodeRunner:
         self.env_id = env_id
         self.env_handler = EnvHandler(self.config)
 
-    def _get_env(self, record=False, record_force=False):
+    def _get_env(self, record, record_force, render):
         if self.config.reuse_env:
             if EpisodeRunner._env is None:
-                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id, render=record)
+                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id, render=render)
             else:
                 env = EpisodeRunner._env
                 # split is needed for the procgen environments
                 assert self.env_id.split(":")[-1] == EpisodeRunner._env.spec.id
         else:
-            env = self.env_handler.make_env(self.env_id, render=record)
+            env = self.env_handler.make_env(self.env_id, render=render)
 
         if record:
             env = gym.wrappers.Monitor(env, record, force=record_force)
@@ -44,7 +44,7 @@ class EpisodeRunner:
 
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
                      neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None, neuron_vis_height=None):
-        env = self._get_env(record, record_force)
+        env = self._get_env(record, record_force, render)
         set_random_seeds(seed, env)
         fitness_total = 0
         steps_total = 0

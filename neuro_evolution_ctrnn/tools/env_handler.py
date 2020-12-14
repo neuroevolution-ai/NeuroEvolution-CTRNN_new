@@ -135,6 +135,11 @@ class ProcEnvWrapper(Wrapper):
     def _transform_ob(self, ob):
         return np.asarray(ob, dtype=self.obs_dtype) / 255.0
 
+    def render(self, mode='human', **kwargs):
+        frame = self.env.render(mode=self.render_mode, **kwargs)
+        cv2.imshow("ProcGen Agent", frame)
+        cv2.waitKey(1)
+
     def step(self, action):
         ob, rew, done, info = super(ProcEnvWrapper, self).step(action)
         return self._transform_ob(ob), rew, done, info
