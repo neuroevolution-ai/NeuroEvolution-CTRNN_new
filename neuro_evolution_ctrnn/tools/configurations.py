@@ -7,21 +7,29 @@ registered_types: Dict = {}
 registered_keys: Dict = {}
 
 
-def register_type(type_id: str):
+def register(name: str, as_key: bool = False):
+    """
+    This decorator registers a class, so that it can later be found be the config_reader with a specific string.
+    To map between the class and the string, it uses the content of the type-value of the json node.
+    If no type-attribute exists for that node, it uses the key of the node instead.
+
+    We explicitly separate between a mapping by key and by type-string, and thus we manage two separate lists for it.
+    Technically this separate isn't needed and it adds clutter, but I think explicit behavior here will help in
+    the long run.
+
+    :param name: the name and which the class shall be registered
+    :param as_key: if true, the node's key will be used for mapping. If false that type-value will be used
+    :return: a wrapper of the class
+    """
     # registering magic
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
-        assert type_id not in registered_types, 'type "' + str(type_id) + '" was already registered'
-        registered_types[type_id] = type_class
-        return type_class
-
-    return _register
-
-
-def register_key(key: str):
-    def _register(type_class: type):
-        assert key not in registered_keys, 'key "' + str(key) + '" was already registered'
-        registered_keys[key] = type_class
+        if as_key:
+            assert name not in registered_keys, 'key "' + str(name) + '" was already registered'
+            registered_keys[name] = type_class
+        else:
+            assert name not in registered_types, 'type "' + str(name) + '" was already registered'
+            registered_types[name] = type_class
         return type_class
 
     return _register
@@ -52,7 +60,7 @@ class IEnvAttributesCfg(abc.ABC):
     type: str
 
 
-@register_type('ReacherMemoryAttr')
+@register('ReacherMemoryAttr')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
@@ -60,7 +68,7 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     action_frames: int
 
 
-@register_type('AtariAttr')
+@register('AtariAttr')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class AtariEnvAttributesCfg(IEnvAttributesCfg):
     screen_size: int = 64
@@ -69,7 +77,7 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
-@register_key('episode_runner')
+@register('episode_runner', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
     reuse_env: bool
@@ -82,7 +90,7 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
-@register_type('CTRNN')
+@register('CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
@@ -103,7 +111,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     clipping_range_max: float = 0
 
 
-@register_type('CNN')
+@register('CNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
@@ -116,15 +124,15 @@ class ConvolutionalNNCfg(IBrainCfg):
     maxp_stride2: int
 
 
-@register_type('CNN_CTRNN')
+@register('CNN_CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
 
 
-@register_type('FeedForward_PyTorch')
-@register_type('FeedForward_NumPy')
+@register('FeedForward_PyTorch')
+@register('FeedForward_NumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
@@ -133,15 +141,15 @@ class FeedForwardCfg(IBrainCfg):
     cppn_hidden_layers: List[int]
 
 
-@register_type('LSTM_PyTorch')
-@register_type('LSTM_NumPy')
-@register_type('LSTMNumPy')
+@register('LSTM_PyTorch')
+@register('LSTM_NumPy')
+@register('LSTMNumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
 
 
-@register_type('ConcatenatedBrain_LSTM')
+@register('ConcatenatedBrain_LSTM')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LSTMCfg
@@ -159,7 +167,7 @@ class IOptimizerCfg(abc.ABC):
     hof_size: int = 5
 
 
-@register_type('MU_ES')
+@register('MU_ES')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
@@ -171,7 +179,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     strategy_parameter_per_gene: bool = False
 
 
-@register_type('CMA_ES')
+@register('CMA_ES')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
