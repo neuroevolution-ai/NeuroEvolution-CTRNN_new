@@ -1,4 +1,4 @@
-# the configurations need to be in a separae file from the actual objects to avoid circular imports
+# the configurations need to be in a separate file from the actual objects to avoid circular imports
 import attr
 import abc
 from typing import Dict, List, Optional
@@ -9,7 +9,7 @@ registered_keys: Dict = {}
 
 def register(name: str, as_key: bool = False):
     """
-    This decorator registers a class, so that it can later be found be the config_reader with a specific string.
+    This decorator registers a class, so that it can later be found by the config_reader with a specific string.
     To map between the class and the string, it uses the content of the type-value of the json node.
     If no type-attribute exists for that node, it uses the key of the node instead.
 

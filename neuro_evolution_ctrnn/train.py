@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 
 from tools.experiment import Experiment
-from tools.helper import config_from_file
 from tools.config_reader import ConfigReader
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
