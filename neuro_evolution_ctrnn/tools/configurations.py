@@ -1,4 +1,4 @@
-# the configurations need to be in a separate file from the actual objects to avoid circular imports
+# the configurations need to be in a separae file from the actual objects to avoid circular imports
 import attr
 import abc
 from typing import Dict, List, Optional
@@ -6,8 +6,14 @@ from typing import Dict, List, Optional
 registered_types: Dict = {}
 
 
-def register_type(type_id: str, type_class: type):
-    registered_types[type_id] = type_class
+def register(type_id: str):
+    # registering magic
+    # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
+    def _register(type_class: type):
+        assert type_id not in registered_types, 'type "' + str(type_id) + '" was already registered'
+        registered_types[type_id] = type_class
+
+    return _register
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -62,6 +68,7 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
+@register('CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
@@ -82,8 +89,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     clipping_range_max: float = 0
 
 
-register_type('CTRNN', ContinuousTimeRNNCfg)
-
+@register('')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
@@ -96,12 +102,15 @@ class ConvolutionalNNCfg(IBrainCfg):
     maxp_stride2: int
 
 
+@register('CNN_CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
 
 
+@register('FeedForward_PyTorch')
+@register('FeedForward_NumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
@@ -110,11 +119,14 @@ class FeedForwardCfg(IBrainCfg):
     cppn_hidden_layers: List[int]
 
 
+@register('LSTM_PyTorch')
+@register('LSTM_NumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
 
 
+@register('ConcatenatedBrain_LSTM')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LSTMCfg
@@ -132,6 +144,7 @@ class IOptimizerCfg(abc.ABC):
     hof_size: int = 5
 
 
+@register('MU_ES')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
@@ -143,17 +156,12 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     strategy_parameter_per_gene: bool = False
 
 
-register_type('MU_ES', OptimizerMuLambdaCfg)
-
-
+@register('CMA_ES')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
     mu: int
-
-
-register_type('CMA_ES', OptimizerCmaEsCfg)
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
