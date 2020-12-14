@@ -28,9 +28,6 @@ class ConfigReader:
                     continue
                 try:
                     node[key] = found_type(**item)
-                except KeyError:
-                    logging.error('key "' + item["type"] + '" not found in tools.configurations.registered_types.')
-                    raise
                 except TypeError:
                     logging.error('Couldn\'t turn dictionary into type. '
                                   'See tools.configurations for a list of optional and required attributes for '
