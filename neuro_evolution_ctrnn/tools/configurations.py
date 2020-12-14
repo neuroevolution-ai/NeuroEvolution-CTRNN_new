@@ -13,6 +13,7 @@ def register(type_id: str):
     def _register(type_class: type):
         assert type_id not in registered_types, 'type "' + str(type_id) + '" was already registered'
         registered_types[type_id] = type_class
+        return type_class
 
     return _register
 
