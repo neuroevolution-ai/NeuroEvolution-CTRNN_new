@@ -1,7 +1,8 @@
 from tools.experiment import Experiment
 from attr import evolve
 import os
-from tools.helper import config_from_file, sample_from_design_space, config_from_dict
+from tools.helper import sample_from_design_space
+from tools.config_reader import ConfigReader
 import json
 
 
@@ -73,9 +74,9 @@ class TestExperiment:
             if "design" in conf_name:
                 with open(path, "r") as read_file:
                     design_space = json.load(read_file)
-                c = config_from_dict(sample_from_design_space(design_space))
+                c = ConfigReader.config_from_dict(sample_from_design_space(design_space))
             else:
-                c = config_from_file(path)
+                c = ConfigReader.config_from_file(path)
 
             if c.environment in ['ReacherMemory-v0']:
                 print("skipping, because Mujoco")

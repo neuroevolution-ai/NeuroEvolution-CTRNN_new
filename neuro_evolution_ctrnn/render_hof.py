@@ -8,6 +8,7 @@ from tap import Tap
 from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.helper import config_from_dict
+from tools.config_reader import ConfigReader
 
 
 class RenderArgs(Tap):
@@ -35,8 +36,8 @@ try:
 except:
     with open(os.path.join(args.dir, "Log.json"), "r") as read_file_log:
         log = json.load(read_file_log)
-with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
-    config = config_from_dict(json.load(read_file))
+        
+config = ConfigReader.config_from_file(os.path.join(args.dir, "Configuration.json"))
 
 experiment = Experiment(configuration=config,
                         result_path="/tmp/not-used",

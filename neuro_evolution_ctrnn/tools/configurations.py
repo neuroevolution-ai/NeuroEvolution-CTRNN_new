@@ -4,6 +4,7 @@ import abc
 from typing import Dict, List, Optional
 
 registered_types: Dict = {}
+registered_keys: Dict = {}
 
 
 def register(type_id: str):
@@ -12,6 +13,14 @@ def register(type_id: str):
     def _register(type_class: type):
         assert type_id not in registered_types, 'type "' + str(type_id) + '" was already registered'
         registered_types[type_id] = type_class
+
+    return _register
+
+
+def register_key(key: str):
+    def _register(type_class: type):
+        assert key not in registered_keys, 'key "' + str(key) + '" was already registered'
+        registered_keys[key] = type_class
 
     return _register
 
@@ -38,17 +47,19 @@ class NoveltyCfg:
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IEnvAttributesCfg(abc.ABC):
-    pass
+    type: str
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@register('ReacherMemoryAttr')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
     memory_frames: int
     action_frames: int
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@register('AtariAttr')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class AtariEnvAttributesCfg(IEnvAttributesCfg):
     screen_size: int = 64
     scale_obs: bool = True
@@ -56,6 +67,7 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
+@register_key('episode_runner')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
     reuse_env: bool
@@ -89,7 +101,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     clipping_range_max: float = 0
 
 
-@register('')
+@register('CNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int

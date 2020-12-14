@@ -62,10 +62,10 @@ def sample_from_design_space(node):
 def config_from_file(json_path: str) -> ExperimentCfg:
     with open(json_path, "r") as read_file:
         config_dict = json.load(read_file)
-    return config_from_dict(config_dict)
+    return config_from_dictx(config_dict)
 
 
-def config_from_dict(config_dict: dict) -> ExperimentCfg:
+def config_from_dictx(config_dict: dict) -> ExperimentCfg:
     # store the serializable version of the config so it can be later be serialized again
     config_dict["raw_dict"] = copy.deepcopy(config_dict)
     brain_cfg_class: Type[IBrainCfg]
