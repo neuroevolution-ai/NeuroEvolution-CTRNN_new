@@ -96,6 +96,7 @@ class EpisodeRunner:
 
             fitness_total += fitness_current
             steps_total += t
+            # print(info['level_seed'])
 
         compressed_behavior = None
         if hasattr(env, 'get_compressed_behavior'):

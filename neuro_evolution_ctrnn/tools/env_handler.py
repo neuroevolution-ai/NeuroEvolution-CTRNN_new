@@ -120,11 +120,10 @@ class ProcEnvWrapper(Wrapper):
                        use_monochrome_assets=False,
                        restrict_themes=True,
                        use_backgrounds=False,
-                       num_levels=0,
+                       num_levels=1,
                        start_level=start_level,
                        render_mode=self.render_mode
                        )
-
         if self.render_mode:
             # if we do render_mode for procgen, then for some reason it must also be declared in meta data
             # so that the Monitor-wrapper can do it's thing
@@ -141,6 +140,9 @@ class ProcEnvWrapper(Wrapper):
         return self._transform_ob(ob), rew, done, info
 
     def reset(self):
+        self.env = self._make_inner_env(
+            start_level=self.env.unwrapped.spec._kwargs['start_level'] + 1
+        )
         return self._transform_ob(super(ProcEnvWrapper, self).reset())
 
     def seed(self, seed=0):
