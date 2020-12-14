@@ -50,10 +50,10 @@ class ConfigReader:
         raw_dict = copy.deepcopy(config_dict)
 
         if "novelty" in config_dict:
-            novelty_cfg = NoveltyCfg(**config_dict["novelty"])
+            # special handling for novelty, because it's values are needed in two different classes
+            config_dict["optimizer"]["novelty"] = config_dict["novelty"]
+            config_dict["episode_runner"]["novelty"] = config_dict["novelty"]
             del config_dict["novelty"]
-            config_dict["optimizer"]["novelty"] = novelty_cfg
-            config_dict["episode_runner"]["novelty"] = novelty_cfg
 
         if config_dict['random_seed'] < 0:
             seed = random.randint(1, 10000)
@@ -63,5 +63,6 @@ class ConfigReader:
                 "set random_seed to a positive integer.")
             config_dict['random_seed'] = seed
         cls._replace_dicts_with_types(config_dict)
+
         config_dict["raw_dict"] = raw_dict
         return ExperimentCfg(**config_dict)

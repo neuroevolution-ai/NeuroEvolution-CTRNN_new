@@ -43,6 +43,7 @@ class IBrainCfg(abc.ABC):
     use_bias: bool
 
 
+@register('novelty', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class NoveltyCfg:
     novelty_weight: float
