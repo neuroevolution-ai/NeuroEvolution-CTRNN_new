@@ -7,25 +7,6 @@ registered_types: Dict = {}
 registered_keys: Dict = {}
 
 
-def register(type_id: str):
-    # registering magic
-    # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
-    def _register(type_class: type):
-        assert type_id not in registered_types, 'type "' + str(type_id) + '" was already registered'
-        registered_types[type_id] = type_class
-        return type_class
-
-    return _register
-
-
-def register_key(key: str):
-    def _register(type_class: type):
-        assert key not in registered_keys, 'key "' + str(key) + '" was already registered'
-        registered_keys[key] = type_class
-
-    return _register
-
-
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
@@ -51,7 +32,6 @@ class IEnvAttributesCfg(abc.ABC):
     type: str
 
 
-@register('ReacherMemoryAttr')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
@@ -59,7 +39,9 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     action_frames: int
 
 
-@register('AtariAttr')
+registered_types['ReacherMemoryAttr'] = ReacherMemoryEnvAttributesCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class AtariEnvAttributesCfg(IEnvAttributesCfg):
     screen_size: int = 64
@@ -68,7 +50,9 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
-@register_key('episode_runner')
+registered_types['AtariAttr'] = AtariEnvAttributesCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
     reuse_env: bool
@@ -81,7 +65,9 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
-@register('CTRNN')
+registered_keys['episode_runner'] = EpisodeRunnerCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
@@ -102,7 +88,9 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     clipping_range_max: float = 0
 
 
-@register('CNN')
+registered_types['CTRNN'] = ContinuousTimeRNNCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
@@ -115,15 +103,18 @@ class ConvolutionalNNCfg(IBrainCfg):
     maxp_stride2: int
 
 
-@register('CNN_CTRNN')
+registered_types['CNN'] = ConvolutionalNNCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
 
 
-@register('FeedForward_PyTorch')
-@register('FeedForward_NumPy')
+registered_types['CNN_CTRNN'] = CnnCtrnnCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
@@ -132,19 +123,28 @@ class FeedForwardCfg(IBrainCfg):
     cppn_hidden_layers: List[int]
 
 
-@register('LSTM_PyTorch')
-@register('LSTM_NumPy')
+registered_types['FeedForward_PyTorch'] = FeedForwardCfg
+registered_types['FeedForward_NumPy'] = FeedForwardCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
 
 
-@register('ConcatenatedBrain_LSTM')
+registered_types['LSTM_PyTorch'] = LSTMCfg
+registered_types['LSTM_NumPy'] = LSTMCfg
+registered_types['LSTMNumPy'] = LSTMCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LSTMCfg
     feed_forward_front: FeedForwardCfg = None
     feed_forward_back: FeedForwardCfg = None
+
+
+registered_types['ConcatenatedBrain_LSTM'] = ConcatenatedBrainLSTMCfg
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -157,7 +157,6 @@ class IOptimizerCfg(abc.ABC):
     hof_size: int = 5
 
 
-@register('MU_ES')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
@@ -169,12 +168,17 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     strategy_parameter_per_gene: bool = False
 
 
-@register('CMA_ES')
+registered_types['MU_ES'] = OptimizerMuLambdaCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int
     sigma: float
     mu: int
+
+
+registered_types['CMA_ES'] = OptimizerCmaEsCfg
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
