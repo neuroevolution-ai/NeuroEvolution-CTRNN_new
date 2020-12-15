@@ -27,13 +27,14 @@ from brains.CNN_CTRNN import CnnCtrnn
 
 class Experiment(object):
 
-    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,
+    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,  checkpoint_to_result,
                  number_of_workers=os.cpu_count(), from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.config = configuration
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
+        self.checkpoint_to_result = checkpoint_to_result
         self.brain_class: Type[IBrain]
         if self.config.brain.type == "CTRNN":
             self.brain_class = ContinuousTimeRNN
@@ -140,13 +141,18 @@ class Experiment(object):
         self.processing_handler.init_framework()
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
+        if self.checkpoint_to_result:
+            final_checkpoint_data = self.optimizer.toolbox.final_checkpoint_data
+        else:
+            final_checkpoint_data = None
         self.result_handler.write_result(
             hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
             output_space=self.output_space,
             input_space=self.input_space,
-            individual_size=self.individual_size)
+            individual_size=self.individual_size,
+            final_checkpoint_data=final_checkpoint_data)
         self.processing_handler.cleanup_framework()
         # Creating multiple Experiment objects requires deleting the HallOfFame because otherwise this would persist
         # in the other Experiment's

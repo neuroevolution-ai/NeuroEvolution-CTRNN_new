@@ -74,6 +74,11 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
     population = toolbox.population
     halloffame = toolbox.hof
 
+    def checkpoint_data():
+        return dict(generation=gen, halloffame=halloffame, population=population,
+                    logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+                    recorded_individuals=toolbox.recorded_individuals)
+
     for gen in range(toolbox.initial_generation, ngen):
         record_individuals(toolbox, population)
         extra = []
@@ -104,10 +109,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
-                                         recorded_individuals=toolbox.recorded_individuals))
-
+            toolbox.checkpoint(data=checkpoint_data())
+    toolbox.final_checkpoint_data = checkpoint_data()
     return toolbox.logbook
 
 
@@ -137,6 +140,11 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         # set_random_seeds(toolbox.initial_seed, env=None)
         pass
 
+    def checkpoint_data():
+        return dict(generation=gen, halloffame=halloffame,
+                    logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
+                    recorded_individuals=toolbox.recorded_individuals)
+
     for gen in range(toolbox.initial_generation, ngen):
         population: Collection = toolbox.generate()
 
@@ -152,8 +160,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
-                                         recorded_individuals=toolbox.recorded_individuals))
+            toolbox.checkpoint(data=checkpoint_data())
 
+    toolbox.final_checkpoint_data = checkpoint_data()
     return toolbox.logbook
