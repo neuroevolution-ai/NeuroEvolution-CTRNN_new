@@ -1,7 +1,7 @@
 {
   "environment": "procgen:procgen-heist-v0",
   "random_seed": -1,
-  "number_generations": 3,
+  "number_generations": 200,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
@@ -10,21 +10,11 @@
     "tournsize": 0,
     "mu": 10,
     "extra_from_hof": 1,
-    "lambda_": 50,
+    "lambda_": 500,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
     "fix_seed_for_generation": true,
     "strategy_parameter_per_gene": false
-  },
-  "novelty": {
-    "behavioral_interval": -1,
-    "behavioral_max_length": 1,
-    "behavior_source": "observation",
-    "distance": "euclid",
-    "max_recorded_behaviors": 20,
-    "recorded_behaviors_per_generation": 2,
-    "novelty_nearest_k": 20,
-    "novelty_weight": 1.0
   },
   "brain": {
     "type": "CNN_CTRNN",
