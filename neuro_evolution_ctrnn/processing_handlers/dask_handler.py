@@ -18,7 +18,7 @@ class _CreatorPlugin(WorkerPlugin):
         self.brain_class_state = brain_class.get_class_state()
 
     def setup(self, worker):
-        logging.info("setting up classes for worker: " + str(worker))
+        logging.debug("setting up classes for worker: " + str(worker))
         self.callback()
         self.brain_class.set_class_state(**self.brain_class_state)
 
@@ -33,7 +33,7 @@ class _CreatorPlugin(WorkerPlugin):
 class DaskHandler(IProcessingHandler):
     """This class wraps all Dask related functions."""
 
-    def __init__(self, number_of_workers, class_cb: Callable, brain_class, worker_log_level=logging.WARN):
+    def __init__(self, number_of_workers, class_cb: Callable, brain_class, worker_log_level=logging.ERROR):
         super().__init__(number_of_workers)
         self._client: Optional[Client] = None
         self._cluster: Optional[LocalCluster] = None
