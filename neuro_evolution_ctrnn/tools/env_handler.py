@@ -32,10 +32,10 @@ class EnvHandler:
                 memory_frames=self.config.environment_attributes.memory_frames,
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
-            logging.info("initiating procgen with memory")
+            logging.debug("initiating procgen with memory")
             env = ProcEnvWrapper(env_id, render)
         elif env_id == 'QbertHard-v0':
-            logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
+            logging.debug("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
         elif env_id == 'ReverseShaped-v0':
             env = gym.make('Reverse-v0')
@@ -43,20 +43,20 @@ class EnvHandler:
             # global configuration file.
             env.env.last = 15
             env.env.min_length = 7
-            logging.info("creating env with min_length " + str(
+            logging.debug("creating env with min_length " + str(
                 env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
 
-            logging.info("wrapping env in ReverseWrapper")
+            logging.debug("wrapping env in ReverseWrapper")
             env = ReverseWrapper(env)
         else:
             env = gym.make(env_id)
 
         if self.config.use_autoencoder:
-            logging.info("wrapping env in AEWrapper")
+            logging.debug("wrapping env in AEWrapper")
             env = AEWrapper(env)
         else:
             if env.spec.id.endswith("NoFrameskip-v4"):
-                logging.info("wrapping env in AtariPreprocessing")
+                logging.debug("wrapping env in AtariPreprocessing")
 
                 assert isinstance(self.config.environment_attributes, AtariEnvAttributesCfg), \
                     "For atari environment one must provide the AtariEnvAttributesCfg" \
@@ -74,18 +74,18 @@ class EnvHandler:
                                          grayscale_obs=self.config.environment_attributes.grayscale_obs)
 
         if str(env_id).startswith("BipedalWalker"):
-            logging.info("wrapping env in Box2DWalkerWrapper")
+            logging.debug("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
         if self.config.novelty:
             if self.config.novelty.behavior_source in ['observation', 'action', 'state']:
-                logging.info("wrapping env in BehaviorWrapper")
+                logging.debug("wrapping env in BehaviorWrapper")
                 env = BehaviorWrapper(env, self.config.novelty.behavior_source,
                                       self.config.novelty.behavioral_interval,
                                       self.config.novelty.behavioral_max_length)
 
         if self.config.max_steps_per_run:
-            logging.info("wrapping env in MaxStepWrapper")
+            logging.debug("wrapping env in MaxStepWrapper")
             env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
 
         return env
@@ -124,12 +124,6 @@ class ProcEnvWrapper(Wrapper):
                        start_level=start_level,
                        render_mode=self.render_mode
                        )
-        if self.render_mode:
-            # if we do render_mode for procgen, then for some reason it must also be declared in meta data
-            # so that the Monitor-wrapper can do it's thing
-            env.metadata["render.modes"] = ["human", "rgb_array"]
-            # env = gym.wrappers.Monitor(env=env, directory="./videos", force=True)
-
         return env
 
     def _transform_ob(self, ob):
@@ -145,12 +139,13 @@ class ProcEnvWrapper(Wrapper):
         return self._transform_ob(ob), rew, done, info
 
     def reset(self):
-        self.env = self._make_inner_env(
-            start_level=self.env.unwrapped.spec._kwargs['start_level'] + 1
-        )
+        # explanation: https://github.com/openai/procgen/issues/40#issuecomment-633720234
+        self.env.step(-1)
         return self._transform_ob(super(ProcEnvWrapper, self).reset())
 
     def seed(self, seed=0):
+        # explicitly delete old env to avoic memory leak
+        del self.env
         self.env = self._make_inner_env(start_level=seed)
 
 
