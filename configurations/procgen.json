@@ -1,7 +1,7 @@
 {
   "environment": "procgen:procgen-heist-v0",
   "random_seed": -1,
-  "number_generations": 100,
+  "number_generations": 3,
   "optimizer": {
     "type": "MU_ES",
     "hof_size": 10,
@@ -21,9 +21,9 @@
     "behavioral_max_length": 1,
     "behavior_source": "observation",
     "distance": "euclid",
-    "max_recorded_behaviors": 100,
+    "max_recorded_behaviors": 20,
     "recorded_behaviors_per_generation": 2,
-    "novelty_nearest_k": 50,
+    "novelty_nearest_k": 20,
     "novelty_weight": 1.0
   },
   "brain": {
@@ -69,7 +69,7 @@
     }
   },
   "episode_runner": {
-    "number_fitness_runs": 1,
+    "number_fitness_runs": 2,
     "reuse_env": true,
     "keep_env_seed_fixed_during_generation": true
   }
