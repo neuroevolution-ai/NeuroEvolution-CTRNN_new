@@ -139,8 +139,9 @@ class ProcEnvWrapper(Wrapper):
         return self._transform_ob(ob), rew, done, info
 
     def reset(self):
-        # explanation: https://github.com/openai/procgen/issues/40#issuecomment-633720234
-        self.env.step(-1)
+        self.env = self._make_inner_env(
+            start_level=self.env.unwrapped.spec._kwargs['start_level'] + 1
+        )
         return self._transform_ob(super(ProcEnvWrapper, self).reset())
 
     def seed(self, seed=0):
