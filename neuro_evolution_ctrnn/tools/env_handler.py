@@ -107,7 +107,7 @@ class ProcEnvHandler(gym.Env):
         super(ProcEnvHandler, self).__init__()
         self._env = self._make_inner_env(start_level=0)
         self.spec = copy.deepcopy(self._env.spec)  # deep copy to avoid references to inner gym
-        self.action_space = copy.deepcopy(self._env.action_space)  # deep copy to avoid references to inner gym
+        self.action_space = self._env.action_space  # use reference, so action_space.seed() works as expected
         self.obs_dtype = np.float16
         self.input_high = 255
         self.current_level = 0
