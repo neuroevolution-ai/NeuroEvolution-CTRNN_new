@@ -10,8 +10,6 @@ from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, re
 class ConfigReader:
     """Reads a configuration from a JSON string and returns a valid config object."""
 
-    def __init__(self):
-        pass
 
     @classmethod
     def _replace_dicts_with_types(cls, node, depth=0):
