@@ -12,6 +12,7 @@ import numpy as np
 import cv2
 from gym.spaces import Box
 from tools.ae_wrapper import AEWrapper
+import copy
 
 
 class EnvHandler:
@@ -33,7 +34,7 @@ class EnvHandler:
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
             logging.debug("initiating procgen with memory")
-            env = ProcEnvWrapper(env_id, render)
+            env = ProcEnvHandler(env_id, render)
         elif env_id == 'QbertHard-v0':
             logging.debug("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
@@ -91,7 +92,7 @@ class EnvHandler:
         return env
 
 
-class ProcEnvWrapper(Wrapper):
+class ProcEnvHandler(gym.Env):
     """
     This Wrapper scales to observation to values between 0 and 1.
     Additionally it implements a seed method because for reasons unknown it not implemented upstream
@@ -103,25 +104,30 @@ class ProcEnvWrapper(Wrapper):
         self.render_mode = None
         if render:
             self.render_mode = 'rgb_array'
-        super(ProcEnvWrapper, self).__init__(self._make_inner_env(start_level=0))
+        super(ProcEnvHandler, self).__init__()
+        self._env = self._make_inner_env(start_level=0)
+        self.spec = copy.deepcopy(self._env.spec)  # deep copy to avoid references to inner gym
+        self.action_space = copy.deepcopy(self._env.action_space)  # deep copy to avoid references to inner gym
         self.obs_dtype = np.float16
         self.input_high = 255
-        assert self.input_high == self.env.observation_space.high.min(), "unexpected bounds for input space"
-        assert self.input_high == self.env.observation_space.high.max(), "unexpected bounds for input space"
-        assert 0 == self.env.observation_space.low.min(), "unexpected bounds for input space"
-        assert 0 == self.env.observation_space.low.max(), "unexpected bounds for input space"
+        self.current_level = 0
+        assert self.input_high == self._env.observation_space.high.min(), "unexpected bounds for input space"
+        assert self.input_high == self._env.observation_space.high.max(), "unexpected bounds for input space"
+        assert 0 == self._env.observation_space.low.min(), "unexpected bounds for input space"
+        assert 0 == self._env.observation_space.low.max(), "unexpected bounds for input space"
         self.observation_space = Box(low=0, high=1,
-                                     shape=self.env.observation_space.shape,
+                                     shape=self._env.observation_space.shape,
                                      dtype=self.obs_dtype)
 
     def _make_inner_env(self, start_level):
+        self.current_level = start_level
         env = gym.make(self.env_id,
                        distribution_mode="memory",
                        use_monochrome_assets=False,
                        restrict_themes=True,
                        use_backgrounds=False,
                        num_levels=1,
-                       start_level=start_level,
+                       start_level=self.current_level,
                        render_mode=self.render_mode
                        )
         return env
@@ -130,24 +136,23 @@ class ProcEnvWrapper(Wrapper):
         return np.asarray(ob, dtype=self.obs_dtype) / 255.0
 
     def render(self, mode='human', **kwargs):
-        frame = self.env.render(mode=self.render_mode, **kwargs)
+        frame = self._env.render(mode=self.render_mode, **kwargs)
         cv2.imshow("ProcGen Agent", frame)
         cv2.waitKey(1)
 
     def step(self, action):
-        ob, rew, done, info = super(ProcEnvWrapper, self).step(action)
+        ob, rew, done, info = self._env.step(action)
         return self._transform_ob(ob), rew, done, info
 
     def reset(self):
-        self.env = self._make_inner_env(
-            start_level=self.env.unwrapped.spec._kwargs['start_level'] + 1
-        )
-        return self._transform_ob(super(ProcEnvWrapper, self).reset())
+        del self._env
+        self._env = self._make_inner_env(start_level=self.current_level + 1)
+        return self._transform_ob(self._env.reset())
 
     def seed(self, seed=0):
-        # explicitly delete old env to avoic memory leak
-        del self.env
-        self.env = self._make_inner_env(start_level=seed)
+        # explicitly delete old env to avoid memory leak
+        del self._env
+        self._env = self._make_inner_env(start_level=seed)
 
 
 class MaxStepWrapper(Wrapper):
