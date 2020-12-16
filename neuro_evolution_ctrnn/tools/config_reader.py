@@ -8,7 +8,7 @@ from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, re
 
 
 class ConfigReader:
-    """reads a configuration from a json string and returns a valid config object"""
+    """Reads a configuration from a JSON string and returns a valid config object."""
 
     def __init__(self):
         pass
@@ -19,7 +19,7 @@ class ConfigReader:
             if isinstance(item, dict):
                 # tree traversal needs to be depth first to avoid TypeError in parents nodes
                 cls._replace_dicts_with_types(item, depth + 1)
-                if 'type' in item:
+                if "type" in item:
                     found_type: Type = registered_types[item["type"]]
                 elif key in registered_keys:
                     found_type: Type = registered_keys[key]
@@ -29,9 +29,9 @@ class ConfigReader:
                 try:
                     node[key] = found_type(**item)
                 except TypeError:
-                    logging.error('Couldn\'t turn dictionary into type. '
-                                  'See tools.configurations for a list of optional and required attributes for '
-                                  'each type.')
+                    logging.error("Couldn't turn dictionary into type. "
+                                  "See tools.configurations for a list of optional and required attributes for "
+                                  "each type.")
                     raise
 
     @classmethod
@@ -52,13 +52,13 @@ class ConfigReader:
             config_dict["episode_runner"]["novelty"] = config_dict["novelty"]
             del config_dict["novelty"]
 
-        if config_dict['random_seed'] < 0:
+        if config_dict["random_seed"] < 0:
             seed = random.randint(1, 10000)
             logging.info("setting random seed to " + str(seed))
             logging.info(
                 "if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
                 "set random_seed to a positive integer.")
-            config_dict['random_seed'] = seed
+            config_dict["random_seed"] = seed
         cls._replace_dicts_with_types(config_dict)
 
         config_dict["raw_dict"] = raw_dict
