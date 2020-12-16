@@ -62,7 +62,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         torch.backends.cudnn.benchmark = True
         torch.backends.cudnn.deterministic = False
 
-        logging.info("Setting number of torch-threads to 1")
+        logging.debug("Setting number of torch-threads to 1")
         # see https://github.com/pytorch/pytorch/issues/13757
         torch.set_num_threads(1)
         return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
