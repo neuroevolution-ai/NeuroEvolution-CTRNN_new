@@ -13,10 +13,11 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 class TrainArgs(Tap):
     configuration: str  # path to configuration file. See directory "configurations" for example files
-    from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
     result_path: os.path.abspath  # Use an alternative path for simulation results
     processing_framework: str = 'dask'  # Choose the framework used for the processing. Options are dask/mp/sequential
     num_workers: int = os.cpu_count()  # Specify the amount of workers for the computation
+    from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
+    reset_hof: bool = False  # when loading from a checkpoint, should the HoF be resetted before continuing?
 
     def configure(self):
         self.description = 'Train CTRNN'
@@ -44,7 +45,7 @@ if __name__ == "__main__":  # pragma: no cover
     args = TrainArgs(underscores_to_dashes=True).parse_args()
     experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
                             from_checkpoint=args.from_checkpoint, processing_framework=args.processing_framework,
-                            number_of_workers=args.num_workers)
+                            number_of_workers=args.num_workers, reset_hof=args.reset_hof)
 
     os.mkdir(args.result_path)
     experiment.run()

@@ -19,15 +19,17 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerCmaEsCfg, stats,
-                 map_func=map, from_checkoint=None):
+                 map_func=map, from_checkoint=None, reset_hof=False):
         super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
                                              from_checkoint)
         toolbox = self.toolbox
 
         if from_checkoint:
+            # todo: DRY. Some parts of this are also in the other optimizer, and can be moved to the parent class
             cp = get_checkpoint(from_checkoint)
             toolbox.initial_generation = cp["generation"] + 1
-            self.hof = cp["halloffame"]
+            if not self.reset_hof:
+                self.hof = cp["halloffame"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
             toolbox.logbook = cp["logbook"]
             toolbox.initial_seed = cp["last_seed"]

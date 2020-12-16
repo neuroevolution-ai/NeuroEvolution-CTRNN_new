@@ -12,7 +12,6 @@ from tools.helper import normalized_compression_distance, euklidian_distance, eq
 from deap import base
 import copy
 
-
 ConfigClass = TypeVar('ConfigClass', bound=IOptimizerCfg)
 
 
@@ -20,8 +19,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
-                 map_func=map,
-                 from_checkoint=None):
+                 map_func=map, from_checkoint=None, reset_hof=False):
         self.create_classes()
         self.conf: ConfigClass = conf
         self.toolbox = toolbox = base.Toolbox()
@@ -35,7 +33,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         self.register_novelty_distance(toolbox)
 
         toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
-
+        self.reset_hof = reset_hof
         if conf.novelty and not conf.fix_seed_for_generation:
             logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
 
@@ -95,7 +93,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             return population
         if mutation_learned:
             if strategy_parameter_per_gene:
-                half = len(np.array(population)[0])//2
+                half = len(np.array(population)[0]) // 2
                 return list(np.array(population)[:, :-half])
             else:
                 return list(np.array(population)[:, :-2])
@@ -103,14 +101,13 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     def shape_fitness_multi_objective(self, population):
         for ind in population:
-            ind.fitness_orig = copy.deepcopy( ind.fitness)
+            ind.fitness_orig = copy.deepcopy(ind.fitness)
             shaped_fitness = [ind.fitness.values[0]]
             novelty = ind.novelty if self.conf.novelty else 0
             efficiency = -ind.steps if self.conf.efficiency_weight else 0
             shaped_fitness.append(novelty)
             shaped_fitness.append(efficiency)
             ind.fitness.values = tuple(shaped_fitness)
-
 
     def shape_fitness_weighted_ranks(self, population):
 
