@@ -25,3 +25,4 @@ dask-worker-space/
 
 *.latex
 /configurations/exp_design_space.json
+mprofile_*.dat
