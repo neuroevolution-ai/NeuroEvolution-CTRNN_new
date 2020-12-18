@@ -27,7 +27,7 @@ from brains.CNN_CTRNN import CnnCtrnn
 
 class Experiment(object):
 
-    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,  checkpoint_to_result,
+    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework,  checkpoint_to_result=False,
                  number_of_workers=os.cpu_count(), from_checkpoint=None):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint

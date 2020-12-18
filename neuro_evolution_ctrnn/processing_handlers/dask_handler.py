@@ -33,7 +33,7 @@ class _CreatorPlugin(WorkerPlugin):
 class DaskHandler(IProcessingHandler):
     """This class wraps all Dask related functions."""
 
-    def __init__(self, number_of_workers, class_cb: Callable, brain_class, worker_log_level=logging.ERROR):
+    def __init__(self, number_of_workers, class_cb: Callable, brain_class, worker_log_level=logging.WARNING):
         super().__init__(number_of_workers)
         self._client: Optional[Client] = None
         self._cluster: Optional[LocalCluster] = None
@@ -51,6 +51,8 @@ class DaskHandler(IProcessingHandler):
         self._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
                                      silence_logs=self.worker_log_level,
                                      n_workers=self.number_of_workers,
+                                     memory_pause_fraction=False,
+                                     lifetime='1 hour', lifetime_stagger='5 minutes', lifetime_restart=True,
                                      interface="lo")
         self._client = Client(self._cluster)
         self._client.register_worker_plugin(_CreatorPlugin(self.class_cb, self.brain_class), name="creator-plugin")
