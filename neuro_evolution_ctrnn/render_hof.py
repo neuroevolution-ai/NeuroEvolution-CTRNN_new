@@ -40,7 +40,7 @@ with open(os.path.join(args.dir, "Configuration.json"), "r") as read_file:
 
 experiment = Experiment(configuration=config,
                         result_path="/tmp/not-used",
-                        from_checkpoint=None, processing_framework='sequential')
+                        from_checkpoint=None, processing_framework="sequential")
 
 with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF

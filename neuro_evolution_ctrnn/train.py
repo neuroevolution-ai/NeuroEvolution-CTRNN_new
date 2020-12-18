@@ -26,7 +26,7 @@ def parse_args(args=None):
     parser.add_argument("-n", "--num-workers", metavar="int", type=int, default=os.cpu_count(),
                         help="Specify the amount of workers for the computation")
     parser.add_argument("--checkpoint-to-result", default=False, action='store_true',
-                        help="should the last checkpoint be stored in the result path?")
+                        help="Should the last checkpoint be stored in the result directory?")
 
 
     return parser.parse_args(args)

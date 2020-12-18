@@ -103,7 +103,7 @@ class ProcEnvHandler(gym.Env):
         self.env_id = env_id
         self.render_mode = None
         if render:
-            self.render_mode = 'rgb_array'
+            self.render_mode = "rgb_array"
         super(ProcEnvHandler, self).__init__()
         self._env = self._make_inner_env(start_level=0)
         self.spec = copy.deepcopy(self._env.spec)  # deep copy to avoid references to inner gym

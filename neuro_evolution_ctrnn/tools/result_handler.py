@@ -53,7 +53,7 @@ class ResultHandler(object):
             diff_file.write(self.git_diff)
 
         if final_checkpoint_data:
-            with open(os.path.join(self.result_path, 'checkpoint.pkl'), "wb") as cp_file:
+            with open(os.path.join(self.result_path, "checkpoint.pkl"), "wb") as cp_file:
                 pickle.dump(final_checkpoint_data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
 
         with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
