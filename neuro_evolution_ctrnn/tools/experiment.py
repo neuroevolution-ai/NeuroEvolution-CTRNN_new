@@ -20,6 +20,7 @@ from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
+from processing_handlers.ray_handler import RayHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
@@ -118,6 +119,8 @@ class Experiment(object):
             self.processing_handler = MPHandler(self.number_of_workers)
         elif self.processing_framework == "sequential":
             self.processing_handler = SequentialHandler(self.number_of_workers)
+        elif self.processing_framework == "ray":
+            self.processing_handler = RayHandler(self.number_of_workers, self.optimizer_class.create_classes, self.brain_class)
         else:
             raise RuntimeError(
                 "The processing framework '{}' is not supported.".format(self.processing_framework))
