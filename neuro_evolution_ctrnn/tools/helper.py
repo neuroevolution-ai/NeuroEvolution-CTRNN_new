@@ -90,10 +90,6 @@ def set_random_seeds(seed, env):
     np.random.seed(seed)
     torch.manual_seed(seed)
     if env:
-        if env.spec.id.startswith('procgen'):
-            # setting random seeds is not supported with procgen. So instead we need to make a new env
-            # https://github.com/openai/procgen/issues/21
-            logging.error("setting random seeds with procgen is not supported")
         env.seed(seed)
         env.action_space.seed(seed)
 

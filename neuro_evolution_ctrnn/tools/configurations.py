@@ -123,6 +123,8 @@ class ConvolutionalNNCfg(IBrainCfg):
     conv_feat2: int
     maxp_size2: int
     maxp_stride2: int
+    conv_stride1: int = 1
+    conv_stride2: int = 1
 
 
 @register('CNN_CTRNN')

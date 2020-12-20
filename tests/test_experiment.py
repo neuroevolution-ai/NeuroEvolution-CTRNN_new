@@ -51,12 +51,26 @@ class TestExperiment:
         assert (experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] ==
                 experiment_sequential.result_handler.result_log.chapters["fitness"][-1]["max"])
 
-    def test_run_atari_setup(self, tmpdir, mocker, config):
+    def test_run_atari_setup(self, tmpdir, config):
         config = evolve(config, environment='Qbert-ram-v0')
         Experiment(configuration=config,
                    result_path=tmpdir,
                    from_checkpoint=None,
-                   processing_framework="dask")
+                   processing_framework="mp")
+
+    def test_run_procgen(self, tmpdir, config, mu_lambda_es_config):
+        brainCfg = evolve(config.brain,
+                          v_mask='logarithmic', v_mask_param=128,
+                          w_mask='logarithmic', w_mask_param=128,
+                          t_mask='logarithmic', t_mask_param=128)
+        # need to use mu_lambda_es_config, because genome is too large for CMA_ES
+        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config)
+
+        exp = Experiment(configuration=config,
+                         result_path=tmpdir,
+                         from_checkpoint=None,
+                         processing_framework="mp")
+        exp.run()
 
     def test_init_from_example_configs(self, tmpdir):
         current_directory = os.path.dirname(os.path.realpath(__file__))
@@ -85,4 +99,4 @@ class TestExperiment:
             Experiment(configuration=c,
                        result_path=tmpdir,
                        from_checkpoint=None,
-                       processing_framework="dask")
+                       processing_framework="mp")
