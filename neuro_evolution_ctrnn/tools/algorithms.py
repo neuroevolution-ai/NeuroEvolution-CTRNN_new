@@ -73,8 +73,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                    include_parents_in_next_generation=True):
     population = toolbox.population
     halloffame = toolbox.hof
-    gen = 0
-    current_seed = 0
+    gen = -1
+    current_seed = -1
 
     for gen in range(toolbox.initial_generation, ngen):
         record_individuals(toolbox, population)

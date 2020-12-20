@@ -104,7 +104,7 @@ class ProcEnvHandler(gym.Env):
         self.render_mode = None
         if render:
             self.render_mode = "rgb_array"
-        super(ProcEnvHandler, self).__init__()
+        super().__init__()
         self._env = self._make_inner_env(start_level=0)
         self.spec = copy.deepcopy(self._env.spec)  # deep copy to avoid references to inner gym
         self.action_space = self._env.action_space  # use reference, so action_space.seed() works as expected

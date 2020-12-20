@@ -109,7 +109,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             ind.fitness.values = tuple(shaped_fitness)
 
     def shape_fitness_weighted_ranks(self, population):
-        MININUM = -10e10
+        MINIMUM = -10e10
         if self.conf.novelty:
             novel_counter = 0
             novel_last = MININUM
