@@ -114,7 +114,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         MINIMUM = -10e10
         if self.conf.novelty:
             novel_counter = 0
-            novel_last = MININUM
+            novel_last = MINIMUM
             for ind in sorted(population, key=lambda x: x.novelty):
                 if novel_last != ind.novelty:
                     novel_counter += 1
@@ -123,7 +123,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
         if self.conf.efficiency_weight:
             efficiency_counter = 0
-            efficiency_last = MININUM
+            efficiency_last = MINIMUM
             for ind in sorted(population, key=lambda x: -x.steps):
                 if efficiency_last != ind.steps:
                     efficiency_counter += 1
@@ -131,7 +131,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
                 ind.efficiency_rank = efficiency_counter
 
         fitness_counter = 0
-        fitness_last = MININUM
+        fitness_last = MINIMUM
         for ind in sorted(population, key=lambda x: x.fitness_orig):
             if fitness_last != ind.fitness_orig:
                 fitness_counter += 1

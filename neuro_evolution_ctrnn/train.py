@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 
 from tools.experiment import Experiment
-from tools.helper import config_from_file
+from tools.config_reader import ConfigReader
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -28,7 +28,6 @@ def parse_args(args=None):
     parser.add_argument("--checkpoint-to-result", default=False, action='store_true',
                         help="Should the last checkpoint be stored in the result directory?")
 
-
     return parser.parse_args(args)
 
 
@@ -40,7 +39,8 @@ if __name__ == "__main__":  # pragma: no cover
     """
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     args = parse_args()
-    experiment = Experiment(configuration=config_from_file(args.configuration), result_path=args.result_path,
+    experiment = Experiment(configuration=ConfigReader.config_from_file(args.configuration),
+                            result_path=args.result_path,
                             from_checkpoint=args.from_checkpoint, processing_framework=args.processing_framework,
                             number_of_workers=args.num_workers, checkpoint_to_result=args.checkpoint_to_result)
 
