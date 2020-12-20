@@ -89,7 +89,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.logbook = cp["logbook"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
 
-            if not self.reset_hof:
+            if not reset_hof:
                 toolbox.hof = self.hof = cp["halloffame"]
         else:
             toolbox.initial_generation = 0

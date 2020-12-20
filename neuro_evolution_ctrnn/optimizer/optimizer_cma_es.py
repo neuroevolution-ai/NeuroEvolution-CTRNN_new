@@ -28,7 +28,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             # todo: DRY. Some parts of this are also in the other optimizer, and can be moved to the parent class
             cp = get_checkpoint(from_checkoint)
             toolbox.initial_generation = cp["generation"] + 1
-            if not self.reset_hof:
+            if not reset_hof:
                 self.hof = cp["halloffame"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
             toolbox.logbook = cp["logbook"]

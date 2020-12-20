@@ -51,7 +51,7 @@ if __name__ == "__main__":  # pragma: no cover
                             processing_framework=args.processing_framework,
                             number_of_workers=args.num_workers,
                             reset_hof=args.reset_hof,
-                            ncheckpoint_to_result=args.checkpoint_to_result)
+                            checkpoint_to_result=args.checkpoint_to_result)
 
     os.mkdir(args.result_path)
     experiment.run()
