@@ -154,7 +154,4 @@ class Experiment(object):
             individual_size=self.individual_size,
             final_checkpoint_data=final_checkpoint_data)
         self.processing_handler.cleanup_framework()
-        # Creating multiple Experiment objects requires deleting the HallOfFame because otherwise this would persist
-        # in the other Experiment's
-        self.optimizer.hof.clear()
         print("Done")

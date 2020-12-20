@@ -96,7 +96,6 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.population = self.toolbox.population(n=self.conf.mu)
             toolbox.logbook = self.create_logbook(conf)
             toolbox.recorded_individuals = []
-            toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
 
     def train(self, number_generations) -> tools.Logbook:
         return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)

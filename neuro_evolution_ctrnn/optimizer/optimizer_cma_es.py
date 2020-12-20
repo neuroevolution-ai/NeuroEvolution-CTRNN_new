@@ -19,8 +19,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerCmaEsCfg, stats,
-                 map_func=map,
-                 hof: tools.HallOfFame = tools.HallOfFame(5), from_checkoint=None):
+                 map_func=map, from_checkoint=None):
         super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
                                              from_checkoint)
         toolbox = self.toolbox
@@ -34,7 +33,6 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.initial_seed = cp["last_seed"]
             toolbox.strategy = cp["strategy"]
         else:
-            self.hof = hof
             toolbox.recorded_individuals = []
             toolbox.initial_generation = 0
             toolbox.initial_seed = random_seed
