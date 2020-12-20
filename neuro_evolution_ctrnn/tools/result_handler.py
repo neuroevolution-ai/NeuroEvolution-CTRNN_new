@@ -30,7 +30,8 @@ class ResultHandler(object):
         if not os.access(self.result_path, os.W_OK):
             raise RuntimeError("result path '" + self.result_path + "' is not writable")
 
-    def write_result(self, hof, log, time_elapsed: float, individual_size: int, input_space: np.shape, output_space):
+    def write_result(self, hof, log, time_elapsed: float, individual_size: int, input_space: np.shape, output_space,
+                     final_checkpoint_data):
         # store results in object, so it can be accept directly by other modules
         self.result_hof = hof
         self.result_log = log
@@ -51,6 +52,10 @@ class ResultHandler(object):
         with open(os.path.join(self.result_path, 'git.diff'), 'wb') as diff_file:
             diff_file.write(self.git_diff)
 
+        if final_checkpoint_data:
+            with open(os.path.join(self.result_path, "checkpoint.pkl"), "wb") as cp_file:
+                pickle.dump(final_checkpoint_data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
+
         with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
             def write(key, value, depth, is_leaf):
                 pad = ""
@@ -68,7 +73,7 @@ class ResultHandler(object):
             write_file.write('Genome Size: {:d}\n'.format(individual_size))
             write_file.write('Inputs: {:s}\n'.format(str(input_space)))
             write_file.write('Outputs: {:s}\n'.format(str(output_space)))
-            write_file.write('Commit: {:s}\n'.format(str(self.git_head.decode("utf-8") )))
+            write_file.write('Commit: {:s}\n'.format(str(self.git_head.decode("utf-8"))))
             write_file.write('\n')
             dash = '-' * 80
             write_file.write(dash + '\n')

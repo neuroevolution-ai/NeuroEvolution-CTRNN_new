@@ -110,23 +110,32 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             ind.fitness.values = tuple(shaped_fitness)
 
     def shape_fitness_weighted_ranks(self, population):
-
+        MINIMUM = -10e10
         if self.conf.novelty:
             novel_counter = 0
+            novel_last = MINIMUM
             for ind in sorted(population, key=lambda x: x.novelty):
+                if novel_last != ind.novelty:
+                    novel_counter += 1
+                novel_last = ind.novelty
                 ind.novelty_rank = novel_counter
-                novel_counter += 1
 
         if self.conf.efficiency_weight:
             efficiency_counter = 0
+            efficiency_last = MINIMUM
             for ind in sorted(population, key=lambda x: -x.steps):
+                if efficiency_last != ind.steps:
+                    efficiency_counter += 1
+                efficiency_last = ind.steps
                 ind.efficiency_rank = efficiency_counter
-                efficiency_counter += 1
 
         fitness_counter = 0
+        fitness_last = MINIMUM
         for ind in sorted(population, key=lambda x: x.fitness_orig):
+            if fitness_last != ind.fitness_orig:
+                fitness_counter += 1
+            fitness_last = ind.fitness_orig
             ind.fitness_rank = fitness_counter
-            fitness_counter += 1
 
         for ind in population:
             # assert not hasattr(ind, 'fitness_orig'), 'individual already has shaped fitness'

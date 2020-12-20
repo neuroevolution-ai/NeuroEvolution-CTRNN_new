@@ -59,75 +59,6 @@ def sample_from_design_space(node):
     return result
 
 
-def config_from_file(json_path: str) -> ExperimentCfg:
-    with open(json_path, "r") as read_file:
-        config_dict = json.load(read_file)
-    return config_from_dict(config_dict)
-
-
-def config_from_dict(config_dict: dict) -> ExperimentCfg:
-    # store the serializable version of the config so it can be later be serialized again
-    config_dict["raw_dict"] = copy.deepcopy(config_dict)
-    brain_cfg_class: Type[IBrainCfg]
-    if config_dict["brain"]["type"] == "CTRNN":
-        brain_cfg_class = ContinuousTimeRNNCfg
-    elif config_dict["brain"]["type"] == "FeedForward_NumPy" or config_dict["brain"]["type"] == "FeedForward_PyTorch":
-        brain_cfg_class = FeedForwardCfg
-    elif config_dict["brain"]["type"] == "LSTM_PyTorch" or config_dict["brain"]["type"] == "LSTM_NumPy":
-        brain_cfg_class = LSTMCfg
-    elif config_dict["brain"]["type"] == "ConcatenatedBrain_LSTM":
-        brain_cfg_class = ConcatenatedBrainLSTMCfg
-
-    elif config_dict["brain"]["type"] == "CNN_CTRNN":
-        brain_cfg_class = CnnCtrnnCfg
-        config_dict["brain"]["cnn_conf"] = ConvolutionalNNCfg(**config_dict["brain"]["cnn_conf"])
-        config_dict["brain"]["ctrnn_conf"] = ContinuousTimeRNNCfg(**config_dict["brain"]["ctrnn_conf"])
-    else:
-        raise RuntimeError("Unknown neural_network_type: " + str(config_dict["brain"]["type"]))
-
-    optimizer_cfg_class: Type[IOptimizerCfg]
-    if config_dict["optimizer"]["type"] == "CMA_ES":
-        optimizer_cfg_class = OptimizerCmaEsCfg
-    elif config_dict["optimizer"]["type"] == "MU_ES":
-        optimizer_cfg_class = OptimizerMuLambdaCfg
-    else:
-        raise RuntimeError("Unknown optimizer_type: " + str(config_dict["optimizer"]["type"]))
-
-    if "novelty" in config_dict:
-        novelty_cfg = NoveltyCfg(**config_dict["novelty"])
-        del config_dict["novelty"]
-        config_dict["optimizer"]["novelty"] = novelty_cfg
-        config_dict["episode_runner"]["novelty"] = novelty_cfg
-    else:
-        config_dict["optimizer"]["novelty"] = None
-        config_dict["episode_runner"]["novelty"] = None
-
-    if config_dict['random_seed'] < 0:
-        seed = random.randint(1, 10000)
-        logging.info("setting random seed to " + str(seed))
-        logging.info("if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
-                     "set random_seed to a positive integer.")
-        config_dict['random_seed'] = seed
-
-    if config_dict["environment"] == "ReacherMemory-v0" or config_dict["environment"] == "ReacherMemoryDynamic-v0":
-        config_dict["episode_runner"]["environment_attributes"] = ReacherMemoryEnvAttributesCfg(
-            **config_dict["episode_runner"]["environment_attributes"])
-
-    if config_dict["environment"].endswith("NoFrameskip-v4") or config_dict["environment"].startswith('Qbert'):
-        if 'environment_attributes' in config_dict["episode_runner"]:
-            config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg(
-                **config_dict["episode_runner"]["environment_attributes"])
-        else:
-            # try to init with default values only
-            config_dict["episode_runner"]["environment_attributes"] = AtariEnvAttributesCfg()
-
-    # turn json into nested class so python's type-hinting can do its magic
-    config_dict["episode_runner"] = EpisodeRunnerCfg(**(config_dict["episode_runner"]))
-    config_dict["optimizer"] = optimizer_cfg_class(**(config_dict["optimizer"]))
-    config_dict["brain"] = brain_cfg_class(**(config_dict["brain"]))
-    return ExperimentCfg(**config_dict)
-
-
 def write_checkpoint(base_path, frequency, data):
     if not frequency:
         return
@@ -159,10 +90,6 @@ def set_random_seeds(seed, env):
     np.random.seed(seed)
     torch.manual_seed(seed)
     if env:
-        if env.spec.id.startswith('procgen'):
-            # setting random seeds is not supported with procgen. So instead we need to make a new env
-            # https://github.com/openai/procgen/issues/21
-            logging.error("setting random seeds with procgen is not supported")
         env.seed(seed)
         env.action_space.seed(seed)
 
