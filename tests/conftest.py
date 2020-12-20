@@ -1,7 +1,8 @@
 import pytest
 import os
 from tools.helper import config_from_file
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg
+from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg, \
+    OptimizerMuLambdaCfg
 from gym.spaces import Box
 
 
@@ -21,6 +22,11 @@ def config() -> ExperimentCfg:
 @pytest.fixture
 def ctrnn_config(config: ExperimentCfg) -> ContinuousTimeRNNCfg:
     return config.brain
+
+
+@pytest.fixture
+def mu_lambda_es_config() -> OptimizerMuLambdaCfg:
+    return OptimizerMuLambdaCfg(type='MU_ES', initial_gene_range=2, mu=2, lambda_=3, mutpb=0.5)
 
 
 @pytest.fixture

@@ -86,6 +86,8 @@ class ConvolutionalNNCfg(IBrainCfg):
     conv_feat2: int
     maxp_size2: int
     maxp_stride2: int
+    conv_stride1: int = 1
+    conv_stride2: int = 1
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -117,7 +119,7 @@ class ConcatenatedBrainLSTMCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IOptimizerCfg(abc.ABC):
     type: str
-    novelty: Optional[NoveltyCfg]
+    novelty: Optional[NoveltyCfg] = None
     efficiency_weight: float = 0.0
     fix_seed_for_generation: bool = True
     checkpoint_frequency: int = 0
