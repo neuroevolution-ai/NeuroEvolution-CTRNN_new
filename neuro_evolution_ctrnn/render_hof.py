@@ -7,7 +7,6 @@ from tap import Tap
 
 from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
-from tools.helper import config_from_dict
 from tools.config_reader import ConfigReader
 
 
