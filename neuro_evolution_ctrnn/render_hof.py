@@ -16,6 +16,7 @@ class RenderArgs(Tap):
 
     dir: str  # Directory path to the simulation result
     no_render: bool = False  # disable rendering to screen?
+    render_raw_ob: bool = False # should the env be rendered from the perspective of the agent?
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
     description = "Visualize Experiments"
@@ -79,4 +80,4 @@ for i, individual in enumerate(individuals):
 
     experiment.ep_runner.eval_fitness(individual, config.random_seed, render, record, record_force,
                                       BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds,
-                                      args.neuron_vis_width, args.neuron_vis_height)
+                                      args.neuron_vis_width, args.neuron_vis_height, render_raw_ob=args.render_raw_ob)

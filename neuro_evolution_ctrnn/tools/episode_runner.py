@@ -10,10 +10,10 @@ from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.env_handler import EnvHandler
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.CNN_CTRNN import CnnCtrnn
+import cv2
 
 
 class EpisodeRunner:
-
     _env: Optional[gym.Env] = None
 
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
@@ -42,8 +42,17 @@ class EpisodeRunner:
 
         return env
 
+    def _render(self, env, ob, render_raw_ob):
+        if render_raw_ob:
+            # only looks good if output is RGB Data
+            cv2.imshow("Agent's Observation", ob.astype(np.float32))
+            cv2.waitKey(1)
+        else:
+            env.render()
+
     def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None, neuron_vis_height=None):
+                     neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None, neuron_vis_height=None,
+                     render_raw_ob=False):
         env = self._get_env(record, record_force, render)
         set_random_seeds(seed, env)
         fitness_total = 0
@@ -58,7 +67,7 @@ class EpisodeRunner:
             t = 0
 
             if render:
-                env.render()
+                self._render(env, ob, render_raw_ob)
 
             if neuron_vis:
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
@@ -81,7 +90,7 @@ class EpisodeRunner:
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
                 if render:
-                    env.render()
+                    self._render(env, ob, render_raw_ob)
                 if self.config.novelty:
                     if self.config.novelty.behavior_source == 'brain':
                         if isinstance(brain, ContinuousTimeRNN):
