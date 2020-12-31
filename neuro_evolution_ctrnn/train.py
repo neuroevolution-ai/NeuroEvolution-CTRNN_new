@@ -12,22 +12,22 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 
 class TrainArgs(Tap):
-    configuration: str  # path to configuration file. See directory "configurations" for example files
+    configuration: str  # Path to configuration file. See directory "configurations" for example files
     result_path: os.path.abspath  # Use an alternative path for simulation results
-    processing_framework: str = 'dask'  # Choose the framework used for the processing. Options are dask/mp/sequential
+    processing_framework: str = "dask"  # Choose the framework used for the processing. Options are dask/mp/sequential
     num_workers: int = os.cpu_count()  # Specify the amount of workers for the computation
     from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
-    reset_hof: bool = False  # when loading from a checkpoint, should the HoF be resetted before continuing?
+    reset_hof: bool = False  # When loading from a checkpoint, should the HoF be reset before continuing?
     checkpoint_to_result: bool = False  # Should the last checkpoint be stored in the result directory?
 
     def configure(self):
-        self.description = 'Train CTRNN'
+        self.description = "Train CTRNN"
         # positional argument:
-        self.add_argument('configuration')
+        self.add_argument("configuration")
 
         # aliases
-        self.add_argument('-p', '--processing_framework')
-        self.add_argument('-n', '--num_workers')
+        self.add_argument("-p", "--processing_framework")
+        self.add_argument("-n", "--num_workers")
 
         # complex type and default
         self.add_argument("--result_path", type=os.path.abspath,

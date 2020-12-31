@@ -34,7 +34,7 @@ class Experiment(object):
         self.reset_hof = reset_hof
         if reset_hof:
             if not from_checkpoint:
-                raise RuntimeError("reset_hof is only possible when starting from a checkpoint")
+                raise RuntimeError("reset_hof is only possible when starting from a checkpoint.")
         self.config = configuration
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers

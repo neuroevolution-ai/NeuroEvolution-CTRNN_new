@@ -26,9 +26,9 @@ class RenderArgs(Tap):
     neuron_vis_height: int = 900  # how high should the neuron_vis window be?
 
     def configure(self):
-        self.description = 'Visualize Experiments'
+        self.description = "Visualize Experiments"
         # positional argument:
-        self.add_argument('dir')
+        self.add_argument("dir")
 
         return self
 
