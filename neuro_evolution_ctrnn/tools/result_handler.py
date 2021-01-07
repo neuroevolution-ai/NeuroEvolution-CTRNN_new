@@ -1,9 +1,12 @@
-import os
 import json
+import logging
+import os
 import pickle
-from tools.helper import walk_dict
-import numpy as np
 import subprocess
+
+import numpy as np
+
+from tools.helper import walk_dict
 
 
 class ResultHandler(object):
@@ -37,26 +40,28 @@ class ResultHandler(object):
         self.result_log = log
         self.result_time_elapsed = time_elapsed
 
-        print("output directory: " + str(self.result_path))
-        with open(os.path.join(self.result_path, 'Configuration.json'), 'w') as outfile:
+        print("Output directory: " + str(self.result_path))
+        with open(os.path.join(self.result_path, "Configuration.json"), "w") as outfile:
             # The indent attribute will pretty print the configuration
             json.dump(self.config_raw, outfile, ensure_ascii=False, indent=4)
 
-        with open(os.path.join(self.result_path, 'HallOfFame.pickle'), "wb") as fp:
+        with open(os.path.join(self.result_path, "HallOfFame.pickle"), "wb") as fp:
             pickle.dump(hof, fp)
-        with open(os.path.join(self.result_path, 'Log.json'), 'w') as outfile:
+        with open(os.path.join(self.result_path, "Log.json"), "w") as outfile:
             json.dump(log, outfile)
-        with open(os.path.join(self.result_path, 'Log.pkl'), 'wb') as pk_file:
+        with open(os.path.join(self.result_path, "Log.pkl"), "wb") as pk_file:
             pickle.dump(log, pk_file)
 
-        with open(os.path.join(self.result_path, 'git.diff'), 'wb') as diff_file:
+        with open(os.path.join(self.result_path, "git.diff"), "wb") as diff_file:
             diff_file.write(self.git_diff)
 
         if final_checkpoint_data:
-            with open(os.path.join(self.result_path, "checkpoint.pkl"), "wb") as cp_file:
+            filename = os.path.join(self.result_path, "checkpoint.pkl")
+            logging.info("Writing final checkpoint " + filename)
+            with open(filename, "wb") as cp_file:
                 pickle.dump(final_checkpoint_data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
 
-        with open(os.path.join(self.result_path, 'Log.txt'), 'w') as write_file:
+        with open(os.path.join(self.result_path, "Log.txt"), "w") as write_file:
             def write(key, value, depth, is_leaf):
                 pad = ""
                 for x in range(depth):
@@ -69,16 +74,16 @@ class ResultHandler(object):
 
             walk_dict(self.config_raw, write)
 
-            write_file.write('\n')
-            write_file.write('Genome Size: {:d}\n'.format(individual_size))
-            write_file.write('Inputs: {:s}\n'.format(str(input_space)))
-            write_file.write('Outputs: {:s}\n'.format(str(output_space)))
-            write_file.write('Commit: {:s}\n'.format(str(self.git_head.decode("utf-8"))))
-            write_file.write('\n')
-            dash = '-' * 80
-            write_file.write(dash + '\n')
+            write_file.write("\n")
+            write_file.write("Genome Size: {:d}\n".format(individual_size))
+            write_file.write("Inputs: {:s}\n".format(str(input_space)))
+            write_file.write("Outputs: {:s}\n".format(str(output_space)))
+            write_file.write("Commit: {:s}\n".format(str(self.git_head.decode("utf-8"))))
+            write_file.write("\n")
+            dash = "-" * 80
+            write_file.write(dash + "\n")
             write_file.write(
-                '{:<8s}{:<12s}{:<16s}{:<16s}{:<16s}{:<16s}\n'.format('gen', 'nevals', 'avg', 'std', 'min', 'max'))
+                "{:<8s}{:<12s}{:<16s}{:<16s}{:<16s}{:<16s}\n".format("gen", "nevals", "avg", "std", "min", "max"))
             write_file.write(dash + '\n')
 
             # Write data for each episode
@@ -95,7 +100,7 @@ class ResultHandler(object):
                     max = line["max"]
 
                 write_file.write(
-                    '{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n'.format(line['gen'], line['nevals'],
+                    "{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n".format(line["gen"], line["nevals"],
                                                                                  avg, std, min, max))
 
             # Write elapsed time
