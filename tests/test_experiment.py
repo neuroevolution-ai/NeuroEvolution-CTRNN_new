@@ -22,11 +22,15 @@ class TestExperiment:
         # when you do, don't forget to repeat an experiment you know will yield good results to make
         # sure nothing broke when you changed the underlying algorithm
 
-        # note; this value depends on the NumPy version used, i.e. with or without Intel MKL
+        # Note that these versions depend on whether one uses a virtualenv created with the standard Python virtualenv
+        # tool package or with Anaconda. Also this value changes when standard NumPy or NumPy + MKL is used.
+        # I don't think this list is exhausted, expand or change accordingly if necessary.
         accepted_results = [
-            -103.4065390603272,  # standard NumPy
-            -102.16727461334207  # NumPy + MKL
+            -103.4065390603272,  # conda 4.9.2 + standard NumPy
+            -102.16727461334207,  # conda 4.9.2 + NumPy + MKL
+            -98.80537742389652  # Python virtualenv + standard NumPy
         ]
+
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
 
         experiment_mp = Experiment(configuration=config,
