@@ -113,12 +113,12 @@ class Experiment(object):
                                "".format(self.number_of_workers, system_cpu_count))
 
         if self.processing_framework == "dask":
-            self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,
-                                                  self.brain_class)
+            self.processing_handler = DaskHandler(
+                number_of_workers=self.number_of_workers, brain_class=self.brain_class)
         elif self.processing_framework == "mp":
-            self.processing_handler = MPHandler(self.number_of_workers)
+            self.processing_handler = MPHandler(number_of_workers=self.number_of_workers)
         elif self.processing_framework == "sequential":
-            self.processing_handler = SequentialHandler(self.number_of_workers)
+            self.processing_handler = SequentialHandler(number_of_workers=self.number_of_workers)
         else:
             raise RuntimeError(
                 "The processing framework '{}' is not supported.".format(self.processing_framework))
@@ -128,7 +128,7 @@ class Experiment(object):
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkoint=self.from_checkpoint,
+                                              stats=stats, from_checkpoint=self.from_checkpoint,
                                               random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
