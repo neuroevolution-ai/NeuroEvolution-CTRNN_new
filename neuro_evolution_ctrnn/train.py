@@ -18,7 +18,7 @@ class TrainArgs(Tap):
     num_workers: int = os.cpu_count()  # Specify the amount of workers for the computation
     from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
     reset_hof: bool = False  # When loading from a checkpoint, should the HoF be reset before continuing?
-    checkpoint_to_result: bool = False  # Should the last checkpoint be stored in the result directory?
+    write_final_checkpoint: bool = False  # Should the last checkpoint be stored in the result directory?
 
     def configure(self):
         self.description = "Train CTRNN"
@@ -51,7 +51,7 @@ if __name__ == "__main__":  # pragma: no cover
                             processing_framework=args.processing_framework,
                             number_of_workers=args.num_workers,
                             reset_hof=args.reset_hof,
-                            checkpoint_to_result=args.checkpoint_to_result)
+                            write_final_checkpoint=args.write_final_checkpoint)
 
     os.mkdir(args.result_path)
     experiment.run()

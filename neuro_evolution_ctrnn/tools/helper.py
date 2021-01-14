@@ -66,7 +66,7 @@ def write_checkpoint(base_path, frequency, data):
         return
 
     filename = os.path.join(base_path, "checkpoint_" + str(data["generation"]) + ".pkl")
-    logging.info("writing checkpoint " + filename)
+    logging.info("Writing checkpoint " + filename)
     with open(filename, "wb") as cp_file:
         pickle.dump(data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
 
