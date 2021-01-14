@@ -48,7 +48,6 @@ class EpisodeRunner:
         else:
             env.render()
 
-
     def eval_fitness(self, individual, seed, render: bool = False, record: str = None, record_force: bool = False,
                      brain_vis_handler=None, neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None,
                      neuron_vis_height=None, render_raw_ob=False):

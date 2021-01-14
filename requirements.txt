@@ -22,7 +22,8 @@ bokeh==2.0 # for dash-dashboard.
 pygame
 networkx
 procgen
-cv2
+# cv2
+opencv-python
 
 typed-argument-parser # adds code completyion to argparse in pycharm
 tikzplotlib
