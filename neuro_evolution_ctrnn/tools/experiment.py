@@ -28,9 +28,13 @@ from brains.CNN_CTRNN import CnnCtrnn
 class Experiment(object):
 
     def __init__(self, configuration: ExperimentCfg, result_path, processing_framework, write_final_checkpoint=False,
-                 number_of_workers=os.cpu_count(), from_checkpoint=None):
+                 number_of_workers=os.cpu_count(), from_checkpoint=None, reset_hof=False):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
+        self.reset_hof = reset_hof
+        if reset_hof:
+            if not from_checkpoint:
+                raise RuntimeError("reset_hof is only possible when starting from a checkpoint.")
         self.config = configuration
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
@@ -85,9 +89,9 @@ class Experiment(object):
         logging.info("Individual size for this experiment: " + str(self.individual_size))
         if issubclass(self.brain_class, CnnCtrnn):
             cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
-                                                                             input_space=self.input_space,
-                                                                             output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size)+ "\tcnn_output: " +
+                                                                                               input_space=self.input_space,
+                                                                                               output_space=self.output_space)
+            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size) + "\tcnn_output: " +
                          str(cnn_output_space))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
@@ -129,7 +133,7 @@ class Experiment(object):
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
                                               stats=stats, from_checkoint=self.from_checkpoint,
-                                              random_seed=self.config.random_seed)
+                                              reset_hof=self.reset_hof, random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,
