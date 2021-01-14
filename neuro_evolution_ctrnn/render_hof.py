@@ -18,7 +18,6 @@ class RenderArgs(Tap):
     no_render: bool = False  # disable rendering to screen?
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
-    description = "Visualize Experiments"
     neuron_vis: bool = False  # show neuron visualizer?
     hof: int = 1  # how many members of hall-of-fame should be shown?
     rounds: int = 1  # how many episodes should be shown per HOF-member?
@@ -26,8 +25,15 @@ class RenderArgs(Tap):
     neuron_vis_width: int = 1600  # how wide should the neuron_vis window be?
     neuron_vis_height: int = 900  # how high should the neuron_vis window be?
 
+    def configure(self):
+        self.description = "Visualize Experiments"
+        # positional argument:
+        self.add_argument("dir")
 
-args = RenderArgs().parse_args()
+        return self
+
+
+args = RenderArgs(underscores_to_dashes=True).parse_args()
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 try:
     with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
@@ -35,7 +41,7 @@ try:
 except:
     with open(os.path.join(args.dir, "Log.json"), "r") as read_file_log:
         log = json.load(read_file_log)
-        
+
 config = ConfigReader.config_from_file(os.path.join(args.dir, "Configuration.json"))
 
 experiment = Experiment(configuration=config,

@@ -19,8 +19,7 @@ def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
-                 stats,
-                 map_func=map, from_checkpoint=None):
+                 stats, map_func=map, from_checkpoint=None, reset_hof=False):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
                                                     from_checkpoint)
         toolbox = self.toolbox
@@ -86,7 +85,9 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.population = cp["population"]
             toolbox.logbook = cp["logbook"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
-            toolbox.hof = self.hof = cp["halloffame"]
+
+            if not reset_hof:
+                toolbox.hof = self.hof = cp["halloffame"]
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = random_seed
