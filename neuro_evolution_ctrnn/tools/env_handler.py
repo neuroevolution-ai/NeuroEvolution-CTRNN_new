@@ -1,3 +1,4 @@
+
 import gym
 import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
@@ -14,12 +15,12 @@ import copy
 
 
 class EnvHandler:
-    """this class creates and modifies openAI-Environment."""
+    """This class creates and modifies OpenAI-Gym environments."""
 
     def __init__(self, config: EpisodeRunnerCfg):
         self.config = config
 
-    def make_env(self, env_id: str, render=False):
+    def make_env(self, env_id: str, render: bool = False, record: str = None, record_force: bool = False):
         if env_id == "ReacherMemory-v0" or env_id == "ReacherMemoryDynamic-v0":
             assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
                 "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg" \
@@ -91,6 +92,9 @@ class EnvHandler:
             logging.debug("wrapping env in MaxStepWrapper")
             env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
 
+        if record is not None:
+            env = gym.wrappers.Monitor(env, record, force=record_force)
+
         return env
 
 
@@ -139,7 +143,7 @@ class ProcEnvHandler(gym.Env):
         obs = cv2.resize(ob, (self.conf.screen_size, self.conf.screen_size), interpolation=cv2.INTER_AREA)
         return np.asarray(obs, dtype=self.obs_dtype) / 255.0
 
-    def render(self, mode='human', **kwargs):
+    def render(self, mode="human", **kwargs):
         frame = self._env.render(mode=self.render_mode, **kwargs)
         cv2.imshow("ProcGen Agent", frame)
         cv2.waitKey(1)
@@ -299,7 +303,7 @@ class ReverseWrapper(Wrapper):
                            - self.unwrapped.write_head_position)
                 if dist > 0:
                     rew -= 1. * dist
-                if self.unwrapped.MOVEMENTS[inp_act] != 'left':
+                if self.unwrapped.MOVEMENTS[inp_act] != "left":
                     rew -= 1
 
         return ob, rew, done, info

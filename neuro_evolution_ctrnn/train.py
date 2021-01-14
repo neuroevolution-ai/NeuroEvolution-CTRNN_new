@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse
 import os
 from datetime import datetime
 import logging
+from tap import Tap
 
 from tools.experiment import Experiment
 from tools.config_reader import ConfigReader
@@ -11,24 +11,29 @@ from tools.config_reader import ConfigReader
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 
-def parse_args(args=None):
-    parser = argparse.ArgumentParser(description="Train CTRNN")
-    parser.add_argument("--from-checkpoint", metavar="dir", type=str,
-                        help="Continues training from a checkpoint", default=None)
-    parser.add_argument("--configuration", metavar="dir", type=str,
-                        help="Use an alternative configuration file", default="configurations/default.json")
-    parser.add_argument("--result-path", metavar="dir", type=os.path.abspath,
-                        help="Use an alternative path for simulation results",
-                        default=os.path.join("..", "CTRNN_Simulation_Results", "data",
-                                             datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
-    parser.add_argument("-p", "--processing-framework", metavar="dask/mp/sequential", type=str, default="dask",
-                        help="Choose the framework used for the processing")
-    parser.add_argument("-n", "--num-workers", metavar="int", type=int, default=os.cpu_count(),
-                        help="Specify the amount of workers for the computation")
-    parser.add_argument("--checkpoint-to-result", default=False, action='store_true',
-                        help="Should the last checkpoint be stored in the result directory?")
+class TrainArgs(Tap):
+    configuration: str  # Path to configuration file. See directory "configurations" for example files
+    result_path: os.path.abspath  # Use an alternative path for simulation results
+    processing_framework: str = "dask"  # Choose the framework used for the processing. Options are dask/mp/sequential
+    num_workers: int = os.cpu_count()  # Specify the amount of workers for the computation
+    from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
+    reset_hof: bool = False  # When loading from a checkpoint, should the HoF be reset before continuing?
+    write_final_checkpoint: bool = False  # Should the last checkpoint be stored in the result directory?
 
-    return parser.parse_args(args)
+    def configure(self):
+        self.description = "Train CTRNN"
+        # positional argument:
+        self.add_argument("configuration")
+
+        # aliases
+        self.add_argument("-p", "--processing_framework")
+        self.add_argument("-n", "--num_workers")
+
+        # complex type and default
+        self.add_argument("--result_path", type=os.path.abspath,
+                          default=os.path.join("..", "CTRNN_Simulation_Results", "data",
+                                               datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
+        return self
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -38,11 +43,15 @@ if __name__ == "__main__":  # pragma: no cover
     pickle-able. 
     """
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    args = parse_args()
+    args = TrainArgs(underscores_to_dashes=True).parse_args()
+
     experiment = Experiment(configuration=ConfigReader.config_from_file(args.configuration),
                             result_path=args.result_path,
-                            from_checkpoint=args.from_checkpoint, processing_framework=args.processing_framework,
-                            number_of_workers=args.num_workers, checkpoint_to_result=args.checkpoint_to_result)
+                            from_checkpoint=args.from_checkpoint,
+                            processing_framework=args.processing_framework,
+                            number_of_workers=args.num_workers,
+                            reset_hof=args.reset_hof,
+                            write_final_checkpoint=args.write_final_checkpoint)
 
     os.mkdir(args.result_path)
     experiment.run()
