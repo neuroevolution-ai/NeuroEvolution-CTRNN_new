@@ -3,7 +3,7 @@ import gym
 import logging
 import numpy as np
 import time
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from tools.helper import set_random_seeds, output_to_action
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
@@ -124,3 +124,74 @@ class EpisodeRunner:
                     compressed_behavior += compressor.flush()
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
+
+    def transform_env_action(self, action):
+        return self._transform(action, space=self.output_space, is_brain_input=False)
+
+    def transform_brain_input(self, brain_input):
+        return self._transform(brain_input, space=self.input_space, is_brain_input=True)
+
+    def _transform(
+            self,
+            to_transform: Union[np.ndarray, int, Tuple],
+            space: gym.Space,
+            is_brain_input: bool) -> Union[np.ndarray, int, Tuple]:
+
+        # TODO doc-string for two methods above, code comments, BrainVisualizer transform, remove code for normalizing from brains
+        # TODO remove old function for transform from helper.py and its usages
+        if isinstance(space, gym.spaces.Box):
+            if is_brain_input:
+                # Could be for example RGB images which are three-dimensional
+                return to_transform.flatten()
+            else:
+                return to_transform
+        elif isinstance(space, gym.spaces.Discrete):
+            # We encode Discrete Spaces as one-hot vectors
+            if is_brain_input:
+                one_hot_vector = np.zeros(space.n)
+                one_hot_vector[to_transform] = 1
+                return one_hot_vector
+            else:
+                return np.argmax(to_transform)
+        elif isinstance(space, gym.spaces.Tuple):
+            # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
+            # a tuple where each entry in the tuple is linked to the corresponding Space.
+            if is_brain_input:
+                # Transform the brain input (a tuple) into a one-dimensional np.ndarray
+                brain_input = []
+                for i, sub_input in enumerate(to_transform):
+                    brain_input = np.concatenate(
+                        (brain_input, self._transform(sub_input, space=space[i], is_brain_input=True))
+                    )
+                return brain_input
+            else:
+                # Transform the brain output into a tuple which match the corresponding "nested" Spaces
+                brain_output = []
+                index = 0
+                for sub_space in space:
+                    # Because Discrete spaces are encoded as one-hot vectors we cannot take their shape to determine
+                    # current range, therefore the n attribute is used
+                    if isinstance(sub_space, gym.spaces.Box):
+                        current_range = np.prod(sub_space.shape)
+                    elif isinstance(sub_space, gym.spaces.Discrete):
+                        current_range = sub_space.n
+                    else:
+                        raise RuntimeError(
+                            "'{}' is not supported to be transformed inside a Tuple Space, use Box or Discrete."
+                            "".format(sub_space.__name__)
+                        )
+
+                    brain_output.append(
+                        self._transform(
+                            to_transform[index:index + current_range], space=sub_space, is_brain_input=False
+                        )
+                    )
+                    index += current_range
+
+                assert index == to_transform.size
+
+                return tuple(brain_output)
+        else:
+            raise RuntimeError(
+                "The gym.Space '{}' is currently not supported to be transformed.".format(space.__name__)
+            )
