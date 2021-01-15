@@ -1,16 +1,19 @@
-import torch
-import numpy as np
-import torch.nn as nn
-from brains.i_brain import IBrain
-from tools.configurations import FeedForwardCfg
-from gym.spaces import Space
+import abc
 from typing import List, Callable
 
+import numpy as np
+import torch
+import torch.nn as nn
+from gym.spaces import Space
 
-class FeedForward(IBrain[FeedForwardCfg]):
+from brains.i_brain import IBrain
+from tools.configurations import FeedForwardCfg
+
+
+class FeedForward(IBrain[FeedForwardCfg], abc.ABC):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
-        super().__init__(input_space, output_space, individual, config)
+        IBrain.__init__(self, input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
                                                            output_space=output_space)
@@ -38,8 +41,9 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
                 "".format(config.non_linearity))
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
+        pass
 
     @staticmethod
     def relu(x: np.ndarray) -> np.ndarray:
@@ -144,11 +148,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
         #
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
         x = ob
-
-        if self.config.normalize_input:
-            x = self._normalize_input(x, self.input_space, self.config.normalize_input_target)
 
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))
@@ -191,7 +192,7 @@ class FeedForwardNumPy(FeedForward):
         # If bias is not used it will be zero, see constructor
         return np.dot(layer_weights, x) + bias
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         for weight, bias in zip(self.weights, self.bias):

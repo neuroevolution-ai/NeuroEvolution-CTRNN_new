@@ -1,9 +1,9 @@
-from gym.spaces import Space, Box
 import numpy as np
+from gym.spaces import Space, Box
 
+from brains.ffnn import FeedForwardNumPy
 from brains.i_brain import IBrain
 from brains.lstm import LSTMNumPy
-from brains.ffnn import FeedForwardNumPy
 from tools.configurations import ConcatenatedBrainLSTMCfg, LSTMCfg, FeedForwardCfg
 
 
@@ -12,9 +12,6 @@ class ConcatenatedLSTM(IBrain):
                  config: ConcatenatedBrainLSTMCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        self.config = config
-        self.input_space = input_space
-        self.output_space = output_space
         self.feed_forward_front = None
         self.feed_forward_back = None
 
@@ -54,11 +51,8 @@ class ConcatenatedLSTM(IBrain):
 
         assert current_index == len(individual)
 
-    def step(self, ob: np.ndarray):
+    def calculate_brain_output(self, ob: np.ndarray):
         x = ob
-
-        if self.config.normalize_input:
-            x = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
 
         if self.feed_forward_front:
             x = self.feed_forward_front.step(x)

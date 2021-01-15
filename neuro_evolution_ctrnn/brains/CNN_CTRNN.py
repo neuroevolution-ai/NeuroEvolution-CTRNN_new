@@ -1,15 +1,15 @@
-from abc import ABC
+import logging
+from typing import Union
 
 import numpy as np
-from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
-from typing import List, Union
-from gym.spaces import Space, Box
-from brains.i_brain import IBrain
-from brains.continuous_time_rnn import ContinuousTimeRNN
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
+from gym.spaces import Space, Box
+
+from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains.i_brain import IBrain
+from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
 
 
 # noinspection PyPep8Naming
@@ -18,7 +18,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
-        self.config = config
+
         cnn_size, ctrnn_size, cnn_output_space = self._get_sub_individual_size(config, input_space, output_space)
         ind_cnn = individual[0:cnn_size]
         ind_ctrnn = individual[cnn_size:cnn_size + ctrnn_size]
@@ -27,7 +27,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+    def calculate_brain_output(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         x = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
         cnn_out = self.cnn.forward(x=x)
         return self.ctrnn.step(ob=cnn_out.numpy())

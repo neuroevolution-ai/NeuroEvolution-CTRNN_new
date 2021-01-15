@@ -14,7 +14,6 @@ from tools.helper import set_random_seeds
 
 
 class EpisodeRunner:
-
     _env: Optional[gym.Env] = None
 
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
@@ -54,8 +53,7 @@ class EpisodeRunner:
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
             ob = env.reset()
-            transformed_ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
-            # TODO normalize
+
             done = False
             t = 0
 
@@ -63,7 +61,6 @@ class EpisodeRunner:
                 env.render()
 
             if neuron_vis:
-                # TODO BrainVis use transformed_ob, dont forget update step in training loop
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
                                                                        env_id=self.env_id, initial_observation=ob,
                                                                        width=neuron_vis_width, height=neuron_vis_height,
@@ -73,10 +70,10 @@ class EpisodeRunner:
                 brain_vis = None
 
             while not done:
-                brain_output = brain.step(transformed_ob)
+                ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
+                brain_output = brain.step(ob)
                 action = self.transform(brain_output, coming_from_space=self.output_space, is_brain_input=False)
                 ob, rew, done, info = env.step(action)
-                transformed_ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
                 t += 1
                 fitness_current += rew
 
@@ -130,15 +127,15 @@ class EpisodeRunner:
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
 
+    @staticmethod
     def transform(
-            self,
             to_transform: Union[np.ndarray, int, Tuple],
             coming_from_space: gym.Space,
             is_brain_input: bool) -> Union[np.ndarray, int, Tuple]:
         """
         Transforms 'to_transform' to a new 'format'. If is_brain_input is True this is a format which is accepted by a
-        Brain, i.e. a one-dimensional np.ndarray. If is_brain_input is False the format corresponds to the provided Space,
-        i.e. the action space of the environment.
+        Brain, i.e. a one-dimensional np.ndarray. If is_brain_input is False the format corresponds to the provided
+        Space, i.e. the action space of the environment.
 
         An input for the brain equals the output of an environment and vice versa.
 
@@ -169,7 +166,8 @@ class EpisodeRunner:
                 brain_input = []
                 for i, sub_input in enumerate(to_transform):
                     brain_input = np.concatenate(
-                        (brain_input, transform(sub_input, coming_from_space=coming_from_space[i], is_brain_input=True))
+                        (brain_input, EpisodeRunner.transform(sub_input, coming_from_space=coming_from_space[i],
+                                                              is_brain_input=True))
                     )
                 return brain_input
             else:
@@ -190,7 +188,7 @@ class EpisodeRunner:
                         )
 
                     brain_output.append(
-                        transform(
+                        EpisodeRunner.transform(
                             to_transform[index:index + current_range], coming_from_space=sub_space, is_brain_input=False
                         )
                     )

@@ -1,25 +1,25 @@
-from gym.spaces import Space
+import abc
+
 import numpy as np
 import torch
 import torch.nn as nn
+from gym.spaces import Space
 
 from brains.i_brain import IBrain
 from tools.configurations import LSTMCfg
 
 
-class LSTM(IBrain):
+class LSTM(IBrain, abc.ABC):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
-        super().__init__(input_space, output_space, individual, config)
-
-        self.config = config
-        self.input_space = input_space
+        IBrain.__init__(self, input_space, output_space, individual, config)
 
         self.input_size = self._size_from_space(input_space)
         self.output_size = self._size_from_space(output_space)
         self.lstm_num_layers = config.lstm_num_layers
 
-    def step(self, ob: np.ndarray):
+    @abc.abstractmethod
+    def calculate_brain_output(self, ob: np.ndarray):
         pass
 
     @classmethod
@@ -112,11 +112,7 @@ class LSTMPyTorch(nn.Module, LSTM):
                 torch.randn(self.lstm_num_layers, 1, self.output_size)
             )
 
-    def step(self, ob: np.ndarray):
-
-        if self.config.normalize_input:
-            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
-
+    def calculate_brain_output(self, ob: np.ndarray):
         with torch.no_grad():
             # Input requires the form (seq_len, batch, input_size)
             out, self.hidden = self.lstm(torch.from_numpy(ob.astype(np.float32)).view(1, 1, -1), self.hidden)
@@ -211,10 +207,7 @@ class LSTMNumPy(LSTM):
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
-    def step(self, ob: np.ndarray):
-
-        if self.config.normalize_input:
-            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+    def calculate_brain_output(self, ob: np.ndarray):
 
         x = ob.astype(np.float32)
 
