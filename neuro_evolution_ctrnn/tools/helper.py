@@ -3,9 +3,7 @@ import os
 import pickle
 import random
 from bz2 import compress
-from typing import Union, Tuple
 
-import gym
 import numpy as np
 import torch
 

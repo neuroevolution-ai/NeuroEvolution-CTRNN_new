@@ -1,7 +1,7 @@
 import logging
 import time
 from bz2 import BZ2Compressor
-from typing import Optional, Tuple, Union
+from typing import Optional
 
 import gym
 import numpy as np
@@ -53,7 +53,6 @@ class EpisodeRunner:
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
             ob = env.reset()
-
             done = False
             t = 0
 
@@ -70,15 +69,12 @@ class EpisodeRunner:
                 brain_vis = None
 
             while not done:
-                ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
-                brain_output = brain.step(ob)
-                action = self.transform(brain_output, coming_from_space=self.output_space, is_brain_input=False)
+                action = brain.step(ob)
                 ob, rew, done, info = env.step(action)
                 t += 1
                 fitness_current += rew
-
                 if brain_vis:
-                    brain_vis.process_update(in_values=ob, out_values=brain_output)
+                    brain_vis.process_update(in_values=ob, out_values=action)
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
                 if render:
@@ -100,13 +96,13 @@ class EpisodeRunner:
             # print(info['level_seed'])
 
         compressed_behavior = None
-        if hasattr(env, 'get_compressed_behavior'):
+        if hasattr(env, "get_compressed_behavior"):
             # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
             if callable(env.get_compressed_behavior):
                 compressed_behavior = env.get_compressed_behavior()
 
         if self.config.novelty:
-            if self.config.novelty.behavior_source == 'brain':
+            if self.config.novelty.behavior_source == "brain":
                 # todo: remove code duplication. This code is also in BehaviorWrapper
                 compressor = BZ2Compressor(2)
                 compressed_behavior = b''
@@ -126,78 +122,3 @@ class EpisodeRunner:
                     compressed_behavior += compressor.flush()
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
-
-    @staticmethod
-    def transform(
-            to_transform: Union[np.ndarray, int, Tuple],
-            coming_from_space: gym.Space,
-            is_brain_input: bool) -> Union[np.ndarray, int, Tuple]:
-        """
-        Transforms 'to_transform' to a new 'format'. If is_brain_input is True this is a format which is accepted by a
-        Brain, i.e. a one-dimensional np.ndarray. If is_brain_input is False the format corresponds to the provided
-        Space, i.e. the action space of the environment.
-
-        An input for the brain equals the output of an environment and vice versa.
-
-        :param to_transform: The to be transformed variable
-        :param coming_from_space: The Space from which to_transform comes from. If is_brain_input is True this is the
-            observation space of the environment, if it is False this is the action space
-        :param is_brain_input: True if to_transform is the input for a Brain, False if not
-        :return: The transformed variable
-        """
-        # TODO BrainVisualizer transform, remove code for normalizing from brains remove old function for transform from
-        #  helper.py and its usages
-        # TODO better name for function maybe transform_brain_input_output
-        if isinstance(coming_from_space, gym.spaces.Box):
-            return to_transform
-        elif isinstance(coming_from_space, gym.spaces.Discrete):
-            # We encode Discrete Spaces as one-hot vectors
-            if is_brain_input:
-                one_hot_vector = np.zeros(coming_from_space.n)
-                one_hot_vector[to_transform] = 1
-                return one_hot_vector
-            else:
-                return np.argmax(to_transform)
-        elif isinstance(coming_from_space, gym.spaces.Tuple):
-            # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
-            # a tuple where each entry in the tuple is linked to the corresponding Space.
-            if is_brain_input:
-                # Transform the brain input (a tuple) into a one-dimensional np.ndarray
-                brain_input = []
-                for i, sub_input in enumerate(to_transform):
-                    brain_input = np.concatenate(
-                        (brain_input, EpisodeRunner.transform(sub_input, coming_from_space=coming_from_space[i],
-                                                              is_brain_input=True))
-                    )
-                return brain_input
-            else:
-                # Transform the brain output into a tuple which match the corresponding "nested" Spaces
-                brain_output = []
-                index = 0
-                for sub_space in coming_from_space:
-                    # Because Discrete spaces are encoded as one-hot vectors we cannot take their shape to determine
-                    # current range, therefore the n attribute is used
-                    if isinstance(sub_space, gym.spaces.Box):
-                        current_range = np.prod(sub_space.shape)
-                    elif isinstance(sub_space, gym.spaces.Discrete):
-                        current_range = sub_space.n
-                    else:
-                        raise RuntimeError(
-                            "'{}' is not supported to be transformed inside a Tuple Space, use Box or Discrete."
-                            "".format(sub_space.__name__)
-                        )
-
-                    brain_output.append(
-                        EpisodeRunner.transform(
-                            to_transform[index:index + current_range], coming_from_space=sub_space, is_brain_input=False
-                        )
-                    )
-                    index += current_range
-
-                assert index == to_transform.size
-
-                return tuple(brain_output)
-        else:
-            raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be transformed.".format(coming_from_space.__name__)
-            )
