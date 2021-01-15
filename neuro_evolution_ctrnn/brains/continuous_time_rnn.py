@@ -103,12 +103,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if self.config.normalize_input:
             ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
 
-        if isinstance(self.input_space, Discrete):
-            # todo: do this observation-transformation in a cleaner way
-            ob = self.discrete_to_vector(ob)
-        else:
-            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
-            ob = ob.flatten()
+        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+        ob = ob.flatten()
 
         if self.config.use_bias:
             ob = np.r_[ob, [1]]

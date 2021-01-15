@@ -1,15 +1,16 @@
-from bz2 import BZ2Compressor
-import gym
 import logging
-import numpy as np
 import time
+from bz2 import BZ2Compressor
 from typing import Optional, Tuple, Union
 
-from tools.helper import set_random_seeds, output_to_action
+import gym
+import numpy as np
+
+from brains.CNN_CTRNN import CnnCtrnn
+from brains.continuous_time_rnn import ContinuousTimeRNN
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.env_handler import EnvHandler
-from brains.continuous_time_rnn import ContinuousTimeRNN
-from brains.CNN_CTRNN import CnnCtrnn
+from tools.helper import set_random_seeds
 
 
 class EpisodeRunner:
@@ -53,6 +54,8 @@ class EpisodeRunner:
             fitness_current = 0
             brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
             ob = env.reset()
+            transformed_ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
+            # TODO normalize
             done = False
             t = 0
 
@@ -60,6 +63,7 @@ class EpisodeRunner:
                 env.render()
 
             if neuron_vis:
+                # TODO BrainVis use transformed_ob, dont forget update step in training loop
                 brain_vis = brain_vis_handler.launch_new_visualization(brain=brain, brain_config=self.brain_config,
                                                                        env_id=self.env_id, initial_observation=ob,
                                                                        width=neuron_vis_width, height=neuron_vis_height,
@@ -69,9 +73,10 @@ class EpisodeRunner:
                 brain_vis = None
 
             while not done:
-                brain_output = brain.step(ob)
-                action = output_to_action(brain_output, self.output_space)
+                brain_output = brain.step(transformed_ob)
+                action = self.transform(brain_output, coming_from_space=self.output_space, is_brain_input=False)
                 ob, rew, done, info = env.step(action)
+                transformed_ob = self.transform(ob, coming_from_space=self.input_space, is_brain_input=True)
                 t += 1
                 fitness_current += rew
 
@@ -125,35 +130,38 @@ class EpisodeRunner:
 
         return fitness_total / number_of_rounds, compressed_behavior, steps_total
 
-    def transform_env_action(self, action):
-        return self._transform(action, space=self.output_space, is_brain_input=False)
-
-    def transform_brain_input(self, brain_input):
-        return self._transform(brain_input, space=self.input_space, is_brain_input=True)
-
-    def _transform(
+    def transform(
             self,
             to_transform: Union[np.ndarray, int, Tuple],
-            space: gym.Space,
+            coming_from_space: gym.Space,
             is_brain_input: bool) -> Union[np.ndarray, int, Tuple]:
+        """
+        Transforms 'to_transform' to a new 'format'. If is_brain_input is True this is a format which is accepted by a
+        Brain, i.e. a one-dimensional np.ndarray. If is_brain_input is False the format corresponds to the provided Space,
+        i.e. the action space of the environment.
 
-        # TODO doc-string for two methods above, code comments, BrainVisualizer transform, remove code for normalizing from brains
-        # TODO remove old function for transform from helper.py and its usages
-        if isinstance(space, gym.spaces.Box):
-            if is_brain_input:
-                # Could be for example RGB images which are three-dimensional
-                return to_transform.flatten()
-            else:
-                return to_transform
-        elif isinstance(space, gym.spaces.Discrete):
+        An input for the brain equals the output of an environment and vice versa.
+
+        :param to_transform: The to be transformed variable
+        :param coming_from_space: The Space from which to_transform comes from. If is_brain_input is True this is the
+            observation space of the environment, if it is False this is the action space
+        :param is_brain_input: True if to_transform is the input for a Brain, False if not
+        :return: The transformed variable
+        """
+        # TODO BrainVisualizer transform, remove code for normalizing from brains remove old function for transform from
+        #  helper.py and its usages
+        # TODO better name for function maybe transform_brain_input_output
+        if isinstance(coming_from_space, gym.spaces.Box):
+            return to_transform
+        elif isinstance(coming_from_space, gym.spaces.Discrete):
             # We encode Discrete Spaces as one-hot vectors
             if is_brain_input:
-                one_hot_vector = np.zeros(space.n)
+                one_hot_vector = np.zeros(coming_from_space.n)
                 one_hot_vector[to_transform] = 1
                 return one_hot_vector
             else:
                 return np.argmax(to_transform)
-        elif isinstance(space, gym.spaces.Tuple):
+        elif isinstance(coming_from_space, gym.spaces.Tuple):
             # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
             # a tuple where each entry in the tuple is linked to the corresponding Space.
             if is_brain_input:
@@ -161,14 +169,14 @@ class EpisodeRunner:
                 brain_input = []
                 for i, sub_input in enumerate(to_transform):
                     brain_input = np.concatenate(
-                        (brain_input, self._transform(sub_input, space=space[i], is_brain_input=True))
+                        (brain_input, transform(sub_input, coming_from_space=coming_from_space[i], is_brain_input=True))
                     )
                 return brain_input
             else:
                 # Transform the brain output into a tuple which match the corresponding "nested" Spaces
                 brain_output = []
                 index = 0
-                for sub_space in space:
+                for sub_space in coming_from_space:
                     # Because Discrete spaces are encoded as one-hot vectors we cannot take their shape to determine
                     # current range, therefore the n attribute is used
                     if isinstance(sub_space, gym.spaces.Box):
@@ -182,8 +190,8 @@ class EpisodeRunner:
                         )
 
                     brain_output.append(
-                        self._transform(
-                            to_transform[index:index + current_range], space=sub_space, is_brain_input=False
+                        transform(
+                            to_transform[index:index + current_range], coming_from_space=sub_space, is_brain_input=False
                         )
                     )
                     index += current_range
@@ -193,5 +201,5 @@ class EpisodeRunner:
                 return tuple(brain_output)
         else:
             raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be transformed.".format(space.__name__)
+                "The gym.Space '{}' is currently not supported to be transformed.".format(coming_from_space.__name__)
             )

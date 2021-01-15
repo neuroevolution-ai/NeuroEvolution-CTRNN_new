@@ -89,9 +89,4 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def set_masks_globally(cls, config: ConfigClass, input_space: Space, output_space: Space):
         pass
 
-    def discrete_to_vector(self, ob):
-        # todo: use this function in all derived classes
-        #  and maybe find a even cleaner way to do this without violating DRY
-        ob_new = np.zeros(self.input_space.n)
-        ob_new[ob] = 1
-        return ob_new
+

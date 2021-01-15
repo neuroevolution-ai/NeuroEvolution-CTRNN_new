@@ -1,35 +1,13 @@
-import random
-import numpy as np
-import json
-import copy
-import pickle
-import os
 import logging
-import torch
-from typing import Type
+import os
+import pickle
+import random
 from bz2 import compress
+from typing import Union, Tuple
+
 import gym
-
-from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
-                                  ConcatenatedBrainLSTMCfg, CnnCtrnnCfg, ConvolutionalNNCfg, AtariEnvAttributesCfg)
-
-
-def output_to_action(output, action_space):
-    if isinstance(action_space, gym.spaces.Discrete):
-        return np.argmax(output)
-    elif isinstance(action_space, gym.spaces.tuple.Tuple):
-        index = 0
-        action_list = []
-        for space in action_space:
-            sub_output = output[index:index + space.n]
-            action_list.append(output_to_action(sub_output, space))
-            index += space.n
-        return action_list
-    else:
-        # for output type box, the data is already in the right format
-        return output
+import numpy as np
+import torch
 
 
 def walk_dict(node, callback_node, depth=0):
