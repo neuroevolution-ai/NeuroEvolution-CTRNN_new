@@ -25,10 +25,12 @@ class TestExperiment:
         # Note that these versions depend on whether one uses a virtualenv created with the standard Python virtualenv
         # tool package or with Anaconda. Also this value changes when standard NumPy or NumPy + MKL is used.
         # I don't think this list is exhausted, expand or change accordingly if necessary.
+        # Also the GitHub Action Runner has a different result than the standard Python virtualenv for some reason
         accepted_results = [
-            -103.4065390603272,  # conda 4.9.2 + standard NumPy
-            -102.16727461334207,  # conda 4.9.2 + NumPy + MKL
-            -98.80537742389652  # Python virtualenv + standard NumPy
+            -103.4065390603272,  # Python 3.8 + conda 4.9.2 + standard NumPy
+            -102.16727461334207,  # Python 3.8 + conda 4.9.2 + NumPy + MKL
+            -98.80537742389652,  # Python 3.8 + Python virtualenv + standard NumPy
+            -98.9895922078135  # Python 3.8 in GitHub Action Runner
         ]
 
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
