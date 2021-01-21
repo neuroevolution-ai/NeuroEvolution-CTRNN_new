@@ -62,7 +62,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
 
 # Since we distribute the work across all processes having more than one thread results in performance degradation
-logging.debug("Setting number of Torch threads and interop threads to 1.")
+# logging.debug("Setting number of Torch threads and interop threads to 1.")
 torch.set_num_threads(1)
 torch.set_num_interop_threads(1)
 # https://github.com/pytorch/pytorch/issues/24398
