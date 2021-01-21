@@ -1,26 +1,25 @@
 import abc
-from tools.configurations import IOptimizerCfg
-import numpy as np
-from gym.spaces import Space, Discrete, Box
-from typing import TypeVar, Generic, Callable
-from deap import tools
-from pathlib import Path
+import copy
 import logging
 import os
-from tools.helper import write_checkpoint
-from tools.helper import normalized_compression_distance, euklidian_distance, equal_elements_distance
-from deap import base
-import copy
 
-ConfigClass = TypeVar('ConfigClass', bound=IOptimizerCfg)
+from deap import base, tools
+import numpy as np
+from pathlib import Path
+from typing import TypeVar, Generic, Callable
+
+from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
+from tools.configurations import IOptimizerCfg
+
+
+ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
 
 class IOptimizer(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
-                 map_func=map, from_checkoint=None, reset_hof=False):
-        self.create_classes()
+                 map_func=map, from_checkpoint=None, reset_hof=False):
         self.conf: ConfigClass = conf
         self.toolbox = toolbox = base.Toolbox()
         self.toolbox.stats = stats
@@ -36,11 +35,6 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         self.reset_hof = reset_hof
         if conf.novelty and not conf.fix_seed_for_generation:
             logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
-
-    @staticmethod
-    @abc.abstractmethod
-    def create_classes():
-        pass
 
     @abc.abstractmethod
     def train(self, number_generations) -> tools.Logbook:
