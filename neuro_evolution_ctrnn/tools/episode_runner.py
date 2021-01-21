@@ -17,34 +17,33 @@ class EpisodeRunner:
     _env: Optional[gym.Env] = None
 
     def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
-                 env_template):
+                 env_id):
         self.config = config
         self.brain_config = brain_config
         self.brain_class = brain_class
         self.input_space = input_space
         self.output_space = output_space
-        self.env_id = env_template.spec.id
+        self.env_id = env_id
         self.env_handler = EnvHandler(self.config)
 
-    def _get_env(self, record=False, record_force=False):
+    def _get_env(self, record, record_force, render):
         if self.config.reuse_env:
             if EpisodeRunner._env is None:
-                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id)
+                EpisodeRunner._env = env = self.env_handler.make_env(self.env_id, render=render, record=record,
+                                                                     record_force=record_force)
             else:
                 env = EpisodeRunner._env
                 # split is needed for the procgen environments
                 assert self.env_id.split(":")[-1] == EpisodeRunner._env.spec.id
         else:
-            env = self.env_handler.make_env(self.env_id)
-
-        if record:
-            env = gym.wrappers.Monitor(env, record, force=record_force)
+            env = self.env_handler.make_env(self.env_id, render=render, record=record, record_force=record_force)
 
         return env
 
-    def eval_fitness(self, individual, seed, render=False, record=None, record_force=False, brain_vis_handler=None,
-                     neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None, neuron_vis_height=None):
-        env = self._get_env(record, record_force)
+    def eval_fitness(self, individual, seed, render: bool = False, record: str = None, record_force: bool = False,
+                     brain_vis_handler=None, neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None,
+                     neuron_vis_height=None):
+        env = self._get_env(record, record_force, render)
         set_random_seeds(seed, env)
         fitness_total = 0
         steps_total = 0
@@ -96,6 +95,7 @@ class EpisodeRunner:
 
             fitness_total += fitness_current
             steps_total += t
+            # print(info['level_seed'])
 
         compressed_behavior = None
         if hasattr(env, 'get_compressed_behavior'):

@@ -1,26 +1,29 @@
-import gym
-import pybullet_envs  # unused import is needed to register pybullet envs
-import gym_memory_environments
+from bz2 import BZ2Compressor
+import copy
 import logging
+from typing import Union, Iterable
+
+import cv2
+import gym
+from gym.spaces import Box
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
+from gym import Wrapper
+import numpy as np
+import pybullet_envs  # unused import is needed to register pybullet envs
+
+import gym_memory_environments
 from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg
 from tools.atari_wrappers import EpisodicLifeEnv
-from gym import Wrapper
-from bz2 import BZ2Compressor
-from typing import Union, Iterable
-import numpy as np
-import cv2
-from gym.spaces import Box
 from tools.ae_wrapper import AEWrapper
 
 
 class EnvHandler:
-    """this class creates and modifies openAI-Environment."""
+    """This class creates and modifies OpenAI-Gym environments."""
 
     def __init__(self, config: EpisodeRunnerCfg):
         self.config = config
 
-    def make_env(self, env_id: str):
+    def make_env(self, env_id: str, render: bool = False, record: str = None, record_force: bool = False):
         if env_id == "ReacherMemory-v0" or env_id == "ReacherMemoryDynamic-v0":
             assert isinstance(self.config.environment_attributes, ReacherMemoryEnvAttributesCfg), \
                 "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg" \
@@ -32,15 +35,10 @@ class EnvHandler:
                 memory_frames=self.config.environment_attributes.memory_frames,
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
-            logging.info("initiating procgen with memory")
-            env = gym.make(env_id,
-                           distribution_mode="memory",
-                           use_monochrome_assets=False,
-                           restrict_themes=True,
-                           use_backgrounds=False)
-            env = ProcEnvWrapper(env)
+            logging.debug("initiating procgen with memory")
+            env = ProcEnvHandler(env_id, render)
         elif env_id == 'QbertHard-v0':
-            logging.info("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
+            logging.debug("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
         elif env_id == 'ReverseShaped-v0':
             env = gym.make('Reverse-v0')
@@ -48,20 +46,20 @@ class EnvHandler:
             # global configuration file.
             env.env.last = 15
             env.env.min_length = 7
-            logging.info("creating env with min_length " + str(
+            logging.debug("creating env with min_length " + str(
                 env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
 
-            logging.info("wrapping env in ReverseWrapper")
+            logging.debug("wrapping env in ReverseWrapper")
             env = ReverseWrapper(env)
         else:
             env = gym.make(env_id)
 
         if self.config.use_autoencoder:
-            logging.info("wrapping env in AEWrapper")
+            logging.debug("wrapping env in AEWrapper")
             env = AEWrapper(env)
         else:
             if env.spec.id.endswith("NoFrameskip-v4"):
-                logging.info("wrapping env in AtariPreprocessing")
+                logging.debug("wrapping env in AtariPreprocessing")
 
                 assert isinstance(self.config.environment_attributes, AtariEnvAttributesCfg), \
                     "For atari environment one must provide the AtariEnvAttributesCfg" \
@@ -78,45 +76,88 @@ class EnvHandler:
                                          terminal_on_life_loss=self.config.environment_attributes.terminal_on_life_loss,
                                          grayscale_obs=self.config.environment_attributes.grayscale_obs)
 
-
         if str(env_id).startswith("BipedalWalker"):
-            logging.info("wrapping env in Box2DWalkerWrapper")
+            logging.debug("wrapping env in Box2DWalkerWrapper")
             env = Box2DWalkerWrapper(env)
 
         if self.config.novelty:
             if self.config.novelty.behavior_source in ['observation', 'action', 'state']:
-                logging.info("wrapping env in BehaviorWrapper")
+                logging.debug("wrapping env in BehaviorWrapper")
                 env = BehaviorWrapper(env, self.config.novelty.behavior_source,
                                       self.config.novelty.behavioral_interval,
                                       self.config.novelty.behavioral_max_length)
 
         if self.config.max_steps_per_run:
-            logging.info("wrapping env in MaxStepWrapper")
+            logging.debug("wrapping env in MaxStepWrapper")
             env = MaxStepWrapper(env, max_steps=self.config.max_steps_per_run, penalty=self.config.max_steps_penalty)
+
+        if record is not None:
+            env = gym.wrappers.Monitor(env, record, force=record_force)
 
         return env
 
 
-class ProcEnvWrapper(Wrapper):
+class ProcEnvHandler(gym.Env):
+    """
+    This Wrapper scales to observation to values between 0 and 1.
+    Additionally it implements a seed method because for reasons unknown it not implemented upstream
+    """
 
-    def __init__(self, env):
-        super(ProcEnvWrapper, self).__init__(env)
-        self.screen_size = 32
+    def __init__(self, env_id, render):
+        # todo: maybe add env specific configuration, but only after issue #20 has been implemented
+        self.env_id = env_id
+        self.render_mode = None
+        if render:
+            self.render_mode = "rgb_array"
+        super().__init__()
+        self._env = self._make_inner_env(start_level=0)
+        self.spec = copy.deepcopy(self._env.spec)  # deep copy to avoid references to inner gym
+        self.action_space = self._env.action_space  # use reference, so action_space.seed() works as expected
         self.obs_dtype = np.float16
+        self.input_high = 255
+        self.current_level = 0
+        assert self.input_high == self._env.observation_space.high.min(), "unexpected bounds for input space"
+        assert self.input_high == self._env.observation_space.high.max(), "unexpected bounds for input space"
+        assert 0 == self._env.observation_space.low.min(), "unexpected bounds for input space"
+        assert 0 == self._env.observation_space.low.max(), "unexpected bounds for input space"
         self.observation_space = Box(low=0, high=1,
-                                     shape=(self.screen_size, self.screen_size, 3),
+                                     shape=self._env.observation_space.shape,
                                      dtype=self.obs_dtype)
 
+    def _make_inner_env(self, start_level):
+        self.current_level = start_level
+        env = gym.make(self.env_id,
+                       distribution_mode="memory",
+                       use_monochrome_assets=False,
+                       restrict_themes=True,
+                       use_backgrounds=False,
+                       num_levels=1,
+                       start_level=self.current_level,
+                       render_mode=self.render_mode
+                       )
+        return env
+
     def _transform_ob(self, ob):
-        ob = cv2.resize(ob, (self.screen_size, self.screen_size), interpolation=cv2.INTER_AREA)
         return np.asarray(ob, dtype=self.obs_dtype) / 255.0
 
+    def render(self, mode="human", **kwargs):
+        frame = self._env.render(mode=self.render_mode, **kwargs)
+        cv2.imshow("ProcGen Agent", frame)
+        cv2.waitKey(1)
+
     def step(self, action):
-        ob, rew, done, info = super(ProcEnvWrapper, self).step(action)
+        ob, rew, done, info = self._env.step(action)
         return self._transform_ob(ob), rew, done, info
 
     def reset(self):
-        return self._transform_ob(super(ProcEnvWrapper, self).reset())
+        del self._env
+        self._env = self._make_inner_env(start_level=self.current_level + 1)
+        return self._transform_ob(self._env.reset())
+
+    def seed(self, seed=0):
+        # explicitly delete old env to avoid memory leak
+        del self._env
+        self._env = self._make_inner_env(start_level=seed)
 
 
 class MaxStepWrapper(Wrapper):
@@ -259,7 +300,7 @@ class ReverseWrapper(Wrapper):
                            - self.unwrapped.write_head_position)
                 if dist > 0:
                     rew -= 1. * dist
-                if self.unwrapped.MOVEMENTS[inp_act] != 'left':
+                if self.unwrapped.MOVEMENTS[inp_act] != "left":
                     rew -= 1
 
         return ob, rew, done, info

@@ -22,9 +22,9 @@ bokeh==2.0 # for dash-dashboard.
 pygame
 networkx
 procgen
-
 typed-argument-parser # adds code completyion to argparse in pycharm
 tikzplotlib
+opencv-python
 
 # optional, if needed install manually
 # gym[mujoco]

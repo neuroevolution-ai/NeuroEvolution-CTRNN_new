@@ -12,6 +12,7 @@ checkpoints
 /results/*
 results
 /results/data/2020-05-29_12-00-33/Configuration.json
+videos
 
 test*.py
 temp*.py
@@ -25,3 +26,4 @@ dask-worker-space/
 
 *.latex
 /configurations/exp_design_space.json
+mprofile_*.dat

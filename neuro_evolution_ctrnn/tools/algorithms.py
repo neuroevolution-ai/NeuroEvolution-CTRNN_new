@@ -73,6 +73,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
                    include_parents_in_next_generation=True):
     population = toolbox.population
     halloffame = toolbox.hof
+    gen = -1
+    current_seed = -1
 
     for gen in range(toolbox.initial_generation, ngen):
         record_individuals(toolbox, population)
@@ -107,7 +109,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
                                          logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
                                          recorded_individuals=toolbox.recorded_individuals))
-
+    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame, population=population,
+                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+                                         recorded_individuals=toolbox.recorded_individuals)
     return toolbox.logbook
 
 
@@ -136,6 +140,8 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
     if toolbox.initial_seed:
         # set_random_seeds(toolbox.initial_seed, env=None)
         pass
+    gen = -1
+    current_seed = -1
 
     for gen in range(toolbox.initial_generation, ngen):
         population: Collection = toolbox.generate()
@@ -156,4 +162,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
                                          logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
                                          recorded_individuals=toolbox.recorded_individuals))
 
+    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame,
+                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
+                                         recorded_individuals=toolbox.recorded_individuals)
     return toolbox.logbook

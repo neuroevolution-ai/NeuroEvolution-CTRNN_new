@@ -1,12 +1,13 @@
-from deap import base
-from deap import creator
-from deap import tools
-from tools import algorithms
-import numpy as np
 import random
-from optimizer.i_optimizer import IOptimizer
-from tools.configurations import OptimizerMuLambdaCfg
 from typing import Callable
+
+from deap import tools
+import numpy as np
+
+from optimizer.creator_classes import Individual
+from optimizer.i_optimizer import IOptimizer
+from tools import algorithms
+from tools.configurations import OptimizerMuLambdaCfg
 from tools.helper import get_checkpoint
 
 
@@ -16,16 +17,11 @@ def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, 
 
 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
-    @staticmethod
-    def create_classes():
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
-                 stats,
-                 map_func=map, from_checkoint=None):
+                 stats, map_func=map, from_checkpoint=None, reset_hof=False):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
-                                                    from_checkoint)
+                                                    from_checkpoint)
         toolbox = self.toolbox
 
         if self.conf.strategy_parameter_per_gene:
@@ -37,7 +33,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                          -self.conf.initial_gene_range,
                          self.conf.initial_gene_range,
                          individual_size)
-        toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
+        toolbox.register("individual", tools.initIterate, Individual, toolbox.indices)
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
         mate_list = [
@@ -82,14 +78,16 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             toolbox.register("select", tools.selBest)
 
-        if from_checkoint:
-            cp = get_checkpoint(from_checkoint)
+        if from_checkpoint:
+            cp = get_checkpoint(from_checkpoint)
             toolbox.initial_generation = cp["generation"] + 1
             toolbox.initial_seed = cp["last_seed"]
             toolbox.population = cp["population"]
             toolbox.logbook = cp["logbook"]
             toolbox.recorded_individuals = cp["recorded_individuals"]
-            toolbox.hof = self.hof = cp["halloffame"]
+
+            if not reset_hof:
+                toolbox.hof = self.hof = cp["halloffame"]
         else:
             toolbox.initial_generation = 0
             toolbox.initial_seed = random_seed
