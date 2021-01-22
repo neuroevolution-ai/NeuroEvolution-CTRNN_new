@@ -45,4 +45,4 @@ class TestIBrain:
 
         brain_output = brain.step(input_space.sample())
 
-        assert brain_output.shape == sample_output_shape.shape
+        assert brain_output.shape == sample_output_shape

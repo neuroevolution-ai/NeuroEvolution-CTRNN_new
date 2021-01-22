@@ -111,19 +111,23 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         :param is_brain_input: True if to_transform is the input for a Brain, False if not
         :return: The parsed variable
         """
-        coming_from_space = self.input_space if is_brain_input else self.output_space
+        # This is the Space we need to calculate the correct output form
+        relevant_space = self.input_space if is_brain_input else self.output_space
 
-        if isinstance(coming_from_space, spaces.Box):
-            return brain_input_output
-        elif isinstance(coming_from_space, spaces.Discrete):
+        if isinstance(relevant_space, spaces.Box):
+            if is_brain_input:
+                return brain_input_output
+            else:
+                return brain_input_output.reshape(relevant_space.shape)
+        elif isinstance(relevant_space, spaces.Discrete):
             # We encode Discrete Spaces as one-hot vectors
             if is_brain_input:
-                one_hot_vector = np.zeros(coming_from_space.n)
+                one_hot_vector = np.zeros(relevant_space.n)
                 one_hot_vector[brain_input_output] = 1
                 return one_hot_vector
             else:
                 return np.argmax(brain_input_output)
-        elif isinstance(coming_from_space, spaces.Tuple):
+        elif isinstance(relevant_space, spaces.Tuple):
             # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
             # a tuple where each entry in the tuple is linked to the corresponding Space.
             if is_brain_input:
@@ -138,7 +142,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 # Transform the brain output into a tuple which match the corresponding "nested" Spaces
                 brain_output = []
                 index = 0
-                for sub_space in coming_from_space:
+                for sub_space in relevant_space:
                     current_range = self._size_from_space(sub_space)
 
                     brain_output.append(
@@ -153,5 +157,5 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 return tuple(brain_output)
         else:
             raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be parsed.".format(type(coming_from_space))
+                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
             )
