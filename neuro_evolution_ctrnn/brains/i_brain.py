@@ -100,7 +100,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     def parse_brain_input_output(self,
                                  brain_input_output: Union[np.ndarray, int, Tuple],
-                                 is_brain_input: bool) -> Union[np.ndarray, int, Tuple]:
+                                 is_brain_input: bool,
+                                 relevant_space: spaces.Space = None) -> Union[np.ndarray, int, Tuple, list]:
         """
         Parses 'brain_input_output' to a new 'format'. If is_brain_input is True this is a np.ndarray. If is_brain_input
         is False the format corresponds to the output Space, i.e. the action space of the environment.
@@ -109,10 +110,13 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
         :param brain_input_output: The to be parsed variable
         :param is_brain_input: True if to_transform is the input for a Brain, False if not
+        :param relevant_space: relevant_space is normally chosen depending on is_brain_input but it can be provided
+        directly with this parameter. This is used for Tuple spaces which are nested
         :return: The parsed variable
         """
         # This is the Space we need to calculate the correct output form
-        relevant_space = self.input_space if is_brain_input else self.output_space
+        if relevant_space is None:
+            relevant_space = self.input_space if is_brain_input else self.output_space
 
         if isinstance(relevant_space, spaces.Box):
             if is_brain_input:
@@ -128,16 +132,20 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             else:
                 return np.argmax(brain_input_output)
         elif isinstance(relevant_space, spaces.Tuple):
+            # TODO Tuple input spaces need to be rethinked, FFNNNumpy for example cannot handle this
+            #   possible solution would be to flatten nested spaces then it can be handled
             # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
             # a tuple where each entry in the tuple is linked to the corresponding Space.
             if is_brain_input:
-                # Transform the brain input (a tuple) into a one-dimensional np.ndarray
+                # Transform the brain input (a tuple) into a list which is structured to resemble the "nested" Spaces.
                 brain_input = []
                 for i, sub_input in enumerate(brain_input_output):
-                    brain_input = np.concatenate(
-                        (brain_input, self.parse_brain_input_output(sub_input, is_brain_input=True))
-                    )
-                return brain_input
+                    parsed_sub_input = self.parse_brain_input_output(sub_input,
+                                                                     is_brain_input=True,
+                                                                     relevant_space=relevant_space[i])
+
+                    brain_input.append(parsed_sub_input)
+                return np.array(brain_input)
             else:
                 # Transform the brain output into a tuple which match the corresponding "nested" Spaces
                 brain_output = []
@@ -147,7 +155,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
                     brain_output.append(
                         self.parse_brain_input_output(
-                            brain_input_output[index:index + current_range], is_brain_input=False
+                            brain_input_output[index:index + current_range], is_brain_input=False,
+                            relevant_space=sub_space
                         )
                     )
                     index += current_range
