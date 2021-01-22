@@ -27,3 +27,6 @@ dask-worker-space/
 *.latex
 /configurations/exp_design_space.json
 mprofile_*.dat
+
+# Whitelist files with 'test' in their name but only in tests/ folder
+!tests/test*.py
