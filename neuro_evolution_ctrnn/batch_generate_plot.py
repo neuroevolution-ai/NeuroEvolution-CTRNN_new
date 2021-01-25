@@ -16,8 +16,8 @@ class BatchPlotArgs(Tap):
     smooth: int = 0  # How strong should the lines be smoothed? (0 to disable)
 
     def configure(self):
-        self.description = "iterate over simulation folders and create a plot for each simulation run by" \
-                           "by calling plot_experiment.py for each folder"
+        self.description = """iterate over simulation folders and create a plot for each simulation run by
+                           calling plot_experiment.py for each folder"""
 
         # positional argument:
         # note: for reasons unknown positional arguments can not contain underscores when using underscores_to_dashes
