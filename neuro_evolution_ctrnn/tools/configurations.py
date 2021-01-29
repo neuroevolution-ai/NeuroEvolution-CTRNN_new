@@ -54,7 +54,7 @@ class NoveltyCfg:
     recorded_behaviors_per_generation: int
     behavioral_interval: int
     behavioral_max_length: int
-    behavior_source: str
+    behavior_source: str  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)

@@ -256,6 +256,7 @@ class BehaviorWrapper(Wrapper):
 
     def get_compressed_behavior(self):
         if self.behavioral_interval < 0:
+            # special case, where just the last value is used as BC
             self._aggregate2compressor()
         data = self.compressed_behavior + self.compressor.flush()
         self._reset_compressor()
