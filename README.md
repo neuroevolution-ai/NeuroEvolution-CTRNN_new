@@ -14,7 +14,7 @@
         git clone git@github.com:neuroevolution-ai/NeuroEvolution-CTRNN.git
         cd NeuroEvolution-CTRNN
       ```
-    - Install system dependencies. If you are running a Linux with a different package manager google the names of the
+    - Install dependencies and convenience tools. If you are running a Linux with a different package manager google the names of the
     packages for your system.
     
         ```bash
@@ -35,6 +35,12 @@
         ```bash
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mjpro150/bin
         pip install mujoco-py 'gym[mujoco]'
+        ``` 
+      
+    - Optional: install custom envs
+    
+        ```bash
+        python -m pip install git+https://github.com/neuroevolution-ai/procgen.git@3a5d86c3b89d362983c1a90df970b9173c0bd79b
         ``` 
 
 # Quick Start

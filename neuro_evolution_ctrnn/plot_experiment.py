@@ -28,8 +28,13 @@ class PlotArgs(Tap):
     style: str = 'seaborn-paper'  # Which plot style should be used?
     tex_renderer: bool = False  # Use text to render plot?
 
+    def configure(self):
+        self.description = "plot the training graph with matplotlib"
+        # positional argument:
+        self.add_argument("dir")
 
-args = PlotArgs().parse_args()
+
+args = PlotArgs(underscores_to_dashes=True).parse_args()
 
 
 # Plot results
