@@ -48,7 +48,7 @@ class DaskHandler(IProcessingHandler):
                                      silence_logs=self.worker_log_level,
                                      n_workers=self.number_of_workers,
                                      memory_pause_fraction=False,
-                                     lifetime='1 hour', lifetime_stagger='5 minutes', lifetime_restart=True,
+                                     lifetime='15 minutes', lifetime_stagger='5 minutes', lifetime_restart=True,
                                      interface="lo")
         self._client = Client(self._cluster)
         self._client.register_worker_plugin(_CreatorPlugin(self.brain_class), name="creator-plugin")

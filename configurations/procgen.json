@@ -62,6 +62,9 @@
     "number_fitness_runs": 20,
     "max_steps_per_run": 100,
     "reuse_env": false,
-    "keep_env_seed_fixed_during_generation": true
+    "keep_env_seed_fixed_during_generation": true,
+    "environment_attributes": {
+      "type": "ProcGenAttr"
+    }
   }
 }

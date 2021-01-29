@@ -21,6 +21,7 @@ def register(name: str, as_key: bool = False):
     :param as_key: if true, the node's key will be used for mapping. If false that type-value will be used
     :return: a wrapper of the class
     """
+
     # registering magic
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
@@ -53,7 +54,7 @@ class NoveltyCfg:
     recorded_behaviors_per_generation: int
     behavioral_interval: int
     behavioral_max_length: int
-    behavior_source: str
+    behavior_source: str  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -76,6 +77,16 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     scale_obs: bool = True
     terminal_on_life_loss: bool = True
     grayscale_obs: bool = False
+
+
+@register('ProcGenAttr')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ProcGenEnvAttributesCfg(IEnvAttributesCfg):
+    screen_size: int = 64
+    distribution_mode: str = 'memory'
+    use_monochrome_assets: bool = False
+    restrict_themes: bool = True
+    use_backgrounds: bool = False
 
 
 @register('episode_runner', True)

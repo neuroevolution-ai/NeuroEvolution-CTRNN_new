@@ -1,20 +1,16 @@
-from bz2 import BZ2Compressor
-import copy
-import logging
-from typing import Union, Iterable
-
-import cv2
 import gym
-from gym.spaces import Box
+import logging
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
+from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg, \
+    ProcGenEnvAttributesCfg
 from gym import Wrapper
+from bz2 import BZ2Compressor
+from typing import Union, Iterable
 import numpy as np
-import pybullet_envs  # unused import is needed to register pybullet envs
-
-import gym_memory_environments
-from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg
-from tools.atari_wrappers import EpisodicLifeEnv
+import cv2
+from gym.spaces import Box
 from tools.ae_wrapper import AEWrapper
+import copy
 
 
 class EnvHandler:
@@ -36,7 +32,11 @@ class EnvHandler:
                 action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
             logging.debug("initiating procgen with memory")
-            env = ProcEnvHandler(env_id, render)
+
+            assert isinstance(self.config.environment_attributes, ProcGenEnvAttributesCfg), \
+                "For procgen environment one must provide the ProcGenEnvAttributesCfg" \
+                " (config.environment_attributes)"
+            env = ProcEnvHandler(env_id, render, self.config.environment_attributes)
         elif env_id == 'QbertHard-v0':
             logging.debug("wrapping QbertNoFrameskip-v4 in QbertGlitchlessWrapper")
             env = QbertGlitchlessWrapper(gym.make('QbertNoFrameskip-v4'))
@@ -103,10 +103,11 @@ class ProcEnvHandler(gym.Env):
     Additionally it implements a seed method because for reasons unknown it not implemented upstream
     """
 
-    def __init__(self, env_id, render):
+    def __init__(self, env_id: str, render: bool, conf: ProcGenEnvAttributesCfg):
         # todo: maybe add env specific configuration, but only after issue #20 has been implemented
         self.env_id = env_id
         self.render_mode = None
+        self.conf = conf
         if render:
             self.render_mode = "rgb_array"
         super().__init__()
@@ -121,16 +122,16 @@ class ProcEnvHandler(gym.Env):
         assert 0 == self._env.observation_space.low.min(), "unexpected bounds for input space"
         assert 0 == self._env.observation_space.low.max(), "unexpected bounds for input space"
         self.observation_space = Box(low=0, high=1,
-                                     shape=self._env.observation_space.shape,
+                                     shape=(self.conf.screen_size, self.conf.screen_size, 3),
                                      dtype=self.obs_dtype)
 
     def _make_inner_env(self, start_level):
         self.current_level = start_level
         env = gym.make(self.env_id,
-                       distribution_mode="memory",
-                       use_monochrome_assets=False,
-                       restrict_themes=True,
-                       use_backgrounds=False,
+                       distribution_mode=self.conf.distribution_mode,
+                       use_monochrome_assets=self.conf.use_monochrome_assets,
+                       restrict_themes=self.conf.restrict_themes,
+                       use_backgrounds=self.conf.use_backgrounds,
                        num_levels=1,
                        start_level=self.current_level,
                        render_mode=self.render_mode
@@ -138,7 +139,8 @@ class ProcEnvHandler(gym.Env):
         return env
 
     def _transform_ob(self, ob):
-        return np.asarray(ob, dtype=self.obs_dtype) / 255.0
+        obs = cv2.resize(ob, (self.conf.screen_size, self.conf.screen_size), interpolation=cv2.INTER_AREA)
+        return np.asarray(obs, dtype=self.obs_dtype) / 255.0
 
     def render(self, mode="human", **kwargs):
         frame = self._env.render(mode=self.render_mode, **kwargs)
@@ -254,6 +256,7 @@ class BehaviorWrapper(Wrapper):
 
     def get_compressed_behavior(self):
         if self.behavioral_interval < 0:
+            # special case, where just the last value is used as BC
             self._aggregate2compressor()
         data = self.compressed_behavior + self.compressor.flush()
         self._reset_compressor()

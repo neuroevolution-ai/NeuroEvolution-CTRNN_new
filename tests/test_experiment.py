@@ -3,6 +3,7 @@ from attr import evolve
 import os
 from tools.helper import sample_from_design_space
 from tools.config_reader import ConfigReader
+from tools.configurations import ProcGenEnvAttributesCfg
 import json
 
 
@@ -66,8 +67,14 @@ class TestExperiment:
                           v_mask='logarithmic', v_mask_param=128,
                           w_mask='logarithmic', w_mask_param=128,
                           t_mask='logarithmic', t_mask_param=128)
+
+        # need custom eprunner-config, because procgen experiments need explicit config
+        episode_runner_cfg = evolve(config.episode_runner,
+                                    environment_attributes=ProcGenEnvAttributesCfg(type="ProcGenAttr"))
+
         # need to use mu_lambda_es_config, because genome is too large for CMA_ES
-        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config)
+        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config,
+                        episode_runner=episode_runner_cfg)
 
         exp = Experiment(configuration=config,
                          result_path=tmpdir,

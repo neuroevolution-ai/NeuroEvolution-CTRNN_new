@@ -58,14 +58,16 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
     @classmethod
     def set_class_state(cls, v_mask, w_mask, t_mask):
-        # https://github.com/pytorch/pytorch/issues/24398
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cudnn.deterministic = False
-
-        logging.debug("Setting number of torch-threads to 1")
-        # see https://github.com/pytorch/pytorch/issues/13757
-        torch.set_num_threads(1)
         return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
+
+
+# Since we distribute the work across all processes having more than one thread results in performance degradation
+# logging.debug("Setting number of Torch threads and interop threads to 1.")
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
+# https://github.com/pytorch/pytorch/issues/24398
+torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = False
 
 
 class Cnn(nn.Module):
