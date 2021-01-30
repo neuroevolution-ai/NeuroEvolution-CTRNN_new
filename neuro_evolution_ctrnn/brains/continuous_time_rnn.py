@@ -111,7 +111,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             ob = ob.flatten()
 
         if self.config.use_bias:
-            ob = np.r_[ob, [1]]
+            ob = np.append(ob, 1)
 
         # Differential equation
         if self.config.neuron_activation == "relu":
