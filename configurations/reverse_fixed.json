@@ -18,7 +18,6 @@
     "use_bias": true,
     "delta_t": 1.0,
     "neuron_activation": "relu",
-    "neuron_activation_inplace": false,
     "normalize_input": false,
     "normalize_input_target": 0,
     "optimize_state_boundaries": "fixed",

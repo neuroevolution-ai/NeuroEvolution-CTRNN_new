@@ -45,7 +45,6 @@
     "t_mask_param": 2,
     "parameter_perturbations": 0.001,
     "neuron_activation": "relu",
-    "neuron_activation_inplace": false,
     "use_bias": true
   },
   "episode_runner": {

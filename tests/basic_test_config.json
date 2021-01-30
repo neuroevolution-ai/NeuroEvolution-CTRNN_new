@@ -19,7 +19,6 @@
     "normalize_input": false,
     "normalize_input_target": 0,
     "neuron_activation": "tanh",
-    "neuron_activation_inplace": false,
     "delta_t": 0.05,
     "optimize_state_boundaries": "legacy",
     "clipping_range_max": 1.0,

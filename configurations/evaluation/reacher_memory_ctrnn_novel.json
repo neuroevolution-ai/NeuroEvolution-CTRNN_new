@@ -30,7 +30,6 @@
     "type": "CTRNN",
     "number_neurons": 10,
     "neuron_activation": "tanh",
-    "neuron_activation_inplace": true,
     "delta_t": 0.05,
     "use_bias": false,
     "normalize_input": true,

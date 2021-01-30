@@ -21,7 +21,6 @@
     "number_neurons": [5, 7, 10],
     "delta_t": [0.1, 0.25, 0.5, 1.0],
     "neuron_activation": ["tanh", "relu"],
-    "neuron_activation_inplace": [true, false],
     "normalize_input": [true, false],
     "normalize_input_target": [5, 10, 1],
     "optimize_state_boundaries": ["fixed", "legacy", "global", "per_neuron"],

@@ -111,7 +111,6 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
     neuron_activation: str
-    neuron_activation_inplace: bool = False
     parameter_perturbations: float = 0.0
     v_mask: str = 'dense'
     v_mask_param: float = 0.0

@@ -39,7 +39,6 @@
       "type": "CTRNN",
       "number_neurons": 15,
       "neuron_activation": "relu",
-      "neuron_activation_inplace": false,
       "use_bias": true,
       "delta_t": 0.05,
       "normalize_input": false,

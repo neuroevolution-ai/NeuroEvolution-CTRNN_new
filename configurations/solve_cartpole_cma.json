@@ -17,7 +17,6 @@
     "normalize_input": true,
     "normalize_input_target": 100,
     "neuron_activation": "tanh",
-    "neuron_activation_inplace": true,
     "number_neurons": 5,
     "use_bias": false,
     "delta_t": 0.05,
