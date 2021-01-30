@@ -6,12 +6,8 @@ from typing import Type
 import numpy as np
 from deap import tools
 
-from brains.continuous_time_rnn import ContinuousTimeRNN
-from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
-from brains.i_brain import IBrain
+from brains.i_brain import IBrain, registered_brain_classes
 from optimizer.i_optimizer import IOptimizer
-from brains.lstm import LSTMPyTorch, LSTMNumPy
-from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -39,23 +35,7 @@ class Experiment(object):
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.write_final_checkpoint = write_final_checkpoint
-        self.brain_class: Type[IBrain]
-        if self.config.brain.type == "CTRNN":
-            self.brain_class = ContinuousTimeRNN
-        elif self.config.brain.type == "FeedForward_NumPy":
-            self.brain_class = FeedForwardNumPy
-        elif self.config.brain.type == "FeedForward_PyTorch":
-            self.brain_class = FeedForwardPyTorch
-        elif self.config.brain.type == "LSTM_PyTorch":
-            self.brain_class = LSTMPyTorch
-        elif self.config.brain.type == "LSTM_NumPy":
-            self.brain_class = LSTMNumPy
-        elif self.config.brain.type == "ConcatenatedBrain_LSTM":
-            self.brain_class = ConcatenatedLSTM
-        elif self.config.brain.type == "CNN_CTRNN":
-            self.brain_class = CnnCtrnn
-        else:
-            raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
+        self.brain_class: Type[IBrain] = registered_brain_classes[self.config.brain.type]
 
         self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == "CMA_ES":

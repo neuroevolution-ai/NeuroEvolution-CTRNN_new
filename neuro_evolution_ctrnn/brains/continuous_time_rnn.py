@@ -1,7 +1,7 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
 from typing import List, Union
-from gym.spaces import Space, Box, Discrete
+from gym.spaces import Space,  Discrete
 import logging
 import math
 from brains.i_brain import IBrain
@@ -9,6 +9,7 @@ from scipy import sparse
 
 
 # noinspection PyPep8Naming
+@IBrain.register('CTRNN')
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray
