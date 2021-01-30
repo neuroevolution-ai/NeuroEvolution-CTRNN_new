@@ -39,9 +39,9 @@ def register(name: str, as_key: bool = False):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
-    normalize_input: bool
-    normalize_input_target: float
-    use_bias: bool
+    normalize_input: bool = False
+    normalize_input_target: float = 1.0
+    use_bias: bool = False
 
 
 @register('novelty', True)
@@ -103,7 +103,7 @@ class EpisodeRunnerCfg(abc.ABC):
 
 
 @register('CTRNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
     delta_t: float
@@ -124,7 +124,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 
 @register('CNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
     conv_feat1: int
@@ -139,7 +139,7 @@ class ConvolutionalNNCfg(IBrainCfg):
 
 
 @register('CNN_CTRNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
@@ -147,7 +147,7 @@ class CnnCtrnnCfg(IBrainCfg):
 
 @register('FeedForward_PyTorch')
 @register('FeedForward_NumPy')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     non_linearity: str
@@ -158,20 +158,20 @@ class FeedForwardCfg(IBrainCfg):
 @register('LSTM_PyTorch')
 @register('LSTM_NumPy')
 @register('LSTMNumPy')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
 
 
 @register('ConcatenatedBrain_LSTM')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LSTMCfg
     feed_forward_front: FeedForwardCfg = None
     feed_forward_back: FeedForwardCfg = None
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True , kw_only=True)
 class IOptimizerCfg(abc.ABC):
     type: str
     novelty: Optional[NoveltyCfg] = None
