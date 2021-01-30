@@ -6,21 +6,7 @@
     "type": "CMA_ES",
     "population_size": 100,
     "sigma": 1.0,
-    "checkpoint_frequency": 0,
-    "hof_size": 5,
-    "mu": 25,
-    "efficiency_weight": 0.1,
-    "fix_seed_for_generation": true
-  },
-  "novelty": {
-    "distance": "euclid",
-    "max_recorded_behaviors": 30,
-    "recorded_behaviors_per_generation": 5,
-    "novelty_nearest_k": 5,
-    "novelty_weight": 0.2,
-    "behavioral_interval": 5,
-    "behavioral_max_length": 500,
-    "behavior_source": "state"
+    "mu": 25
   },
   "brain": {
     "type": "CTRNN",
@@ -28,26 +14,10 @@
     "use_bias": false,
     "delta_t": 0.2,
     "neuron_activation": "tanh",
-    "normalize_input": true,
-    "normalize_input_target": 2,
     "optimize_state_boundaries": "global",
     "clipping_range_max": 0.1,
     "clipping_range_min": -0.1,
-    "optimize_y0": true,
-    "set_principle_diagonal_elements_of_W_negative": true,
-    "v_mask": "learned",
-    "v_mask_param": 90,
-    "w_mask": "learned",
-    "w_mask_param": 80,
-    "t_mask": "learned",
-    "t_mask_param": 90,
-    "parameter_perturbations": 0.001
+    "optimize_y0": true
   },
-  "episode_runner": {
-    "keep_env_seed_fixed_during_generation": true,
-    "number_fitness_runs": 1,
-    "reuse_env": true,
-    "max_steps_per_run": 0,
-    "max_steps_penalty": 0
-  }
+  "episode_runner": {}
 }
