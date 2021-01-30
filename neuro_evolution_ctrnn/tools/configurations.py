@@ -121,6 +121,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask_param: float = 0.0
     clipping_range_min: float = 0
     clipping_range_max: float = 0
+    substeps: int = 1
 
 
 @register('CNN')

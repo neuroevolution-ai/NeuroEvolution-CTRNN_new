@@ -98,6 +98,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                 if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
                     self.W[j, j] = -abs(self.W[j, j])
 
+        assert self.config.substeps > 0
+
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
         if self.config.normalize_input:
@@ -113,32 +115,33 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if self.config.use_bias:
             ob = np.append(ob, 1)
 
-        # Differential equation
-        if self.config.neuron_activation == "relu":
-            y_ = np.maximum(0, self.y)
-        elif self.config.neuron_activation == "tanh":
-            y_ = np.tanh(self.y)
-        elif self.config.neuron_activation == "learned":
-            # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-            raise NotImplementedError("learned activations are not yet implemented")
-        else:
-            raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+        for _ in range(self.config.substeps):
+            # Differential equation
+            if self.config.neuron_activation == "relu":
+                y_ = np.maximum(0, self.y)
+            elif self.config.neuron_activation == "tanh":
+                y_ = np.tanh(self.y)
+            elif self.config.neuron_activation == "learned":
+                # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
+                raise NotImplementedError("learned activations are not yet implemented")
+            else:
+                raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
 
-        if self.config.neuron_activation_inplace:
-            self.y = y_  # type:ignore
-        dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
+            if self.config.neuron_activation_inplace:
+                self.y = y_  # type:ignore
+            dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
-        # Euler forward discretization
-        self.y = self.y + self.delta_t * dydt
+            # Euler forward discretization
+            self.y = self.y + self.delta_t * dydt
 
-        if self.config.parameter_perturbations:
-            self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
+            if self.config.parameter_perturbations:
+                self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
 
-        if self.config.optimize_state_boundaries == "legacy":
-            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
-                self.y = np.clip(self.y, y_min, y_max)
-        else:
-            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+            if self.config.optimize_state_boundaries == "legacy":
+                for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
+                    self.y = np.clip(self.y, y_min, y_max)
+            else:
+                self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
         o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
         return o
