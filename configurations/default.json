@@ -20,5 +20,7 @@
     "clipping_range_min": -1.0,
     "optimize_y0": false
   },
-  "episode_runner": {}
+  "episode_runner": {
+    "number_fitness_runs": 3
+  }
 }
