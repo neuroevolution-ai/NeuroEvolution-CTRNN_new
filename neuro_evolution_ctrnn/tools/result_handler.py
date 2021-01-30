@@ -21,6 +21,7 @@ class ResultHandler(object):
 
         self.git_head = subprocess.check_output(["git", "rev-parse", "--verify", "HEAD"])
         self.git_diff = subprocess.check_output(["git", "diff", "HEAD"])
+        self.pip_freeze = subprocess.check_output(["python", "-m", "pip", "freeze"])
 
     def check_path(self):
         # checking before hand is not pythonic, but problems would a lot of processing time go to waste
@@ -54,6 +55,9 @@ class ResultHandler(object):
 
         with open(os.path.join(self.result_path, "git.diff"), "wb") as diff_file:
             diff_file.write(self.git_diff)
+
+        with open(os.path.join(self.result_path, "pip.freeze"), "wb") as freeze_file:
+            freeze_file.write(self.pip_freeze)
 
         if final_checkpoint_data:
             filename = os.path.join(self.result_path, "checkpoint.pkl")
