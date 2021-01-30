@@ -2,12 +2,30 @@ import abc
 from tools.configurations import IBrainCfg
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Dict
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
+registered_brain_classes: Dict = {}
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
+
+    @staticmethod
+    def register(name: str):
+        """
+        similar to configuration.register this registering decorator maps a string to a class when the module is
+        loaded. The mapping is later used to initialize classes from config files. The mapping itself is stored in a
+        singleton outside the class.
+        :param name: the name under which the class shall be registered
+        :return:
+        """
+
+        def _register(type_class):
+            assert name not in registered_brain_classes, 'key "' + str(name) + '" was already registered'
+            registered_brain_classes[name] = type_class
+            return type_class
+
+        return _register
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):

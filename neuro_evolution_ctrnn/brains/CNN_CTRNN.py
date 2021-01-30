@@ -2,17 +2,17 @@ from abc import ABC
 
 import numpy as np
 from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
-from typing import List, Union
+from typing import Union
 from gym.spaces import Space, Box
 from brains.i_brain import IBrain
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
 
 # noinspection PyPep8Naming
+@IBrain.register('CNN_CTRNN')
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CnnCtrnnCfg):
         super().__init__(input_space, output_space, individual, config)

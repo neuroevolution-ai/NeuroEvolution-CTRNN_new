@@ -88,6 +88,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
         return individual_size
 
 
+@IBrain.register('FeedForward_PyTorch')
 class FeedForwardPyTorch(nn.Module, FeedForward):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
@@ -158,6 +159,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
             return x.view(self.output_size).numpy()
 
 
+@IBrain.register("FeedForward_NumPy")
 class FeedForwardNumPy(FeedForward):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
