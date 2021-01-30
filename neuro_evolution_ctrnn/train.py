@@ -14,7 +14,7 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 class TrainArgs(Tap):
     configuration: str  # Path to configuration file. See directory "configurations" for example files
     result_path: os.path.abspath  # Use an alternative path for simulation results
-    processing_framework: str = "dask"  # Choose the framework used for the processing. Options are dask/mp/sequential
+    processing_framework: str = "mp"  # Choose the framework used for the processing. Options are dask/mp/sequential
     num_workers: int = os.cpu_count()  # Specify the amount of workers for the computation
     from_checkpoint: str = None  # Continues training from a checkpoint. Expects path to checkpoint.pkl
     reset_hof: bool = False  # When loading from a checkpoint, should the HoF be reset before continuing?
