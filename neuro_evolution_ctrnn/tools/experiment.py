@@ -79,9 +79,9 @@ class Experiment(object):
         self.output_space = env.action_space
         logging.info("Input space: " + str(self.input_space))
         logging.info("Output space: " + str(self.output_space))
-        self.brain_class.set_masks_globally(config=self.config.brain,
-                                            input_space=self.input_space,
-                                            output_space=self.output_space)
+        self.brain_class.generate_and_set_class_state(config=self.config.brain,
+                                                      input_space=self.input_space,
+                                                      output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain,
                                                                     input_space=self.input_space,

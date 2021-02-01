@@ -86,7 +86,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             raise NotImplementedError("not implemented input/output space: " + str(type(space)))
 
     @classmethod
-    def set_masks_globally(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
         pass
 
     def discrete_to_vector(self, ob):

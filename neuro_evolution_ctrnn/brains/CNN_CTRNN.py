@@ -48,9 +48,9 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         return a + b
 
     @classmethod
-    def set_masks_globally(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        ContinuousTimeRNN.set_masks_globally(config.ctrnn_conf, cnn_output_space, output_space)
+        ContinuousTimeRNN.generate_and_set_class_state(config.ctrnn_conf, cnn_output_space, output_space)
 
     @classmethod
     def get_class_state(cls):
