@@ -26,20 +26,15 @@ class LSTM(IBrain):
     def get_free_parameter_metadata(cls, config: LSTMCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
-
         lstm_num_layers = config.lstm_num_layers
         info_dict = {}
-
-        individual_size = 0
-
         # Calculate the number of weights as depicted in https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
         if lstm_num_layers > 0:
             layer_size1 = 4 * output_size * (input_size + output_size)
 
             if config.use_bias:
                 layer_size1 += 8 * output_size
-            info_dict["layer1"] = layer_size1
-            individual_size += layer_size1
+            info_dict["layer0"] = layer_size1
 
         for i in range(1, lstm_num_layers):
             # Here it is assumed that the LSTM is not bidirectional
@@ -47,7 +42,6 @@ class LSTM(IBrain):
             if config.use_bias:
                 layer_size_n += 8 * output_size
             info_dict["layer" + str(i)] = layer_size_n
-            individual_size += layer_size_n
 
         return info_dict
 
