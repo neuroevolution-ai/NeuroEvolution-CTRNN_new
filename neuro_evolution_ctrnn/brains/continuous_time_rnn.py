@@ -1,5 +1,6 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
+from tools.helper import walk_dict
 from typing import List, Union
 from gym.spaces import Space, Box, Discrete
 import logging
@@ -144,21 +145,23 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         return o
 
     @classmethod
-    def get_individual_size(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
+    def get_individual_slices(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+        info_dict = {'V': np.count_nonzero(cls.v_mask),
+                     'W': np.count_nonzero(cls.w_mask),
+                     'T': np.count_nonzero(cls.t_mask)}
         if config.optimize_y0:
-            individual_size += config.number_neurons
+            info_dict['optimize_y0'] = config.number_neurons
 
         if config.optimize_state_boundaries == "legacy":
-            individual_size += 2 * config.number_neurons
+            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "per_neuron":
-            individual_size += 2 * config.number_neurons
+            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "global":
-            individual_size += 2
+            info_dict['optimize_state_boundaries'] = 2
         elif config.optimize_state_boundaries == "fixed":
-            individual_size += 0
+            pass
 
-        return individual_size
+        return info_dict
 
     @classmethod
     def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):

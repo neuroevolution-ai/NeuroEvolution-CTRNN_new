@@ -67,7 +67,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_individual_size(cls, config: FeedForwardCfg, input_space: Space, output_space: Space) -> int:
+    def get_individual_slices(cls, config: FeedForwardCfg, input_space: Space, output_space: Space) -> (int, dict):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -85,7 +85,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
         if config.use_bias:
             individual_size += sum(hidden_layers) + output_size
 
-        return individual_size
+        return {'individual_size': individual_size}
 
 
 class FeedForwardPyTorch(nn.Module, FeedForward):

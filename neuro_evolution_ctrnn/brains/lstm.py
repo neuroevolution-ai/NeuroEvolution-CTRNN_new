@@ -23,29 +23,33 @@ class LSTM(IBrain):
         pass
 
     @classmethod
-    def get_individual_size(cls, config: LSTMCfg, input_space: Space, output_space: Space):
+    def get_individual_slices(cls, config: LSTMCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
         lstm_num_layers = config.lstm_num_layers
+        info_dict = {}
 
         individual_size = 0
 
         # Calculate the number of weights as depicted in https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
         if lstm_num_layers > 0:
-            individual_size += 4 * output_size * (input_size + output_size)
+            layer_size1 = 4 * output_size * (input_size + output_size)
 
             if config.use_bias:
-                individual_size += 8 * output_size
+                layer_size1 += 8 * output_size
+            info_dict["layer1"] = layer_size1
+            individual_size += layer_size1
 
         for i in range(1, lstm_num_layers):
             # Here it is assumed that the LSTM is not bidirectional
-            individual_size += 8 * output_size * output_size
-
+            layer_size_n = 8 * output_size * output_size
             if config.use_bias:
-                individual_size += 8 * output_size
+                layer_size_n += 8 * output_size
+            info_dict["layer" + str(i)] = layer_size_n
+            individual_size += layer_size_n
 
-        return individual_size
+        return info_dict
 
 
 class LSTMPyTorch(nn.Module, LSTM):
@@ -222,7 +226,6 @@ class LSTMNumPy(LSTM):
         # Calculated as in the PyTorch description of the LSTM:
         # https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
         for i in range(self.lstm_num_layers):
-
             weight_ih_li = getattr(self, "weight_ih_l{}".format(i))
             weight_hh_li = getattr(self, "weight_hh_l{}".format(i))
 

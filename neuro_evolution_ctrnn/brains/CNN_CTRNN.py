@@ -33,19 +33,21 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         return self.ctrnn.step(ob=cnn_out.numpy())
 
     @classmethod
-    def _get_sub_individual_size(cls, config, input_space, output_space):
+    def _get_sub_individual_slices(cls, config, input_space, output_space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
 
-        cnn_size = Cnn.get_individual_size(config=config.cnn_conf, input_space=input_space,
-                                           output_space=cnn_output_space)
-        ctrnn_size = ContinuousTimeRNN.get_individual_size(config=config.ctrnn_conf, input_space=cnn_output_space,
-                                                           output_space=output_space)
-        return cnn_size, ctrnn_size, cnn_output_space
+        cnn_slices = Cnn.get_individual_size(config=config.cnn_conf, input_space=input_space,
+                                             output_space=cnn_output_space)
+        ctrnn_slices = ContinuousTimeRNN.get_individual_size(config=config.ctrnn_conf,
+                                                             input_space=cnn_output_space,
+                                                             output_space=output_space)
+        return cnn_slices, ctrnn_slices, cnn_output_space
 
     @classmethod
-    def get_individual_size(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        a, b, _ = cls._get_sub_individual_size(config, input_space, output_space)
-        return a + b
+    def get_individual_slices(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
+        cnn_slices, ctrnn_slices, cnn_output_space = cls._get_sub_individual_slices(config, input_space,
+                                                                                    output_space)
+        return {'CNN': cnn_slices, 'CTRNN': ctrnn_slices, '_cnn_output_space': cnn_output_space}
 
     @classmethod
     def set_masks_globally(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):

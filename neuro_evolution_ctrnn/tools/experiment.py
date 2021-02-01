@@ -16,7 +16,7 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds
+from tools.helper import set_random_seeds, walk_dict
 from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
@@ -87,12 +87,21 @@ class Experiment(object):
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
-        if issubclass(self.brain_class, CnnCtrnn):
-            cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
-                                                                                               input_space=self.input_space,
-                                                                                               output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size) + "\tcnn_output: " +
-                         str(cnn_output_space))
+        info = self.brain_class.get_individual_slices(self.config.brain,
+                                                      input_space=self.input_space,
+                                                      output_space=self.output_space)
+        if info:
+            # printing some relevant info for this experiment
+            s = ''
+
+            def print_info(key, item, depth, is_leaf):
+                nonlocal s
+                s += str(key) + ': '
+                if is_leaf:
+                    s += str(item) + ', '
+
+            walk_dict(info, print_info)
+            logging.info(s)
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,

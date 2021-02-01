@@ -1,5 +1,6 @@
 import abc
 from tools.configurations import IBrainCfg
+from tools.helper import walk_dict
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
 from typing import TypeVar, Generic
@@ -21,8 +22,29 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @classmethod
+    def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
+        """uses context information to calculate the required number of free parameter needed to construct
+                an individual of this class"""
+
+        def add(key, item, depth, is_leaf):
+            nonlocal sum_
+
+            if str(key).startswith('_'):
+                return
+            if is_leaf:
+                sum_ += item
+
+        slice_dict = cls.get_individual_slices(config, input_space, output_space)
+        sum_ = 0
+        walk_dict(slice_dict, add)
+        return sum_
+
+    @classmethod
     @abc.abstractmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def get_individual_slices(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
+        """returns a dict for the mapping from free parameters to parts of the brain. The keys
+         are ignored for functional purposes, and only serve as hint for the user. Items are ignored for
+         functional purposes if their key starts with '_'. """
         pass
 
     @classmethod
