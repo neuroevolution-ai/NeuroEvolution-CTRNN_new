@@ -93,13 +93,11 @@ class Experiment(object):
         if info:
             # printing some relevant info for this experiment
             s = ''
-
             def print_info(key, item, depth, is_leaf):
                 nonlocal s
                 s += str(key) + ': '
                 if is_leaf:
                     s += str(item) + ', '
-
             walk_dict(info, print_info)
             logging.info(s)
 

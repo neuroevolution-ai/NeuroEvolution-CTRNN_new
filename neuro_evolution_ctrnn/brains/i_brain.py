@@ -25,7 +25,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
-
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
@@ -36,9 +35,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 else:
                     sum_ += item
             return sum_
-
         metadata_dict = cls.get_free_parameter_metadata(config, input_space, output_space)
-
         return sum_dict(metadata_dict)
 
     @classmethod

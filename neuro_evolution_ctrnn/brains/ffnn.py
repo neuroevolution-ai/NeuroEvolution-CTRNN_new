@@ -67,7 +67,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_free_parameter_metadata(cls, config: FeedForwardCfg, input_space: Space, output_space: Space) -> (int, dict):
+    def get_free_parameter_metadata(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
