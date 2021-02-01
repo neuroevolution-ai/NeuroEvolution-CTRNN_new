@@ -24,11 +24,12 @@ parser.add_argument('--max-experiments', type=int, dest='max_experiments',
 
 params = parser.parse_args()
 
-with open(params.design_space_path, "r") as read_file:
-    design_space = json.load(read_file)
 
 for i in range(params.max_experiments):
+
     logging.info("Starting experiment number: " + str(i) + " out of " + str(params.max_experiments))
+    with open(params.design_space_path, "r") as read_file:
+        design_space = json.load(read_file)
     config = sample_from_design_space(design_space)
     result_path = os.path.join(params.result_base_path, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
