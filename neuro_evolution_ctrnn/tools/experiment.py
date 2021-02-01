@@ -87,9 +87,9 @@ class Experiment(object):
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
-        info = self.brain_class.get_individual_slices(self.config.brain,
-                                                      input_space=self.input_space,
-                                                      output_space=self.output_space)
+        info = self.brain_class.get_free_parameter_metadata(self.config.brain,
+                                                            input_space=self.input_space,
+                                                            output_space=self.output_space)
         if info:
             # printing some relevant info for this experiment
             s = ''

@@ -99,7 +99,7 @@ class ConcatenatedLSTM(IBrain):
         return feed_forward_front_cfg, feed_forward_back_cfg, lstm_config, lstm_input_size, lstm_output_size
 
     @classmethod
-    def get_individual_slices(cls, config: ConcatenatedBrainLSTMCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_metadata(cls, config: ConcatenatedBrainLSTMCfg, input_space: Space, output_space: Space):
 
         feed_forward_front_cfg, feed_forward_back_cfg, lstm_config, lstm_input_size, lstm_output_size = (
             cls.get_configs_and_output_sizes(config, input_space, output_space))

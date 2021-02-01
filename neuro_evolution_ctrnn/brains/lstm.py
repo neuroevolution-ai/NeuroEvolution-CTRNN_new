@@ -23,7 +23,7 @@ class LSTM(IBrain):
         pass
 
     @classmethod
-    def get_individual_slices(cls, config: LSTMCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_metadata(cls, config: LSTMCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 

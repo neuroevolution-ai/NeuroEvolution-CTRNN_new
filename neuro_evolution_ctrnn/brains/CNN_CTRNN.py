@@ -19,35 +19,29 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
         self.config = config
-        cnn_size, ctrnn_size, cnn_output_space = self._get_sub_individual_size(config, input_space, output_space)
+        metadata_dict = self.get_free_parameter_metadata(config, input_space, output_space)
+        cnn_output_space = metadata_dict['_cnn_output_space']
+        cnn_size = Cnn.get_individual_size(config.cnn_conf, input_space, cnn_output_space)
+        ctrnn_size = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, cnn_output_space, output_space)
         ind_cnn = individual[0:cnn_size]
         ind_ctrnn = individual[cnn_size:cnn_size + ctrnn_size]
-        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space, config=config.cnn_conf,
-                       individual=ind_cnn)
+        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space,
+                       config=config.cnn_conf, individual=ind_cnn)
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
     def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        x = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
-        cnn_out = self.cnn.forward(x=x)
-        return self.ctrnn.step(ob=cnn_out.numpy())
+        return self.ctrnn.step(self.cnn.step(ob))
 
     @classmethod
-    def _get_sub_individual_slices(cls, config, input_space, output_space):
+    def get_free_parameter_metadata(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-
-        cnn_slices = Cnn.get_individual_size(config=config.cnn_conf, input_space=input_space,
-                                             output_space=cnn_output_space)
-        ctrnn_slices = ContinuousTimeRNN.get_individual_size(config=config.ctrnn_conf,
-                                                             input_space=cnn_output_space,
-                                                             output_space=output_space)
-        return cnn_slices, ctrnn_slices, cnn_output_space
-
-    @classmethod
-    def get_individual_slices(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        cnn_slices, ctrnn_slices, cnn_output_space = cls._get_sub_individual_slices(config, input_space,
-                                                                                    output_space)
-        return {'CNN': cnn_slices, 'CTRNN': ctrnn_slices, '_cnn_output_space': cnn_output_space}
+        cnn_metadata = Cnn.get_free_parameter_metadata(config=config.cnn_conf, input_space=input_space,
+                                                       output_space=cnn_output_space)
+        ctrnn_metadata = ContinuousTimeRNN.get_free_parameter_metadata(config=config.ctrnn_conf,
+                                                                       input_space=cnn_output_space,
+                                                                       output_space=output_space)
+        return {'CNN': cnn_metadata, 'CTRNN': ctrnn_metadata, '_cnn_output_space': cnn_output_space}
 
     @classmethod
     def set_masks_globally(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
@@ -72,11 +66,14 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.deterministic = False
 
 
-class Cnn(nn.Module):
+class Cnn(nn.Module, IBrain):
     _number_input_channels = 3
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):
-        super().__init__()
+
+        # super().__init__()
+        nn.Module.__init__(self)
+        IBrain.__init__(self, input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
 
         with torch.no_grad():
@@ -98,13 +95,15 @@ class Cnn(nn.Module):
 
         self.eval()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def step(self, ob):
+        x: torch.Tensor = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
+
         with torch.no_grad():
             x = F.relu(self.conv1(x))
             x = self.maxpool1(x)
             x = torch.sigmoid(self.conv2(x))
             x = self.maxpool2(x)
-            return x.flatten()
+            return x.numpy().flatten()
 
     @classmethod
     def _make_convs(cls, config: ConvolutionalNNCfg):
@@ -118,10 +117,10 @@ class Cnn(nn.Module):
         return conv1, conv2
 
     @classmethod
-    def get_individual_size(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_metadata(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
         assert output_space == cls.get_output_shape(config, input_space), "output space is not what it should be"
         conv1, conv2 = cls._make_convs(config)
-        return conv1.weight.size().numel() + conv2.weight.size().numel()
+        return {'conv1': conv1.weight.size().numel(), 'conv2': conv2.weight.size().numel()}
 
     @classmethod
     def get_output_shape(cls, config: ConvolutionalNNCfg, input_space: Space) -> Space:

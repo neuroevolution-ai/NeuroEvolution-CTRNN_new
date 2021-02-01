@@ -26,25 +26,31 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
 
-        def add(key, item, depth, is_leaf):
-            nonlocal sum_
+        def sum_dict(node):
+            sum_ = 0
+            for key, item in node.items():
+                if str(key).startswith('_'):
+                    continue
+                if isinstance(item, dict):
+                    sum_ += sum_dict(item)
+                else:
+                    sum_ += item
+            return sum_
 
-            if str(key).startswith('_'):
-                return
-            if is_leaf:
-                sum_ += item
+        metadata_dict = cls.get_free_parameter_metadata(config, input_space, output_space)
 
-        slice_dict = cls.get_individual_slices(config, input_space, output_space)
-        sum_ = 0
-        walk_dict(slice_dict, add)
-        return sum_
+        return sum_dict(metadata_dict)
 
     @classmethod
     @abc.abstractmethod
-    def get_individual_slices(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
-        """returns a dict for the mapping from free parameters to parts of the brain. The keys
-         are ignored for functional purposes, and only serve as hint for the user. Items are ignored for
-         functional purposes if their key starts with '_'. """
+    def get_free_parameter_metadata(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
+        """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
+        only the sum of the individual leaves is relevant at the time of writing this docstring.
+        Items (and their respective subtrees) are ignored if their key starts with '_'.
+
+        The sum of the values of the leaves of this dict, must be exactly the dimension of the individual, which
+        is parsed by the constructor of the respective brain.
+        """
         pass
 
     @classmethod
@@ -71,7 +77,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     @staticmethod
     def _normalize(x, low, high):
         """scales a value x from interval [low,high] to interval [0,1]"""
-        return ((x - low) / (high - low))
+        return (x - low) / (high - low)
 
     @staticmethod
     def _scale_observation(ob, input_space: Space, target: float):
@@ -87,7 +93,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             scaled = IBrain._normalize(ob[mask], input_space.low[mask],
                                        input_space.high[mask])
 
-            # ob[mask] is now betwen -target and +target
+            # ob[mask] is now between -target and +target
             ob[mask] = (scaled - 0.5) * (2 * target)
         else:
             raise NotImplementedError("normalize_input is only defined for input-type Box")
@@ -100,10 +106,10 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         elif isinstance(space, Box):
             return np.prod(space.shape)  # type: ignore
         elif isinstance(space, tuple.Tuple):
-            sum = 0
+            sum_ = 0
             for x in space:
-                sum += IBrain._size_from_space(x)
-            return sum
+                sum_ += IBrain._size_from_space(x)
+            return sum_
         else:
             raise NotImplementedError("not implemented input/output space: " + str(type(space)))
 
