@@ -90,16 +90,7 @@ class Experiment(object):
         info = self.brain_class.get_free_parameter_metadata(self.config.brain,
                                                             input_space=self.input_space,
                                                             output_space=self.output_space)
-        if info:
-            # printing some relevant info for this experiment
-            s = ''
-            def print_info(key, item, depth, is_leaf):
-                nonlocal s
-                s += str(key) + ': '
-                if is_leaf:
-                    s += str(item) + ', '
-            walk_dict(info, print_info)
-            logging.info(s)
+        logging.info("consumption of free parameter: " + str(info))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
