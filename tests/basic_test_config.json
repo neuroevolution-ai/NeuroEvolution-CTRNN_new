@@ -1,0 +1,44 @@
+{
+  "environment": "BipedalWalker-v3",
+  "random_seed": 123,
+  "number_generations": 3,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 2,
+    "sigma": 1.0,
+    "checkpoint_frequency": 0,
+    "hof_size": 5,
+    "mu": 0,
+    "efficiency_weight": 0,
+    "fix_seed_for_generation": false
+  },
+  "brain": {
+    "type": "CTRNN",
+    "number_neurons": 2,
+    "use_bias": false,
+    "normalize_input": false,
+    "normalize_input_target": 0,
+    "neuron_activation": "tanh",
+    "delta_t": 0.05,
+    "optimize_state_boundaries": "legacy",
+    "clipping_range_max": 1.0,
+    "clipping_range_min": -1.0,
+    "optimize_y0": true,
+    "set_principle_diagonal_elements_of_W_negative": true,
+    "w_mask": "dense",
+    "w_mask_param": 0.3,
+    "v_mask": "dense",
+    "v_mask_param": 0.1,
+    "t_mask": "dense",
+    "t_mask_param": 0.3,
+    "parameter_perturbations": 0
+  },
+  "episode_runner": {
+    "keep_env_seed_fixed_during_generation": true,
+    "number_fitness_runs": 1,
+    "reuse_env": false,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "use_autoencoder": false
+  }
+}
