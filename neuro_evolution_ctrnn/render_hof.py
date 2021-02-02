@@ -9,7 +9,8 @@ from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.config_reader import ConfigReader
 from tools.configurations import OptimizerMuLambdaCfg
-
+from deap import base
+from deap import creator
 
 class RenderArgs(Tap):
     # Note: Comments in lines become helpstring when called with --help
@@ -53,7 +54,15 @@ experiment = Experiment(configuration=config,
 with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF
     # creator is registered when loading experiment
-    hall_of_fame = pickle.load(read_file_hof)
+    try:
+        hall_of_fame = pickle.load(read_file_hof)
+    except AttributeError:
+        # workaround to render experiments that were created before this PR was merged:
+        # https://github.com/neuroevolution-ai/NeuroEvolution-CTRNN_new/pull/48
+        # feel free to remove this workaround when experiments from before february 2021 are no longer relevant
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+        hall_of_fame = pickle.load(read_file_hof)
 
 assert len(hall_of_fame) >= args.hof, "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(
     args.hof, len(hall_of_fame))
