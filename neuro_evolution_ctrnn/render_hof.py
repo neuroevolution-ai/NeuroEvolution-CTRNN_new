@@ -8,6 +8,7 @@ from tap import Tap
 from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.config_reader import ConfigReader
+from tools.configurations import OptimizerMuLambdaCfg
 
 
 class RenderArgs(Tap):
@@ -71,9 +72,9 @@ if hasattr(config.optimizer, "mutation_learned"):
     # are not part of the brain and need to be removed from the genome before initializing the brain.
     individuals = experiment.optimizer.strip_strategy_from_population(individuals,
                                                                       config.optimizer.mutation_learned)
-elif config.optimizer.type == "MU_ES":
+elif isinstance(config.optimizer, OptimizerMuLambdaCfg):
     # later version of don't have the "mutation_learned" option anymore and instead always use that option
-    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True)
+    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True, config.optimizer.strategy_parameter_per_gene)
 
 render = not args.no_render
 
