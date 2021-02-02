@@ -45,7 +45,7 @@ for i in range(params.max_experiments):
         logging.info('starting experiment...')
         subprocess.call(["python",
                          "neuro_evolution_ctrnn/train.py",
-                         "--configuration", conf_path,
+                         conf_path,
                          "--result-path", result_path])
         logging.info('... experiment done')
 
