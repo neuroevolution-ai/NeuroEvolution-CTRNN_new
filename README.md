@@ -40,6 +40,7 @@
     - Optional: install custom envs
     
         ```bash
+        sudo apt install qt5-default cmake
         python -m pip install git+https://github.com/neuroevolution-ai/procgen.git@3a5d86c3b89d362983c1a90df970b9173c0bd79b
         ``` 
 
