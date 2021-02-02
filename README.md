@@ -53,12 +53,12 @@
         ```bash
         tmux
         . $HOME/.venv/neuro/bin/activate`
-        python neuro_evolution_ctrnn/train.py --configuration configurations/default.json
+        python neuro_evolution_ctrnn/train.py configurations/default.json
         ```
 
 3. Visualize the results
     
-    `python neuro_evolution_ctrnn/visualize.py --neuron-vis --render` 
+    `python neuro_evolution_ctrnn/render_hof.py results/data/2021-02-01_11-28-24` 
 
 4. Optional: Publish the results
     - All results are stored in a git submodule which is located in a different folder
