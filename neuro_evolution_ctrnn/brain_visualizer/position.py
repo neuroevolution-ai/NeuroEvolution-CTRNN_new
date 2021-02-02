@@ -10,8 +10,8 @@ class Positions:
 
     @staticmethod
     def get_graph_positions(visualizer: "brain_visualizer.BrainVisualizer") -> dict:
-        brain_state = visualizer.brain.y
-        brain_weight = visualizer.brain.W.todense()
+        brain_state = visualizer.brain.get_neuron_states()
+        brain_weight = visualizer.brain.get_internal_weight_matrix()
 
         # Create Graph by adding Nodes and Edges separately
         g = nx.Graph(brain="CTRNN")

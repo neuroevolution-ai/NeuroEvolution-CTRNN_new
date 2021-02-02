@@ -21,6 +21,7 @@ def register(name: str, as_key: bool = False):
     :param as_key: if true, the node's key will be used for mapping. If false that type-value will be used
     :return: a wrapper of the class
     """
+
     # registering magic
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
@@ -41,6 +42,23 @@ class IBrainCfg(abc.ABC):
     normalize_input: bool
     normalize_input_target: float
     use_bias: bool
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class IPytorchBrainCfg(IBrainCfg):
+    num_layers: int
+    hidden_size: int
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ILayerBasedBrainCfg(IBrainCfg):
+    # The structure of the layers
+    # Each list entry translates to the size of one layer
+    # The layers are in the given order
+    hidden_layer_structure: List[int]
+    optimize_initial_neuron_state: bool
+    # Whether a neuron can only use its own state form the last timestep
+    diagonal_hidden_to_hidden: bool = True
 
 
 @register('novelty', True)
@@ -91,10 +109,28 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
+@register('ELMAN')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ElmanCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@register('LSTMLayered')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LstmLayeredCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@register('GRU')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruCfg(ILayerBasedBrainCfg):
+    pass
+
+
 @register('CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
-    optimize_y0: bool
+    optimize_initial_neuron_state: bool
     delta_t: float
     optimize_state_boundaries: str
     set_principle_diagonal_elements_of_W_negative: bool
@@ -144,12 +180,29 @@ class FeedForwardCfg(IBrainCfg):
     cppn_hidden_layers: List[int]
 
 
-@register('LSTM_PyTorch')
 @register('LSTM_NumPy')
 @register('LSTMNumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
     lstm_num_layers: int
+
+
+@register('ElmanTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ElmanTorchCfg(IPytorchBrainCfg):
+    pass
+
+@register('GruTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruTorchCfg(IPytorchBrainCfg):
+    pass
+
+
+
+@register('LSTM_PyTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LstmTorchCfg(IPytorchBrainCfg):
+    pass
 
 
 @register('ConcatenatedBrain_LSTM')

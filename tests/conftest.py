@@ -1,7 +1,8 @@
 import pytest
 import os
 from tools.config_reader import ConfigReader
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg
+from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg, \
+    ILayerBasedBrainCfg
 from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg, \
     OptimizerMuLambdaCfg
 from gym.spaces import Box
@@ -41,6 +42,13 @@ def ffnn_config() -> FeedForwardCfg:
 def lstm_config() -> LSTMCfg:
     return LSTMCfg(type="LSTM_PyTorch", normalize_input=False, normalize_input_target=1, lstm_num_layers=3,
                    use_bias=True)
+
+
+@pytest.fixture
+def layer_config() -> ILayerBasedBrainCfg:
+    return ILayerBasedBrainCfg(type=None, normalize_input=False, normalize_input_target=1, use_bias=True,
+                               hidden_layer_structure=[2], diagonal_hidden_to_hidden=False,
+                               optimize_initial_hidden_values=True, )
 
 
 @pytest.fixture

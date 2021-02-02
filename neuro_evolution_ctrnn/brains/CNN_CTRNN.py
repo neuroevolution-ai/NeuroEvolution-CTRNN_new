@@ -27,7 +27,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         x = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
         cnn_out = self.cnn.forward(x=x)
         return self.ctrnn.step(ob=cnn_out.numpy())

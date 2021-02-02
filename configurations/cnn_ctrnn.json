@@ -47,7 +47,7 @@
       "optimize_state_boundaries": "global",
       "clipping_range_max": 1.0,
       "clipping_range_min": -1.0,
-      "optimize_y0": false,
+      "optimize_initial_neuron_state": false,
       "set_principle_diagonal_elements_of_W_negative": false,
       "parameter_perturbations": 0.0,
       "w_mask": "logarithmic",

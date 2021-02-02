@@ -38,7 +38,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
                 "".format(config.non_linearity))
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
     @staticmethod
@@ -144,11 +144,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
         #
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
         x = ob
-
-        if self.config.normalize_input:
-            x = self._normalize_input(x, self.input_space, self.config.normalize_input_target)
 
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))

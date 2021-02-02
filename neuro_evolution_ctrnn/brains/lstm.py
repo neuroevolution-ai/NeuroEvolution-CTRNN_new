@@ -4,7 +4,9 @@ import torch
 import torch.nn as nn
 
 from brains.i_brain import IBrain
-from tools.configurations import LSTMCfg
+from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
+from brains.i_pytorch_brain import IPytorchBrain
+from tools.configurations import LSTMCfg, LstmLayeredCfg, LstmTorchCfg, IPytorchBrainCfg
 
 
 class LSTM(IBrain):
@@ -19,7 +21,7 @@ class LSTM(IBrain):
         self.output_size = self._size_from_space(output_space)
         self.lstm_num_layers = config.lstm_num_layers
 
-    def step(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
         pass
 
     @classmethod
@@ -47,81 +49,31 @@ class LSTM(IBrain):
 
         return individual_size
 
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
 
-class LSTMPyTorch(nn.Module, LSTM):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
-        nn.Module.__init__(self)
-        LSTM.__init__(self, input_space, output_space, individual, config)
+class LSTMPyTorch(IPytorchBrain):
 
-        assert len(individual) == self.get_individual_size(
-            config=config, input_space=input_space, output_space=output_space)
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LstmTorchCfg):
+        IPytorchBrain.__init__(self, input_space, output_space, individual, config)
 
-        if self.lstm_num_layers <= 0:
-            raise RuntimeError("LSTMs need at least one layer.")
+    def get_brain(self, config: IPytorchBrainCfg, input_size):
+        return nn.LSTM(
+            input_size=input_size, hidden_size=config.hidden_size,
+            num_layers=config.num_layers, bias=config.use_bias)
 
-        individual = np.array(individual, dtype=np.float32)
+    @staticmethod
+    def get_hidden(config: IPytorchBrainCfg):
+        return (
+            torch.randn(config.num_layers, 1, config.hidden_size),
+            torch.randn(config.num_layers, 1, config.hidden_size)
+        )
 
-        # Disable tracking of the gradients since backpropagation is not used
-        with torch.no_grad():
-            self.lstm = nn.LSTM(
-                self.input_size, self.output_size, num_layers=self.lstm_num_layers, bias=config.use_bias)
-
-            # Iterate through all layers and assign the weights from the individual
-            current_index = 0
-            for i in range(self.lstm_num_layers):
-                attr_weight_ih_li = "weight_ih_l{}".format(i)
-                attr_weight_hh_li = "weight_hh_l{}".format(i)
-
-                weight_ih_li = getattr(self.lstm, attr_weight_ih_li)
-                weight_hh_li = getattr(self.lstm, attr_weight_hh_li)
-
-                weight_ih_li_size = np.prod(weight_ih_li.size())
-                weight_hh_li_size = np.prod(weight_hh_li.size())
-
-                # Do not forget to reshape back again
-                weight_ih_li.data = torch.from_numpy(
-                    individual[current_index: current_index + weight_ih_li_size]).view(weight_ih_li.size())
-                current_index += weight_ih_li_size
-
-                weight_hh_li.data = torch.from_numpy(
-                    individual[current_index: current_index + weight_hh_li_size]).view(weight_hh_li.size())
-                current_index += weight_hh_li_size
-
-                if config.use_bias:
-                    attr_bias_ih_li = "bias_ih_l{}".format(i)
-                    attr_bias_hh_li = "bias_hh_l{}".format(i)
-
-                    bias_ih_li = getattr(self.lstm, attr_bias_ih_li)
-                    bias_hh_li = getattr(self.lstm, attr_bias_hh_li)
-
-                    bias_ih_li_size = bias_ih_li.size()[0]
-                    bias_hh_li_size = bias_hh_li.size()[0]
-
-                    bias_ih_li.data = torch.from_numpy(individual[current_index: current_index + bias_ih_li_size])
-                    current_index += bias_ih_li_size
-
-                    bias_hh_li.data = torch.from_numpy(individual[current_index: current_index + bias_hh_li_size])
-                    current_index += bias_hh_li_size
-
-            assert current_index == len(individual)
-
-            # TODO Maybe the hidden values can be initialized differently
-            self.hidden = (
-                torch.randn(self.lstm_num_layers, 1, self.output_size),
-                torch.randn(self.lstm_num_layers, 1, self.output_size)
-            )
-
-    def step(self, ob: np.ndarray):
-
-        if self.config.normalize_input:
-            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
-
-        with torch.no_grad():
-            # Input requires the form (seq_len, batch, input_size)
-            out, self.hidden = self.lstm(torch.from_numpy(ob.astype(np.float32)).view(1, 1, -1), self.hidden)
-            return out.view(self.output_size).numpy()
-
+    @staticmethod
+    def get_number_gates():
+        return 4
 
 class LSTMNumPy(LSTM):
 
@@ -211,18 +163,14 @@ class LSTMNumPy(LSTM):
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
-    def step(self, ob: np.ndarray):
-
-        if self.config.normalize_input:
-            ob = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+    def brainstep(self, ob: np.ndarray):
 
         x = ob.astype(np.float32)
 
         # The input for the i-th layer is the (i-1)-th hidden feature or if i==0 the input
         # Calculated as in the PyTorch description of the LSTM:
-        # https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
+        # https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
         for i in range(self.lstm_num_layers):
-
             weight_ih_li = getattr(self, "weight_ih_l{}".format(i))
             weight_hh_li = getattr(self, "weight_hh_l{}".format(i))
 
@@ -260,3 +208,38 @@ class LSTMNumPy(LSTM):
             x = self.hidden[i]
 
         return np.copy(self.hidden[-1])
+
+
+class LSTMLayered(ILayerBasedBrain[LstmLayeredCfg]):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
+        super().__init__(input_space, output_space, individual, config)
+
+    @staticmethod
+    def get_number_gates():
+        return 4
+
+    @staticmethod
+    def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h, hidden):
+        # Input Gate
+        i_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[0], layer_input)
+                                       + bias_h[0]
+                                       + np.dot(weight_hh[0], hidden))
+
+        # Forget Gate
+        f_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[1], layer_input)
+                                       + bias_h[1]
+                                       + np.dot(weight_hh[1], hidden))
+
+        # Cell Gate
+        g_t = np.tanh(np.dot(weight_ih[2], layer_input)
+                      + bias_h[2]
+                      + np.dot(weight_hh[2], hidden))
+
+        # Output Gate
+        o_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[3], layer_input)
+                                       + bias_h[3]
+                                       + np.dot(weight_hh[3], hidden))
+
+        cell_state = np.multiply(f_t, hidden) + np.multiply(i_t, g_t)
+        output = np.multiply(o_t, np.tanh(cell_state))
+        return [cell_state, output]

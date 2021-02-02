@@ -52,6 +52,7 @@
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,
     "environment_attributes": {
+      "type": "ReacherMemoryAttr",
       "observation_frames": 20,
       "memory_frames": 20,
       "action_frames": 50

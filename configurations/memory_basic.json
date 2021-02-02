@@ -1,7 +1,7 @@
 {
   "environment": "ReacherMemory-v0",
   "random_seed": 0,
-  "number_generations": 2500,
+  "number_generations": 150,
   "optimizer": {
     "type": "CMA_ES",
     "population_size": 200,
@@ -13,37 +13,13 @@
     "fix_seed_for_generation": false
   },
   "brain": {
-    "type": "ConcatenatedBrain_LSTM",
-    "normalize_input": false,
-    "normalize_input_target": 5,
+    "type": "ELMAN",
+    "hidden_layer_structure": [7],
+    "diagonal_hidden_to_hidden": true,
     "use_bias": true,
-    "feed_forward_front": {
-      "type": "FeedForward_NumPy",
-      "normalize_input": false,
-      "normalize_input_target": 2,
-      "use_bias": true,
-      "hidden_layers": [16],
-      "non_linearity": "relu",
-      "indirect_encoding": false,
-      "cppn_hidden_layers": [10, 10]
-    },
-    "lstm": {
-      "type": "LSTMNumPy",
-      "normalize_input": false,
-      "normalize_input_target": 5,
-      "use_bias": true,
-      "lstm_num_layers": 1
-    },
-    "feed_forward_back": {
-      "type": "FeedForward_NumPy",
-      "normalize_input": false,
-      "normalize_input_target": 2,
-      "use_bias": true,
-      "hidden_layers": [8],
-      "non_linearity": "relu",
-      "indirect_encoding": false,
-      "cppn_hidden_layers": [10, 10]
-    }
+    "normalize_input": false,
+    "normalize_input_target": 3,
+    "optimize_initial_neuron_state": false
   },
   "episode_runner": {
     "number_fitness_runs": 50,
@@ -52,9 +28,10 @@
     "max_steps_per_run": 0,
     "max_steps_penalty": 0,
     "environment_attributes": {
+      "type": "ReacherMemoryAttr",
       "observation_frames": 20,
-      "memory_frames": 20,
-      "action_frames": 50
+      "memory_frames": 1,
+      "action_frames": 20
     }
   }
 }
