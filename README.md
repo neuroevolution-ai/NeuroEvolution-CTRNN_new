@@ -73,7 +73,13 @@
     - Now commit the results with a corresponding commit message and push them
     
         `git commit -m "New simulation results" && git push`
-    
+
+Note: 
+
+* you can call all our script with the CLI parameter `-h` to show all available CLI parameters
+* for the configuration json-file, all available options are listed in [neuro_evolution_ctrnn/tools/configurations.py](neuro_evolution_ctrnn/tools/configurations.py)
+
+
 
 # Development
 
