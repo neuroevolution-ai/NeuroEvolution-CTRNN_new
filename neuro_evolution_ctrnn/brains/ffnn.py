@@ -120,34 +120,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
                     np.array(individual[current_index:current_index + hidden_layer]))
                 current_index += hidden_layer
 
-        # TODO this has to be redone if it shall be used
-        # # Indirect encoding
-        # if config.indirect_encoding:
-        #
-        #     config_cppn = LayeredNNCfg(number_neurons_layer1=config.cppn_hidden_size1,
-        #                                number_neurons_layer2=config.cppn_hidden_size2, indirect_encoding=False,
-        #                                use_biases=False, cppn_hidden_size1=0, cppn_hidden_size2=0, type="LNN")
-        #
-        #     cppn_weights = LayeredNN(4, 1, individual, config_cppn)
-        #
-        #     self.W1 = np.zeros((self.hidden_size1, self.input_size), dtype=np.single)
-        #     self.W2 = np.zeros((self.hidden_size2, self.hidden_size1), dtype=np.single)
-        #     self.W3 = np.zeros((self.output_size, self.hidden_size2), dtype=np.single)
-        #
-        #     for i, j in np.ndindex(self.W1.shape):
-        #         self.W1[i, j] = cppn_weights.step(
-        #             np.array([i / (self.hidden_size1 - 1), 0.33, j / (self.input_size - 1), 0]))
-        #
-        #     for i, j in np.ndindex(self.W2.shape):
-        #         self.W2[i, j] = cppn_weights.step(
-        #             np.array([i / (self.hidden_size2 - 1), 0.66, j / (self.hidden_size1 - 1), 0.33]))
-        #
-        #     for i, j in np.ndindex(self.W3.shape):
-        #         self.W3[i, j] = cppn_weights.step(
-        #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
-        #
+    def step(self, ob: np.ndarray) -> np.ndarray:
 
-    def brainstep(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         with torch.no_grad():
