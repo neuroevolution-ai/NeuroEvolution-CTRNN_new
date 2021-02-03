@@ -181,7 +181,10 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
         if config.use_bias:
             for hidden_layer in self.hidden_layers + [self.output_size]:
-                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
+                # The reshape(-1,1) converts the 1D bias vector into 2D, otherwise the stacked np.add() would not work
+                # in the layer_step() method below. See SO thread here for more infos about this reshape:
+                # https://stackoverflow.com/questions/36009907/numpy-reshape-1d-to-2d-array-with-1-column
+                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single).reshape(-1, 1))
 
                 current_index += hidden_layer
         else:
@@ -189,8 +192,10 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
     @staticmethod
     def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
+        x = np.matmul(layer_weights, x)
         # If bias is not used it will be zero, see constructor
-        return np.dot(layer_weights, x) + bias
+        x = np.add(x, bias)
+        return x
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
