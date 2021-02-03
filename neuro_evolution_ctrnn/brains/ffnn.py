@@ -167,16 +167,16 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         self.weights: [np.ndarray] = []
         self.bias: [np.ndarray] = []
 
-        last_layer = self.input_size
+        previous_layer = self.input_size
         current_index = 0
 
         for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_size = last_layer * hidden_layer
+            current_size = previous_layer * hidden_layer
 
             current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
-            self.weights.append(current_weight.reshape((hidden_layer, last_layer)))
+            self.weights.append(current_weight.reshape((hidden_layer, previous_layer)))
 
-            last_layer = hidden_layer
+            previous_layer = hidden_layer
             current_index += current_size
 
         if config.use_bias:
