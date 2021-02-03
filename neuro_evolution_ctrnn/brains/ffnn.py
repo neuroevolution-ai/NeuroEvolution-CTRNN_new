@@ -165,7 +165,7 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         super().__init__(input_space, output_space, individual, config)
 
         self.weights: [np.ndarray] = []
-        self.bias: [np.ndarray] = []
+        self.use_bias = config.use_bias
 
         previous_layer = self.input_size
         current_index = 0
@@ -179,7 +179,8 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
             previous_layer = hidden_layer
             current_index += current_size
 
-        if config.use_bias:
+        if self.use_bias:
+            self.bias: [np.ndarray] = []
             for hidden_layer in self.hidden_layers + [self.output_size]:
                 # The reshape(-1,1) converts the 1D bias vector into 2D, otherwise the stacked np.add() would not work
                 # in the layer_step() method below. See SO thread here for more infos about this reshape:
@@ -187,20 +188,14 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
                 self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single).reshape(-1, 1))
 
                 current_index += hidden_layer
-        else:
-            self.bias = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
-
-    @staticmethod
-    def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
-        x = np.matmul(layer_weights, x)
-        # If bias is not used it will be zero, see constructor
-        x = np.add(x, bias)
-        return x
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         for weight, bias in zip(self.weights, self.bias):
-            x = self.non_linearity(self.layer_step(x, weight, bias))
+            x = np.matmul(weight, x)
+            if self.use_bias:
+                x = np.add(x, bias)
+            x = self.non_linearity(x)
 
         return x
