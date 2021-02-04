@@ -25,46 +25,8 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-        # Set activation functions for hidden layers and output layer based on config
-        self.neuron_activation_hidden_layers = self.__get_neuron_activation(config.neuron_activation_hidden_layers)
-        self.neuron_activation_output_layer = self.__get_neuron_activation(config.neuron_activation_output_layer)
-
-    def __get_neuron_activation(self, activation: str) -> Callable[[np.ndarray], np.ndarray]:
-
-        if activation == "relu":
-            if isinstance(self, FeedForwardPyTorch):
-                return nn.ReLU()  # type:ignore
-            else:
-                return self.relu
-        elif activation == "linear":
-            if isinstance(self, FeedForwardPyTorch):
-                return nn.Linear()  # type:ignore
-            else:
-                return self.linear
-        elif activation == "tanh":
-            if isinstance(self, FeedForwardPyTorch):
-                return nn.Tanh()  # type:ignore
-            else:
-                return self.tanh
-        else:
-            raise RuntimeError(
-                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(activation))
-
-    def brainstep(self, ob: np.ndarray) -> np.ndarray:
+    def step(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
-
-    @staticmethod
-    def relu(x: np.ndarray) -> np.ndarray:
-        return np.maximum(0, x)
-
-    @staticmethod
-    def linear(x: np.ndarray) -> np.ndarray:
-        return x
-
-    @staticmethod
-    def tanh(x: np.ndarray) -> np.ndarray:
-        return np.tanh(x)
 
     @staticmethod
     def check_hidden_layers(hidden_layers: List[int]) -> List[int]:
@@ -82,17 +44,6 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
             raise RuntimeError(
                 "Error with the chosen hidden layer list {}. It must be at least of size 1 and have elements which are "
                 "larger than 0.".format(hidden_layers))
-
-    @staticmethod
-    def read_from_genome(individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int):
-        matrix_size = matrix_columns * matrix_rows
-
-        matrix = np.array(individual[index:index + matrix_size], dtype=np.single)
-        matrix = matrix.reshape(matrix_rows, matrix_columns)
-
-        index += matrix_size
-
-        return matrix, index
 
     @classmethod
     def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
@@ -122,6 +73,10 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
+
+        # Set activation functions for hidden layers and output layer based on config
+        self.activation_hidden_layers = self.get_activation_function_pytorch(config.neuron_activation_hidden_layers)
+        self.activation_output_layer = self.get_activation_function_pytorch(config.neuron_activation_output_layer)
 
         self.layers: [nn.Linear] = []
 
@@ -164,6 +119,10 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
+        # Set activation functions for hidden layers and output layer based on config
+        self.activation_hidden_layers = self.get_activation_function_numpy(config.neuron_activation_hidden_layers)
+        self.activation_output_layer = self.get_activation_function_numpy(config.neuron_activation_output_layer)
+
         self.weights_hidden_layers: List[np.ndarray] = []
         self.biases_hidden_layers: List[np.ndarray] = []
         self.use_bias = config.use_bias
@@ -173,22 +132,22 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
         # Read out weight matrizes and bias matrizes from genome for hidden layers
         for hidden_layer in self.hidden_layers:
-            current_weight, index = self.read_from_genome(individual, index, hidden_layer, previous_layer_size)
+            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer, previous_layer_size)
             self.weights_hidden_layers.append(current_weight)
 
             if self.use_bias:
-                current_bias, index = self.read_from_genome(individual, index, hidden_layer, 1)
+                current_bias, index = self.read_matrix_from_genome(individual, index, hidden_layer, 1)
                 self.biases_hidden_layers.append(current_bias)
 
             previous_layer_size = hidden_layer
 
         # Read out weight matrix from genome for output layer
-        self.weights_output_layer, index = self.read_from_genome(individual, index, self.output_size,
-                                                                 previous_layer_size)
+        self.weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size,
+                                                                        previous_layer_size)
 
         # Read out bias matrix from genome for output layer
         if self.use_bias:
-            self.biases_output_layer, index = self.read_from_genome(individual, index, self.output_size, 1)
+            self.biases_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
@@ -200,12 +159,12 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
             x = np.matmul(weights, x)
             if self.use_bias:
                 x = np.add(x, biases)
-            x = self.neuron_activation_hidden_layers(x)
+            x = self.activation_hidden_layers(x)
 
         # Calculate output layer
         x = np.matmul(self.weights_output_layer, x)
         if self.use_bias:
             x = np.add(x, self.biases_output_layer)
-        x = self.neuron_activation_output_layer(x)
+        x = self.activation_output_layer(x)
 
         return x
