@@ -24,21 +24,31 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-        self.non_linearity: Callable[[np.ndarray], np.ndarray]
-        if config.non_linearity == "relu":
+        # Set activation functions for hidden layers and output layer based on config
+        self.neuron_activation_hidden_layers = self.__get_neuron_activation(config.neuron_activation_hidden_layers)
+        self.neuron_activation_output_layer = self.__get_neuron_activation(config.neuron_activation_output_layer)
+
+    def __get_neuron_activation(self, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+
+        if activation == "relu":
             if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.ReLU()  # type:ignore
+                return nn.ReLU()  # type:ignore
             else:
-                self.non_linearity = self.relu
-        elif config.non_linearity == "tanh":
+                return self.relu
+        elif activation == "linear":
             if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.Tanh()  # type:ignore
+                return nn.Linear()  # type:ignore
             else:
-                self.non_linearity = self.tanh
+                return self.linear
+        elif activation == "tanh":
+            if isinstance(self, FeedForwardPyTorch):
+                return nn.Tanh()  # type:ignore
+            else:
+                return self.tanh
         else:
             raise RuntimeError(
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(config.non_linearity))
+                "".format(activation))
 
     def brainstep(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
@@ -46,6 +56,10 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
     @staticmethod
     def relu(x: np.ndarray) -> np.ndarray:
         return np.maximum(0, x)
+
+    @staticmethod
+    def linear(x: np.ndarray) -> np.ndarray:
+        return x
 
     @staticmethod
     def tanh(x: np.ndarray) -> np.ndarray:
@@ -128,7 +142,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
             x = torch.from_numpy(x.astype(np.float32))
 
             for layer in self.layers:
-                x = self.non_linearity(layer(x))
+                x = self.neuron_activation_hidden_layers(layer(x))
             return x.view(self.output_size).numpy()
 
 
@@ -139,6 +153,7 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         super().__init__(input_space, output_space, individual, config)
 
         self.weights: [np.ndarray] = []
+        self.bias: [np.ndarray] = []
         self.use_bias = config.use_bias
 
         previous_layer = self.input_size
@@ -154,22 +169,23 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
             current_index += current_size
 
         if self.use_bias:
-            self.bias: [np.ndarray] = []
             for hidden_layer in self.hidden_layers + [self.output_size]:
-                # The reshape(-1,1) converts the 1D bias vector into 2D, otherwise the stacked np.add() would not work
-                # in the layer_step() method below. See SO thread here for more infos about this reshape:
-                # https://stackoverflow.com/questions/36009907/numpy-reshape-1d-to-2d-array-with-1-column
-                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single).reshape(-1, 1))
+                current_bias = np.array(individual[current_index:current_index + hidden_layer], dtype=np.single)
+                self.bias.append(current_bias.reshape(hidden_layer, 1))
 
                 current_index += hidden_layer
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
-        for weight, bias in zip(self.weights, self.bias):
-            x = np.matmul(weight, x)
-            if self.use_bias:
+        if self.use_bias:
+            for weight, bias in zip(self.weights, self.bias):
+                x = np.matmul(weight, x)
                 x = np.add(x, bias)
-            x = self.non_linearity(x)
+                x = self.neuron_activation_hidden_layers(x)
+        else:
+            for weight in self.weights:
+                x = np.matmul(weight, x)
+                x = self.neuron_activation_hidden_layers(x)
 
         return x

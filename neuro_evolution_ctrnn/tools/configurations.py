@@ -177,9 +177,8 @@ class CnnCtrnnCfg(IBrainCfg):
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
-    non_linearity: str
-    indirect_encoding: bool
-    cppn_hidden_layers: List[int]
+    neuron_activation_hidden_layers: str
+    neuron_activation_output_layer: str = 'linear'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
