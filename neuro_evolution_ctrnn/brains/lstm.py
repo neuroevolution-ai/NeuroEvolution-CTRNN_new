@@ -19,7 +19,7 @@ class LSTM(IBrain):
 
         self.input_size = self._size_from_space(input_space)
         self.output_size = self._size_from_space(output_space)
-        self.lstm_num_layers = config.lstm_num_layers
+        self.num_layers = config.num_layers
 
     def brainstep(self, ob: np.ndarray):
         pass
@@ -29,18 +29,18 @@ class LSTM(IBrain):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
-        lstm_num_layers = config.lstm_num_layers
+        num_layers = config.num_layers
 
         individual_size = 0
 
         # Calculate the number of weights as depicted in https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
-        if lstm_num_layers > 0:
+        if num_layers > 0:
             individual_size += 4 * output_size * (input_size + output_size)
 
             if config.use_bias:
                 individual_size += 8 * output_size
 
-        for i in range(1, lstm_num_layers):
+        for i in range(1, num_layers):
             # Here it is assumed that the LSTM is not bidirectional
             individual_size += 8 * output_size * output_size
 
@@ -80,7 +80,7 @@ class LSTMNumPy(LSTM):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        if self.lstm_num_layers <= 0:
+        if self.num_layers <= 0:
             raise RuntimeError("LSTMs need at least one layer.")
 
         # Initialize the first layer, shape will be used for following layers
@@ -95,14 +95,14 @@ class LSTMNumPy(LSTM):
         else:
             self.bias_ih_l0 = self.bias_hh_l0 = np.zeros((4, self.output_size)).astype(np.float32)
 
-        self.hidden = np.random.randn(self.lstm_num_layers, self.output_size).astype(np.float32)
-        self.cell_state = np.random.randn(self.lstm_num_layers, self.output_size).astype(np.float32)
+        self.hidden = np.random.randn(self.num_layers, self.output_size).astype(np.float32)
+        self.cell_state = np.random.randn(self.num_layers, self.output_size).astype(np.float32)
 
         individual = np.array(individual, dtype=np.float32)
 
         current_index = 0
 
-        if self.lstm_num_layers > 0:
+        if self.num_layers > 0:
 
             self.weight_ih_l0 = individual[current_index:current_index + self.weight_ih_l0.size].reshape(
                 self.weight_ih_l0.shape)
@@ -128,7 +128,7 @@ class LSTMNumPy(LSTM):
         bias_size = np.prod(bias_shape)
 
         # Weights for following layers have not been created
-        for i in range(1, self.lstm_num_layers):
+        for i in range(1, self.num_layers):
 
             setattr(
                 self,
@@ -156,7 +156,8 @@ class LSTMNumPy(LSTM):
                 # Therefore remove the need to check for biases every time when a prediction is called
                 setattr(self, attr_bias_ih_li, np.zeros(bias_shape).astype(np.float32))
                 setattr(self, attr_bias_hh_li, np.zeros(bias_shape).astype(np.float32))
-
+        print(current_index)
+        print(len(individual))
         assert current_index == len(individual)
 
     @staticmethod
@@ -170,7 +171,7 @@ class LSTMNumPy(LSTM):
         # The input for the i-th layer is the (i-1)-th hidden feature or if i==0 the input
         # Calculated as in the PyTorch description of the LSTM:
         # https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
-        for i in range(self.lstm_num_layers):
+        for i in range(self.num_layers):
             weight_ih_li = getattr(self, "weight_ih_l{}".format(i))
             weight_hh_li = getattr(self, "weight_hh_l{}".format(i))
 

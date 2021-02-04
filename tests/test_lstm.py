@@ -34,8 +34,8 @@ class TestLSTM:
         hidden_pytorch = np.random.randn(*lstm_pytorch.hidden[0].size()).astype(np.float32)
         cell_pytorch = np.random.randn(*lstm_pytorch.hidden[1].size()).astype(np.float32)
 
-        hidden_numpy = np.copy(hidden_pytorch).reshape(lstm_config.lstm_num_layers, -1)
-        cell_numpy = np.copy(cell_pytorch).reshape(lstm_config.lstm_num_layers, -1)
+        hidden_numpy = np.copy(hidden_pytorch).reshape(lstm_config.num_layers, -1)
+        cell_numpy = np.copy(cell_pytorch).reshape(lstm_config.num_layers, -1)
 
         lstm_pytorch.hidden = (torch.from_numpy(hidden_pytorch), torch.from_numpy(cell_pytorch))
 
@@ -43,7 +43,7 @@ class TestLSTM:
         lstm_numpy.cell_state = np.copy(cell_numpy)
 
         with torch.no_grad():
-            for i in range(lstm_config.lstm_num_layers):
+            for i in range(lstm_config.num_layers):
                 attr_weight_ih_li = "weight_ih_l{}".format(i)
                 attr_weight_hh_li = "weight_hh_l{}".format(i)
 

@@ -32,7 +32,7 @@
       "normalize_input": false,
       "normalize_input_target": 5,
       "use_bias": true,
-      "lstm_num_layers": 10
+      "num_layers": 10
     },
     "feed_forward_back": {
       "type": "FeedForward_NumPy",

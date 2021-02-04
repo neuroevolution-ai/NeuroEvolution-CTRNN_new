@@ -6,12 +6,14 @@ import os
 class TestConfigReader:
 
     def test_basic_init(self):
-        config_location = os.path.join(os.getcwd(), "basic_test_config.json")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(os.getcwd())
+        config_location = os.path.join(os.getcwd(), "tests/basic_test_config.json")
         config = ConfigReader.config_from_file(config_location)
         assert config.brain.number_neurons == 2
 
     def test_cnn_init_exp(self, tmpdir):
-        config_location = os.path.join(os.getcwd(), "../configurations/cnn_ctrnn.json")
+        config_location = os.path.join(os.getcwd(), "configurations/cnn_ctrnn.json")
 
         config = ConfigReader.config_from_file(config_location)
         Experiment(configuration=config,

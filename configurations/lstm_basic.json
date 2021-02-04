@@ -16,7 +16,7 @@
     "type": "LSTM_NumPy",
     "normalize_input": true,
     "normalize_input_target": 5,
-    "lstm_num_layers": 3,
+    "num_layers": 3,
     "use_bias": true
   },
   "episode_runner": {

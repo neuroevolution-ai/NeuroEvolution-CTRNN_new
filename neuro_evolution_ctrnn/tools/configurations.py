@@ -184,7 +184,8 @@ class FeedForwardCfg(IBrainCfg):
 @register('LSTMNumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LSTMCfg(IBrainCfg):
-    lstm_num_layers: int
+    num_layers: int
+    hidden_size: int
 
 
 @register('ElmanTorch')
