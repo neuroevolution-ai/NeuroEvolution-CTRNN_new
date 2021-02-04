@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import itertools
 import torch.nn as nn
 from brains.i_brain import IBrain, register_brain
 from tools.configurations import FeedForwardCfg
@@ -163,34 +164,48 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        self.weights: List[np.ndarray] = []
-        self.bias: List[np.ndarray] = []
+        self.weights_hidden_layers: List[np.ndarray] = []
+        self.biases_hidden_layers: List[np.ndarray] = []
         self.use_bias = config.use_bias
 
-        previous_layer = self.input_size
         index = 0
+        previous_layer_size = self.input_size
 
-        for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_weight, index = self.read_from_genome(individual, index, hidden_layer, previous_layer)
-            self.weights.append(current_weight)
-            previous_layer = hidden_layer
+        # Read out weight matrizes and bias matrizes from genome for hidden layers
+        for hidden_layer in self.hidden_layers:
+            current_weight, index = self.read_from_genome(individual, index, hidden_layer, previous_layer_size)
+            self.weights_hidden_layers.append(current_weight)
 
-        if self.use_bias:
-            for hidden_layer in self.hidden_layers + [self.output_size]:
+            if self.use_bias:
                 current_bias, index = self.read_from_genome(individual, index, hidden_layer, 1)
-                self.bias.append(current_bias)
+                self.biases_hidden_layers.append(current_bias)
+
+            previous_layer_size = hidden_layer
+
+        # Read out weight matrix from genome for output layer
+        self.weights_output_layer, index = self.read_from_genome(individual, index, self.output_size,
+                                                                 previous_layer_size)
+
+        # Read out bias matrix from genome for output layer
+        if self.use_bias:
+            self.biases_output_layer, index = self.read_from_genome(individual, index, self.output_size, 1)
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
+        # Calculate hidden layers
+        # Note: itertools.zip_longest is necessary here instead of zip, since self.biases_hidden_layers is
+        # an empty list, if self.use_bias is False
+        for weights, biases in itertools.zip_longest(self.weights_hidden_layers, self.biases_hidden_layers):
+            x = np.matmul(weights, x)
+            if self.use_bias:
+                x = np.add(x, biases)
+            x = self.neuron_activation_hidden_layers(x)
+
+        # Calculate output layer
+        x = np.matmul(self.weights_output_layer, x)
         if self.use_bias:
-            for weight, bias in zip(self.weights, self.bias):
-                x = np.matmul(weight, x)
-                x = np.add(x, bias)
-                x = self.neuron_activation_hidden_layers(x)
-        else:
-            for weight in self.weights:
-                x = np.matmul(weight, x)
-                x = self.neuron_activation_hidden_layers(x)
+            x = np.add(x, self.biases_output_layer)
+        x = self.neuron_activation_output_layer(x)
 
         return x
