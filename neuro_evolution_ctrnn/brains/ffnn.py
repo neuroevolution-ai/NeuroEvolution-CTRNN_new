@@ -75,8 +75,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
         # Set activation functions for hidden layers and output layer based on config
-        self.activation_hidden_layers = self.get_activation_function_pytorch(config.neuron_activation_hidden_layers)
-        self.activation_output_layer = self.get_activation_function_pytorch(config.neuron_activation_output_layer)
+        self.activation_hidden_layers = self.get_activation_function_pytorch(config.neuron_activation)
+        self.activation_output_layer = self.get_activation_function_pytorch(config.neuron_activation_output)
 
         self.layers: [nn.Linear] = []
 
@@ -120,8 +120,8 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         super().__init__(input_space, output_space, individual, config)
 
         # Set activation functions for hidden layers and output layer based on config
-        self.activation_hidden_layers = self.get_activation_function_numpy(config.neuron_activation_hidden_layers)
-        self.activation_output_layer = self.get_activation_function_numpy(config.neuron_activation_output_layer)
+        self.activation_hidden_layers = self.get_activation_function_numpy(config.neuron_activation)
+        self.activation_output_layer = self.get_activation_function_numpy(config.neuron_activation_output)
 
         self.weights_hidden_layers: List[np.ndarray] = []
         self.biases_hidden_layers: List[np.ndarray] = []
