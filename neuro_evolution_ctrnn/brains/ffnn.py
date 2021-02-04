@@ -82,6 +82,17 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
                 "Error with the chosen hidden layer list {}. It must be at least of size 1 and have elements which are "
                 "larger than 0.".format(hidden_layers))
 
+    @staticmethod
+    def read_from_genome(individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int):
+        matrix_size = matrix_columns * matrix_rows
+
+        matrix = np.array(individual[index:index + matrix_size], dtype=np.single)
+        matrix = matrix.reshape(matrix_rows, matrix_columns)
+
+        index += matrix_size
+
+        return matrix, index
+
     @classmethod
     def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
@@ -152,28 +163,22 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        self.weights: [np.ndarray] = []
-        self.bias: [np.ndarray] = []
+        self.weights: List[np.ndarray] = []
+        self.bias: List[np.ndarray] = []
         self.use_bias = config.use_bias
 
         previous_layer = self.input_size
-        current_index = 0
+        index = 0
 
         for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_size = previous_layer * hidden_layer
-
-            current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
-            self.weights.append(current_weight.reshape((hidden_layer, previous_layer)))
-
+            current_weight, index = self.read_from_genome(individual, index, hidden_layer, previous_layer)
+            self.weights.append(current_weight)
             previous_layer = hidden_layer
-            current_index += current_size
 
         if self.use_bias:
             for hidden_layer in self.hidden_layers + [self.output_size]:
-                current_bias = np.array(individual[current_index:current_index + hidden_layer], dtype=np.single)
-                self.bias.append(current_bias.reshape(hidden_layer, 1))
-
-                current_index += hidden_layer
+                current_bias, index = self.read_from_genome(individual, index, hidden_layer, 1)
+                self.bias.append(current_bias)
 
     def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
