@@ -135,7 +135,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         else:
             self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(self.T.dot(self.y))
+        # o: Union[np.ndarray, np.generic] = np.tanh(self.T.dot(self.y))
+        o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
         return o
 
     @classmethod
@@ -170,7 +171,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                     config.w_mask_param)
         # TODO The mask was flipped on the diagonal for mathematical correct structure. check if no errer exist
-        t_mask = cls._generate_mask(config.t_mask, output_size, config.number_neurons, config.t_mask_param)
+        # t_mask = cls._generate_mask(config.t_mask, output_size, config.number_neurons, config.t_mask_param)
+        t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size,  config.t_mask_param)
 
         cls.set_class_state(v_mask=v_mask, w_mask=w_mask, t_mask=t_mask)
 
