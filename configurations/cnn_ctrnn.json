@@ -61,7 +61,7 @@
   "novelty": {
     "behavioral_interval": 100,
     "behavioral_max_length": 20,
-    "behavior_source": "brain",
+    "behavior_source": "action",
     "distance": "euclid",
     "max_recorded_behaviors": 100,
     "recorded_behaviors_per_generation": 2,

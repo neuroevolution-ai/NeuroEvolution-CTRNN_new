@@ -8,7 +8,9 @@ from tap import Tap
 from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.config_reader import ConfigReader
-
+from tools.configurations import OptimizerMuLambdaCfg
+from deap import base
+from deap import creator
 
 class RenderArgs(Tap):
     # Note: Comments in lines become helpstring when called with --help
@@ -16,9 +18,9 @@ class RenderArgs(Tap):
 
     dir: str  # Directory path to the simulation result
     no_render: bool = False  # disable rendering to screen?
+    render_raw_ob: bool = False # should the env be rendered from the perspective of the agent?
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
-    description = "Visualize Experiments"
     neuron_vis: bool = False  # show neuron visualizer?
     hof: int = 1  # how many members of hall-of-fame should be shown?
     rounds: int = 1  # how many episodes should be shown per HOF-member?
@@ -26,8 +28,15 @@ class RenderArgs(Tap):
     neuron_vis_width: int = 1600  # how wide should the neuron_vis window be?
     neuron_vis_height: int = 900  # how high should the neuron_vis window be?
 
+    def configure(self):
+        self.description = "Visualize Experiments"
+        # positional argument:
+        self.add_argument("dir")
 
-args = RenderArgs().parse_args()
+        return self
+
+
+args = RenderArgs(underscores_to_dashes=True).parse_args()
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 try:
     with open(os.path.join(args.dir, "Log.pkl"), "rb") as read_file_log:
@@ -35,7 +44,7 @@ try:
 except:
     with open(os.path.join(args.dir, "Log.json"), "r") as read_file_log:
         log = json.load(read_file_log)
-        
+
 config = ConfigReader.config_from_file(os.path.join(args.dir, "Configuration.json"))
 
 experiment = Experiment(configuration=config,
@@ -45,7 +54,15 @@ experiment = Experiment(configuration=config,
 with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF
     # creator is registered when loading experiment
-    hall_of_fame = pickle.load(read_file_hof)
+    try:
+        hall_of_fame = pickle.load(read_file_hof)
+    except AttributeError:
+        # workaround to render experiments that were created before this PR was merged:
+        # https://github.com/neuroevolution-ai/NeuroEvolution-CTRNN_new/pull/48
+        # feel free to remove this workaround when experiments from before february 2021 are no longer relevant
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
+        hall_of_fame = pickle.load(read_file_hof)
 
 assert len(hall_of_fame) >= args.hof, "The 'hof' value {} is too large as the hall of fame has a size of {}.".format(
     args.hof, len(hall_of_fame))
@@ -64,9 +81,9 @@ if hasattr(config.optimizer, "mutation_learned"):
     # are not part of the brain and need to be removed from the genome before initializing the brain.
     individuals = experiment.optimizer.strip_strategy_from_population(individuals,
                                                                       config.optimizer.mutation_learned)
-elif config.optimizer.type == "MU_ES":
+elif isinstance(config.optimizer, OptimizerMuLambdaCfg):
     # later version of don't have the "mutation_learned" option anymore and instead always use that option
-    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True)
+    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True, config.optimizer.strategy_parameter_per_gene)
 
 render = not args.no_render
 
@@ -79,4 +96,4 @@ for i, individual in enumerate(individuals):
 
     experiment.ep_runner.eval_fitness(individual, config.random_seed, render, record, record_force,
                                       BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds,
-                                      args.neuron_vis_width, args.neuron_vis_height)
+                                      args.neuron_vis_width, args.neuron_vis_height, render_raw_ob=args.render_raw_ob)
