@@ -1,7 +1,6 @@
 import pytest
 import os
 from tools.config_reader import ConfigReader
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg
 from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, LSTMCfg, FeedForwardCfg, ConcatenatedBrainLSTMCfg, \
     OptimizerMuLambdaCfg
 from gym.spaces import Box

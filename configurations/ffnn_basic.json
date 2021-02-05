@@ -6,16 +6,11 @@
     "type": "CMA_ES",
     "population_size": 5,
     "sigma": 1.0,
-    "checkpoint_frequency": 0,
-    "hof_size": 5,
     "mu": 5,
-    "efficiency_weight": 0.0,
     "fix_seed_for_generation": false
   },
   "brain": {
     "type": "FeedForward_NumPy",
-    "normalize_input": false,
-    "normalize_input_target": 2,
     "use_bias": true,
     "hidden_layers": [[64, 64]],
     "non_linearity": "relu",
@@ -23,10 +18,6 @@
     "cppn_hidden_layers": [[10, 10]]
   },
   "episode_runner": {
-    "keep_env_seed_fixed_during_generation": false,
-    "number_fitness_runs": 1,
-    "reuse_env": true,
-    "max_steps_per_run": 0,
-    "max_steps_penalty": 0
+    "keep_env_seed_fixed_during_generation": false
   }
 }
