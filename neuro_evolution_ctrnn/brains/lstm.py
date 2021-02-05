@@ -33,8 +33,8 @@ class LSTM(IBrain):
             layer_size_1 = 4 * output_size * (input_size + output_size)
 
             if config.use_bias:
-                layer_size1 += 8 * output_size
-            info_dict["layer0"] = layer_size1
+                layer_size_1 += 8 * output_size
+            info_dict["layer0"] = layer_size_1
 
         for i in range(1, lstm_num_layers):
             # Here it is assumed that the LSTM is not bidirectional

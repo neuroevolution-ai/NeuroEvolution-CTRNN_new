@@ -1,6 +1,5 @@
 import abc
 from tools.configurations import IBrainCfg
-from tools.helper import walk_dict
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
 from typing import TypeVar, Generic

@@ -16,7 +16,7 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, walk_dict
+from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
