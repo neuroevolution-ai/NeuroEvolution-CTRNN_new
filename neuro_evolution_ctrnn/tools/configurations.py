@@ -92,7 +92,7 @@ class ProcGenEnvAttributesCfg(IEnvAttributesCfg):
 @register('episode_runner', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
-    reuse_env: bool
+    reuse_env: bool = True
     keep_env_seed_fixed_during_generation: bool = True
     novelty: Optional[NoveltyCfg] = None
     environment_attributes: Optional[IEnvAttributesCfg] = None
@@ -111,7 +111,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
     neuron_activation: str
-    neuron_activation_inplace: bool = False
+    set_principle_diagonal_elements_of_W_negative: bool = True
     parameter_perturbations: float = 0.0
     v_mask: str = 'dense'
     v_mask_param: float = 0.0
@@ -121,6 +121,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask_param: float = 0.0
     clipping_range_min: float = 0
     clipping_range_max: float = 0
+    substeps: int = 1
 
 
 @register('CNN')
