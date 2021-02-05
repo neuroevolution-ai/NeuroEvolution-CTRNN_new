@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Type
+from typing import Type, get_args
 
 import numpy as np
 from deap import tools
@@ -13,7 +13,7 @@ from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
 from tools.helper import set_random_seeds
-from tools.configurations import ExperimentCfg
+from tools.configurations import ExperimentCfg, registered_types
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
@@ -35,7 +35,11 @@ class Experiment(object):
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.write_final_checkpoint = write_final_checkpoint
-        self.brain_class: Type[IBrain] = registered_brain_classes[self.config.brain.type]
+        for brain_class in IBrain.__subclasses__():
+            for bases in brain_class.__orig_bases__:
+                for type_args in get_args(bases):
+                    if registered_types[self.config.brain.type] == type_args:
+                        self.brain_class = brain_class
 
         self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == "CMA_ES":

@@ -9,6 +9,7 @@ registered_brain_classes: Dict = {}
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
+    config_class = ConfigClass
 
     @staticmethod
     def register(name: str):
