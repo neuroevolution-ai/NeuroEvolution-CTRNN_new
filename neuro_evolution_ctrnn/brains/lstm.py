@@ -46,6 +46,7 @@ class LSTM(IBrain[LSTMCfg]):
         return info_dict
 
 
+@IBrain.register("LSTM_PyTorch")
 class LSTMPyTorch(nn.Module, LSTM):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
@@ -121,6 +122,7 @@ class LSTMPyTorch(nn.Module, LSTM):
             return out.view(self.output_size).numpy()
 
 
+@IBrain.register("LSTM_NumPy")
 class LSTMNumPy(LSTM):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):

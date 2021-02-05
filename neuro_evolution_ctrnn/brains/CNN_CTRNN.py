@@ -12,6 +12,7 @@ import torch.nn.functional as F
 
 
 # noinspection PyPep8Naming
+@IBrain.register('CNN_CTRNN')
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     _usage_key_cnn_output = '_cnn_output_space'
 
