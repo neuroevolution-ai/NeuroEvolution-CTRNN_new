@@ -87,10 +87,10 @@ class Experiment(object):
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
-        info = self.brain_class.get_free_parameter_metadata(self.config.brain,
-                                                            input_space=self.input_space,
-                                                            output_space=self.output_space)
-        logging.info("consumption of free parameter: " + str(info))
+        info = self.brain_class.get_free_parameter_usage(self.config.brain,
+                                                         input_space=self.input_space,
+                                                         output_space=self.output_space)
+        logging.info("Usage of free parameters: " + str(info))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,

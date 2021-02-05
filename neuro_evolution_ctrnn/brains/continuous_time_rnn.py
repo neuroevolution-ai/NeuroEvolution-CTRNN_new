@@ -144,7 +144,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         return o
 
     @classmethod
-    def get_free_parameter_metadata(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
         info_dict = {'V': np.count_nonzero(cls.v_mask),
                      'W': np.count_nonzero(cls.w_mask),
                      'T': np.count_nonzero(cls.t_mask)}

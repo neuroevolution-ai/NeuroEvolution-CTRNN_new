@@ -34,12 +34,12 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 else:
                     sum_ += item
             return sum_
-        metadata_dict = cls.get_free_parameter_metadata(config, input_space, output_space)
-        return sum_dict(metadata_dict)
+        usage_dict = cls.get_free_parameter_usage(config, input_space, output_space)
+        return sum_dict(usage_dict)
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_metadata(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.

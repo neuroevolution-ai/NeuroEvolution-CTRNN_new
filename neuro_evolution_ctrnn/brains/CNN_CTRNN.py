@@ -14,13 +14,15 @@ import logging
 
 # noinspection PyPep8Naming
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
+    _usage_key_cnn_output = '_cnn_output_space'
+
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CnnCtrnnCfg):
         super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
         self.config = config
-        metadata_dict = self.get_free_parameter_metadata(config, input_space, output_space)
-        cnn_output_space = metadata_dict['_cnn_output_space']
+        paramter_usage_dict = self.get_free_parameter_usage(config, input_space, output_space)
+        cnn_output_space = paramter_usage_dict[self._usage_key_cnn_output]
         cnn_size = Cnn.get_individual_size(config.cnn_conf, input_space, cnn_output_space)
         ctrnn_size = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, cnn_output_space, output_space)
         ind_cnn = individual[0:cnn_size]
@@ -34,14 +36,14 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         return self.ctrnn.step(self.cnn.step(ob))
 
     @classmethod
-    def get_free_parameter_metadata(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        cnn_metadata = Cnn.get_free_parameter_metadata(config=config.cnn_conf, input_space=input_space,
-                                                       output_space=cnn_output_space)
-        ctrnn_metadata = ContinuousTimeRNN.get_free_parameter_metadata(config=config.ctrnn_conf,
-                                                                       input_space=cnn_output_space,
-                                                                       output_space=output_space)
-        return {'CNN': cnn_metadata, 'CTRNN': ctrnn_metadata, '_cnn_output_space': cnn_output_space}
+        cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf, input_space=input_space,
+                                                    output_space=cnn_output_space)
+        ctrnn_paramter_usage = ContinuousTimeRNN.get_free_parameter_usage(config=config.ctrnn_conf,
+                                                                    input_space=cnn_output_space,
+                                                                    output_space=output_space)
+        return {'CNN': cnn_paramter_usage, 'CTRNN': ctrnn_paramter_usage, cls._usage_key_cnn_output: cnn_output_space}
 
     @classmethod
     def set_masks_globally(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
@@ -117,7 +119,7 @@ class Cnn(nn.Module, IBrain):
         return conv1, conv2
 
     @classmethod
-    def get_free_parameter_metadata(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
         assert output_space == cls.get_output_shape(config, input_space), "output space is not what it should be"
         conv1, conv2 = cls._make_convs(config)
         return {'conv1': conv1.weight.size().numel(), 'conv2': conv2.weight.size().numel()}
