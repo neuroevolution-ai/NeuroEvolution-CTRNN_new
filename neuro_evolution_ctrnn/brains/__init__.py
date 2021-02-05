@@ -13,6 +13,6 @@ import importlib
 for module in os.listdir(os.path.dirname(__file__)):
     if module == '__init__.py' or module[-3:] != '.py':
         continue
-    importlib.import_module("." + module[:-3], "neuro_evolution_ctrnn.brains")
+    importlib.import_module(__name__ + "." + module[:-3])
 del module
 

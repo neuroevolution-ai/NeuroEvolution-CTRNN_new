@@ -18,7 +18,10 @@ def brain_class_from_config_type(config_type_string: str):
         for bases in brain_class_candidate.__orig_bases__:  # iterate over all base-classes of this candidate
             for type_args in get_args(bases):  # iterate over all generic types used with this base-class
                 if target_brain_cfg == type_args:
-                    brain_class = brain_class_candidate
+                    if not brain_class:
+                        brain_class = brain_class_candidate
+                    elif not issubclass(brain_class, brain_class_candidate):
+                        raise RuntimeError("Multiple brain classes are registered for this configuration-class.")
     if not brain_class:
         # this is either a typo in the json, or the target brain is not a proper subclass of IBrain, or the
         # config-class is not linked to the brain class as a generic of IBrain.
