@@ -36,16 +36,16 @@ class TestFeedForwardNN:
 
             for i, hidden_layer in enumerate(hidden_layers):
                 weight_array_pytorch: np.ndarray = ffnn_pytorch.layers[i].weight.data.numpy()
-                weight_array_numpy: np.ndarray = ffnn_numpy.weights[i]
+                weight_array_numpy: np.ndarray = ffnn_numpy.weights_hidden_layers[i]
 
                 assert np.array_equal(weight_array_pytorch, weight_array_numpy)
                 assert weight_array_pytorch.shape == (hidden_layer, current_input)
 
                 if ffnn_config.use_bias:
                     bias_array_pytorch: np.ndarray = ffnn_pytorch.layers[i].bias.data.numpy()
-                    bias_array_numpy: np.ndarray = ffnn_numpy.bias[i]
+                    bias_array_numpy: np.ndarray = ffnn_numpy.biases_hidden_layers[i]
 
-                    assert np.array_equal(bias_array_pytorch, bias_array_numpy)
+                    assert np.array_equal(bias_array_pytorch, bias_array_numpy.flatten())
                     assert bias_array_pytorch.shape == (hidden_layer,)
 
                 current_input = hidden_layer

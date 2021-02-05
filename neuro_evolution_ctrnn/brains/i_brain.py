@@ -201,7 +201,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         if activation == "relu":
             return nn.ReLU()  # type:ignore
         elif activation == "linear":
-            return nn.Linear()  # type:ignore
+            return nn.Identity()  # type:ignore
         elif activation == "tanh":
             return nn.Tanh()  # type:ignore
         else:

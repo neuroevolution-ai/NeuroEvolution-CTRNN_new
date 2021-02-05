@@ -21,6 +21,7 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         self.input_size: int = self._size_from_space(input_space)
         self.output_size: int = self._size_from_space(output_space)
         self.config = config
+        self.use_bias = config.use_bias
 
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
@@ -78,38 +79,52 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
         self.activation_hidden_layers = self.get_activation_function_pytorch(config.neuron_activation)
         self.activation_output_layer = self.get_activation_function_pytorch(config.neuron_activation_output)
 
-        self.layers: [nn.Linear] = []
+        self.layers: List[nn.Linear] = []
 
-        current_index = 0
-        last_layer = self.input_size
-        for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_size = last_layer * hidden_layer
+        index = 0
+        previous_layer_size = self.input_size
 
-            next_layer = nn.Linear(last_layer, hidden_layer, bias=config.use_bias)
-            next_layer.weight.data = torch.from_numpy(
-                np.array(individual[current_index:current_index + current_size], dtype=np.single).reshape(
-                    (hidden_layer, last_layer)))
+        # Hidden Layers
+        for hidden_layer in self.hidden_layers:
 
-            self.layers.append(next_layer)
-            last_layer = hidden_layer
-            current_index += current_size
+            current_layer = nn.Linear(previous_layer_size, hidden_layer, bias=config.use_bias)
+            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer, previous_layer_size)
+            current_layer.weight.data = torch.from_numpy(current_weight)
 
-        if config.use_bias:
-            # Take extra loop for bias because we have the "convention" to add bias to the end of the individual array
-            for index, hidden_layer in enumerate(self.hidden_layers + [self.output_size]):
-                self.layers[index].bias.data = torch.from_numpy(
-                    np.array(individual[current_index:current_index + hidden_layer]))
-                current_index += hidden_layer
+            if self.use_bias:
+                current_bias, index = self.read_matrix_from_genome(individual, index, hidden_layer, 1)
+                current_layer.bias.data = torch.from_numpy(current_bias.flatten())
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+            self.layers.append(current_layer)
 
-        x = ob
+            previous_layer_size = hidden_layer
+
+        # Output Layer
+        self.output_layer: nn.Linear = nn.Linear(previous_layer_size, self.output_size, bias=config.use_bias)
+        weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, previous_layer_size)
+        self.output_layer.weight.data = torch.from_numpy(weights_output_layer)
+
+        if self.use_bias:
+            output_bias, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
+            self.output_layer.bias.data = torch.from_numpy(output_bias.flatten())
+
+    def step(self, u: np.ndarray) -> np.ndarray:
+
+        assert u.ndim == 1
+        assert u.size == self.input_size
+
+        x = u
 
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))
 
+            # Hidden Layers
             for layer in self.layers:
-                x = self.neuron_activation_hidden_layers(layer(x))
+                x = self.activation_hidden_layers(layer(x))
+
+            # Output Layer
+            x = self.activation_output_layer(self.output_layer(x))
+
             return x.view(self.output_size).numpy()
 
 
@@ -125,7 +140,6 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
         self.weights_hidden_layers: List[np.ndarray] = []
         self.biases_hidden_layers: List[np.ndarray] = []
-        self.use_bias = config.use_bias
 
         index = 0
         previous_layer_size = self.input_size
@@ -150,7 +164,21 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
             self.biases_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
 
     def step(self, ob: np.ndarray) -> np.ndarray:
-        x = ob
+
+        assert ob.ndim == 1
+        assert ob.size == self.input_size
+
+        x = self.predict(ob.reshape(ob.size, 1))
+
+        return x.flatten()
+
+    def predict(self, u: np.ndarray) -> np.ndarray:
+
+        assert u.ndim > 1
+        assert u.shape[-2] == self.input_size
+        assert u.shape[-1] == 1
+
+        x = u
 
         # Calculate hidden layers
         # Note: itertools.zip_longest is necessary here instead of zip, since self.biases_hidden_layers is
