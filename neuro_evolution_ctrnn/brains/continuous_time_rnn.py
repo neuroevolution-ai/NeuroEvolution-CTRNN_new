@@ -9,7 +9,6 @@ from scipy import sparse
 
 
 # noinspection PyPep8Naming
-@IBrain.register('CTRNN')
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray

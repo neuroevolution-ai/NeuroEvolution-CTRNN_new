@@ -7,7 +7,7 @@ from brains.i_brain import IBrain
 from tools.configurations import LSTMCfg
 
 
-class LSTM(IBrain):
+class LSTM(IBrain[LSTMCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
         super().__init__(input_space, output_space, individual, config)
@@ -46,7 +46,6 @@ class LSTM(IBrain):
         return info_dict
 
 
-@IBrain.register("LSTM_PyTorch")
 class LSTMPyTorch(nn.Module, LSTM):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):
@@ -122,7 +121,6 @@ class LSTMPyTorch(nn.Module, LSTM):
             return out.view(self.output_size).numpy()
 
 
-@IBrain.register("LSTM_NumPy")
 class LSTMNumPy(LSTM):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LSTMCfg):

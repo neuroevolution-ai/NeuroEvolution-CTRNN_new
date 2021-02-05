@@ -7,8 +7,7 @@ from brains.ffnn import FeedForwardNumPy
 from tools.configurations import ConcatenatedBrainLSTMCfg, LSTMCfg, FeedForwardCfg
 
 
-@IBrain.register('ConcatenatedBrain_LSTM')
-class ConcatenatedLSTM(IBrain):
+class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray,
                  config: ConcatenatedBrainLSTMCfg):
         super().__init__(input_space, output_space, individual, config)

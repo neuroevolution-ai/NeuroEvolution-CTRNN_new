@@ -12,7 +12,6 @@ import torch.nn.functional as F
 
 
 # noinspection PyPep8Naming
-@IBrain.register('CNN_CTRNN')
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     _usage_key_cnn_output = '_cnn_output_space'
 
@@ -68,7 +67,7 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.deterministic = False
 
 
-class Cnn(nn.Module, IBrain):
+class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     _number_input_channels = 3
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):

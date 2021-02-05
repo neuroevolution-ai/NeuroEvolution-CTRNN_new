@@ -1,24 +1,22 @@
 import logging
 import os
 import time
-from typing import Type, get_args
+from typing import Type
 
 import numpy as np
 from deap import tools
 
-from brains.i_brain import IBrain, registered_brain_classes
 from optimizer.i_optimizer import IOptimizer
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds
-from tools.configurations import ExperimentCfg, registered_types
+from tools.helper import set_random_seeds, brain_class_from_config_type
+from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
-from brains.CNN_CTRNN import CnnCtrnn
 
 
 class Experiment(object):
@@ -35,11 +33,7 @@ class Experiment(object):
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.write_final_checkpoint = write_final_checkpoint
-        for brain_class in IBrain.__subclasses__():
-            for bases in brain_class.__orig_bases__:
-                for type_args in get_args(bases):
-                    if registered_types[self.config.brain.type] == type_args:
-                        self.brain_class = brain_class
+        self.brain_class = brain_class_from_config_type(self.config.brain.type)
 
         self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == "CMA_ES":

@@ -4,10 +4,15 @@ import typing
 import gym.spaces.discrete
 import numpy as np
 import pytest
+from tools.helper import brain_class_from_config_type
 
 
-@brains.i_brain.IBrain.register("TestBrain")
-class BrainClass(brains.i_brain.IBrain[tools.configurations.IBrainCfg]):
+@tools.configurations.register('TestBrain')
+class BrainCfgClass(tools.configurations.IBrainCfg):
+    pass
+
+
+class BrainClass(brains.i_brain.IBrain[BrainCfgClass]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
@@ -15,8 +20,8 @@ class BrainClass(brains.i_brain.IBrain[tools.configurations.IBrainCfg]):
         return 1
 
     @classmethod
-    def get_individual_size(cls, *nargs, **kwargs):
-        return 1
+    def get_free_parameter_usage(cls, *nargs, **kwargs):
+        return {"blubb": 1}
 
 
 class TestBrainLoader:
@@ -24,8 +29,9 @@ class TestBrainLoader:
     def test_basic_init(self):
         input_space = gym.spaces.discrete.Discrete(1)
         output_space = gym.spaces.discrete.Discrete(1)
-        config = tools.configurations.IBrainCfg(type='TestBrain')
-        brain_class: typing.Type[brains.i_brain.IBrain] = brains.i_brain.registered_brain_classes[config.type]
+        config = BrainCfgClass(type='TestBrain')
+
+        brain_class: typing.Type[brains.i_brain.IBrain] = brain_class_from_config_type(config.type)
 
         individual = np.zeros(
             brain_class.get_individual_size(input_space=input_space, output_space=output_space, config=config))
@@ -35,8 +41,4 @@ class TestBrainLoader:
     def test_unregistered_type(self):
         config = tools.configurations.IBrainCfg(type='Smooth')
         with pytest.raises(KeyError, match='Smooth'):
-            brain_class: typing.Type[brains.i_brain.IBrain] = brains.i_brain.registered_brain_classes[config.type]
-
-    def test_duplicated_registering(self):
-        with pytest.raises(AssertionError, match='TestBrain'):
-            brains.i_brain.IBrain.register("TestBrain")(BrainClass)
+            brain_class: typing.Type[brains.i_brain.IBrain] = brain_class_from_config_type(config.type)
