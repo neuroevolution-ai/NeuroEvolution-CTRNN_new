@@ -30,7 +30,7 @@ class LSTM(IBrain):
         info_dict = {}
         # Calculate the number of weights as depicted in https://pytorch.org/docs/stable/nn.html#torch.nn.LSTM
         if lstm_num_layers > 0:
-            layer_size1 = 4 * output_size * (input_size + output_size)
+            layer_size_1 = 4 * output_size * (input_size + output_size)
 
             if config.use_bias:
                 layer_size1 += 8 * output_size
