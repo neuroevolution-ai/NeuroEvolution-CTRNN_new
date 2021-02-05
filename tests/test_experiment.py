@@ -29,7 +29,6 @@ class TestExperiment:
                             -92.24354731262838,  # result on Patrick's notebook
                             -116.79799970080285,  # result on Github Action Public Runner
                             -99.78831700269642,  # result on se-catalpa
-            -109.27841881864515,   # Python 3.8 + Python virtualenv + standard NumPy updated after 2021-02-04
                             ]
 
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
