@@ -1,6 +1,5 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
-from tools.helper import walk_dict
 from typing import List, Union
 from gym.spaces import Space, Box, Discrete
 import logging
