@@ -34,6 +34,7 @@ class TestExperiment:
             -98.80537742389652,  # Python 3.8 + Python virtualenv + standard NumPy
             -98.9895922078135,  # Python 3.8 in GitHub Action Runner
             -98.2224  # Python 3.8 in GitHub Action Runner since 2021-02-06
+            -109.27841881864515,  # Python 3.8 + Python virtualenv + standard NumPy updated after 2021-02-04
         ]
 
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results

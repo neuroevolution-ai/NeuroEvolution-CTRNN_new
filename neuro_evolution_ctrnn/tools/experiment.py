@@ -79,20 +79,18 @@ class Experiment(object):
         self.output_space = env.action_space
         logging.info("Input space: " + str(self.input_space))
         logging.info("Output space: " + str(self.output_space))
-        self.brain_class.set_masks_globally(config=self.config.brain,
-                                            input_space=self.input_space,
-                                            output_space=self.output_space)
+        self.brain_class.generate_and_set_class_state(config=self.config.brain,
+                                                      input_space=self.input_space,
+                                                      output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain,
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
-        if issubclass(self.brain_class, CnnCtrnn):
-            cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
-                                                                                               input_space=self.input_space,
-                                                                                               output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size) + "\tcnn_output: " +
-                         str(cnn_output_space))
+        info = self.brain_class.get_free_parameter_usage(self.config.brain,
+                                                         input_space=self.input_space,
+                                                         output_space=self.output_space)
+        logging.info("Usage of free parameters: " + str(info))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,

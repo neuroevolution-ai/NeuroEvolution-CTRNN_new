@@ -40,6 +40,7 @@
     - Optional: install custom envs
     
         ```bash
+        sudo apt install qt5-default cmake
         python -m pip install git+https://github.com/neuroevolution-ai/procgen.git@3a5d86c3b89d362983c1a90df970b9173c0bd79b
         ``` 
 
@@ -53,12 +54,12 @@
         ```bash
         tmux
         . $HOME/.venv/neuro/bin/activate`
-        python neuro_evolution_ctrnn/train.py --configuration configurations/default.json
+        python neuro_evolution_ctrnn/train.py configurations/default.json
         ```
 
 3. Visualize the results
     
-    `python neuro_evolution_ctrnn/visualize.py --neuron-vis --render` 
+    `python neuro_evolution_ctrnn/render_hof.py results/data/2021-02-01_11-28-24` 
 
 4. Optional: Publish the results
     - All results are stored in a git submodule which is located in a different folder
@@ -72,7 +73,51 @@
     - Now commit the results with a corresponding commit message and push them
     
         `git commit -m "New simulation results" && git push`
-    
+
+# usage hints
+
+## CLI parameter
+
+you can call all our scripts with the CLI parameter `-h` to show all available CLI parameters. For example: 
+
+```bash
+$ python neuro_evolution_ctrnn/render_hof.py -h
+pygame 2.0.0 (SDL 2.0.12, python 3.8.5)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+usage: render_hof.py [--no-render] [--render-raw-ob] [--record] [--record-force] [--neuron-vis] [--hof HOF]
+                     [--rounds ROUNDS] [--slow-down SLOW_DOWN] [--neuron-vis-width NEURON_VIS_WIDTH]
+                     [--neuron-vis-height NEURON_VIS_HEIGHT] [-h]
+                     dir
+
+Visualize Experiments
+
+positional arguments:
+  dir                   (str, default=None) Directory path to the simulation result
+
+optional arguments:
+  --no-render           (bool, default=False) disable rendering to screen?
+  --render-raw-ob       (bool, default=False) should the env be rendered from the perspective of the agent?
+  --record              (bool, default=False) record rendering to store it to file?
+  --record-force        (bool, default=False) force rendering even if file exists
+  --neuron-vis          (bool, default=False) show neuron visualizer?
+  --hof HOF             (int, default=1) how many members of hall-of-fame should be shown?
+  --rounds ROUNDS       (int, default=1) how many episodes should be shown per HOF-member?
+  --slow-down SLOW_DOWN
+                        (int, default=0) how many milliseconds should be pause between time steps?
+  --neuron-vis-width NEURON_VIS_WIDTH
+                        (int, default=1600) how wide should the neuron_vis window be?
+  --neuron-vis-height NEURON_VIS_HEIGHT
+                        (int, default=900) how high should the neuron_vis window be?
+  -h, --help            show this help message and exit
+```
+
+## configuration file
+
+For the configuration json-file, all available options are listed in 
+[neuro_evolution_ctrnn/tools/configurations.py](neuro_evolution_ctrnn/tools/configurations.py). 
+The contents of the json-file are directly mapped to objects in the `configurations.py`. The json-file as 
+a whole especially is represented  by the class `ExperimentCfg`. 
+
 
 # Development
 

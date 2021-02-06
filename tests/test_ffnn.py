@@ -8,7 +8,7 @@ import torch
 
 class TestFeedForwardNN:
 
-    def test_lstm_output(self, ffnn_config: FeedForwardCfg):
+    def test_ffnn_output(self, ffnn_config: FeedForwardCfg):
 
         input_size = 28
         output_size = 8
