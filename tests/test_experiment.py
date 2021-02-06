@@ -3,6 +3,7 @@ from attr import evolve
 import os
 from tools.helper import sample_from_design_space
 from tools.config_reader import ConfigReader
+from tools.configurations import ProcGenEnvAttributesCfg
 import json
 
 
@@ -23,13 +24,16 @@ class TestExperiment:
         # when you do, don't forget to repeat an experiment you know will yield good results to make
         # sure nothing broke when you changed the underlying algorithm
 
-        # note; this value depends on the machine
-        accepted_results = [-99.11361202453168,  # result on bjoern's notebook
-                            -98.95448135483025,  # result on bjoern's desktop
-                            -92.24354731262838,  # result on Patrick's notebook
-                            -116.79799970080285,  # result on Github Action Public Runner
-                            -99.78831700269642  # result on se-catalpa
-                            ]
+        # Note that these versions depend on whether one uses a virtualenv created with the standard Python virtualenv
+        # tool package or with Anaconda. Also this value changes when standard NumPy or NumPy + MKL is used.
+        # I don't think this list is exhausted, expand or change accordingly if necessary.
+        # Also the GitHub Action Runner has a different result than the standard Python virtualenv for some reason
+        accepted_results = [
+            -103.4065390603272,  # Python 3.8 + conda 4.9.2 + standard NumPy
+            -102.16727461334207,  # Python 3.8 + conda 4.9.2 + NumPy + MKL
+            -98.80537742389652,  # Python 3.8 + Python virtualenv + standard NumPy
+            -98.9895922078135  # Python 3.8 in GitHub Action Runner
+        ]
 
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results
 
@@ -63,8 +67,14 @@ class TestExperiment:
                           v_mask='logarithmic', v_mask_param=128,
                           w_mask='logarithmic', w_mask_param=128,
                           t_mask='logarithmic', t_mask_param=128)
+
+        # need custom eprunner-config, because procgen experiments need explicit config
+        episode_runner_cfg = evolve(config.episode_runner,
+                                    environment_attributes=ProcGenEnvAttributesCfg(type="ProcGenAttr"))
+
         # need to use mu_lambda_es_config, because genome is too large for CMA_ES
-        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config)
+        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config,
+                        episode_runner=episode_runner_cfg)
 
         exp = Experiment(configuration=config,
                          result_path=tmpdir,

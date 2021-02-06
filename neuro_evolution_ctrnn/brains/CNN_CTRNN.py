@@ -48,9 +48,9 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         return a + b
 
     @classmethod
-    def set_masks_globally(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        ContinuousTimeRNN.set_masks_globally(config.ctrnn_conf, cnn_output_space, output_space)
+        ContinuousTimeRNN.generate_and_set_class_state(config.ctrnn_conf, cnn_output_space, output_space)
 
     @classmethod
     def get_class_state(cls):
@@ -58,14 +58,16 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
 
     @classmethod
     def set_class_state(cls, v_mask, w_mask, t_mask):
-        # https://github.com/pytorch/pytorch/issues/24398
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cudnn.deterministic = False
-
-        logging.debug("Setting number of torch-threads to 1")
-        # see https://github.com/pytorch/pytorch/issues/13757
-        torch.set_num_threads(1)
         return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
+
+
+# Since we distribute the work across all processes having more than one thread results in performance degradation
+# logging.debug("Setting number of Torch threads and interop threads to 1.")
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
+# https://github.com/pytorch/pytorch/issues/24398
+torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = False
 
 
 class Cnn(nn.Module):

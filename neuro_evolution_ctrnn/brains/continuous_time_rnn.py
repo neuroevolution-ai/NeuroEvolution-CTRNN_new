@@ -106,7 +106,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             ob = ob.flatten()
 
         if self.config.use_bias:
-            ob = np.r_[ob, [1]]
+            ob = np.append(ob, 1)
 
         # Differential equation
         if self.config.neuron_activation == "relu":
@@ -156,7 +156,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         return individual_size
 
     @classmethod
-    def set_masks_globally(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
