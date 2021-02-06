@@ -70,7 +70,7 @@ class IPytorchBrain(nn.Module, IBrain, abc.ABC):
             self.hidden = self.get_hidden(config)
 
     @classmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: Space, output_space: Space):
         num_layers = config.num_layers
         number_gates = cls.get_number_gates()
         hidden_size = config.hidden_size
@@ -87,7 +87,8 @@ class IPytorchBrain(nn.Module, IBrain, abc.ABC):
         if config.use_bias:
             index += 2 * hidden_size * num_layers * number_gates
         index += IBrain._size_from_space(output_space) * hidden_size
-        return index
+        # TODO better usage of the dict
+        return {"all": index}
 
     @staticmethod
     @abc.abstractmethod

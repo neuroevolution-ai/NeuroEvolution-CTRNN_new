@@ -121,7 +121,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         pass
 
     @classmethod
-    def get_individual_size(cls, config: ILayerBasedBrainCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: ILayerBasedBrainCfg, input_space: Space, output_space: Space):
 
         number_gates = cls.get_number_gates()
         input_size = cls._size_from_space(input_space)
@@ -155,7 +155,8 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
 
         # Matrix for transforming output of last layer into output neurons
         individual_size += hidden_structure[len(hidden_structure) - 1] * output_size
-        return individual_size
+        # TODO better usage of the dict
+        return {"all": individual_size}
 
     def brainstep(self, ob: np.ndarray):
 

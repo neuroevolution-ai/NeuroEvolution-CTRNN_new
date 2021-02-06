@@ -24,7 +24,7 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
             np.dot(weight_ih[0], layer_input) +
             np.dot(weight_hh[0], hidden[0]) +
             bias_h[0])
-        return [result, result]
+        return [[result], result]
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
         super().__init__(input_space, output_space, individual, config)

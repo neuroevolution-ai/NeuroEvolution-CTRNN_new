@@ -36,7 +36,7 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
                       + bias_h[2])
 
         result = np.multiply(1 - z_t, n_t) + np.multiply(z_t, hidden[0])
-        return [result, result]
+        return [[result], result]
 
     @staticmethod
     def get_number_gates():

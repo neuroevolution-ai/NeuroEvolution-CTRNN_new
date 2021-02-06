@@ -44,13 +44,13 @@ class IBrainCfg(abc.ABC):
     normalize_input_target: float = False
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class IPytorchBrainCfg(IBrainCfg):
     num_layers: int
     hidden_size: int
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ILayerBasedBrainCfg(IBrainCfg):
     # The structure of the layers
     # Each list entry translates to the size of one layer
@@ -74,7 +74,7 @@ class NoveltyCfg:
     behavior_source: str  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class IEnvAttributesCfg(abc.ABC):
     type: str
 
