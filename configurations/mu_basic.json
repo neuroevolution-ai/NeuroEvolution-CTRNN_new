@@ -18,7 +18,7 @@
     "optimize_state_boundaries": "global",
     "clipping_range_max": 1.0,
     "clipping_range_min": -1.0,
-    "optimize_y0": false
+    "optimize_initial_neuron_state": false
   },
   "episode_runner": {}
 }

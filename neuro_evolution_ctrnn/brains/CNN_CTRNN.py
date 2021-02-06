@@ -31,7 +31,7 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         return self.ctrnn.step(self.cnn.step(ob))
 
     @classmethod

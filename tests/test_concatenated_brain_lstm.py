@@ -1,6 +1,6 @@
+from brains.lstm import LSTMLayered
 from tools.configurations import ConcatenatedBrainLSTMCfg
 from brains.concatenated_brains import ConcatenatedLSTM
-from brains.lstm import LSTMNumPy
 from brains.ffnn import FeedForwardNumPy
 
 import numpy as np
@@ -49,12 +49,12 @@ class TestConcatenatedLSTM:
 
         # Create LSTM
         lstm_cfg = concat_lstm_config.lstm
-        lstm_individual_size = LSTMNumPy.get_individual_size(lstm_cfg, ff_front_output_space, ff_back_input_space)
+        lstm_individual_size = LSTMLayered.get_individual_size(lstm_cfg, ff_front_output_space, ff_back_input_space)
 
         lstm_individual = individual[current_index:current_index + lstm_individual_size]
         current_index += lstm_individual_size
 
-        lstm = LSTMNumPy(ff_front_output_space, ff_back_input_space, lstm_individual, lstm_cfg)
+        lstm = LSTMLayered(ff_front_output_space, ff_back_input_space, lstm_individual, lstm_cfg)
 
         # Create Feed Forward at the back here
         ff_back_individual_size = FeedForwardNumPy.get_individual_size(ff_back_cfg, ff_back_input_space, output_space)
@@ -65,17 +65,17 @@ class TestConcatenatedLSTM:
         assert current_index == len(individual)
 
         # Hidden and cell states are random, initialize them to the same arrays
-        hidden_concat = np.random.randn(*concatenated_lstm.lstm.hidden.shape)
-        cell_concat = np.random.randn(*concatenated_lstm.lstm.cell_state.shape)
+        hidden_concat = np.random.randn(*concatenated_lstm.lstm.hidden[0].shape)
+        cell_concat = np.random.randn(*concatenated_lstm.lstm.hidden[1].shape)
 
         hidden_single_step = hidden_concat.copy()
         cell_single_step = cell_concat.copy()
 
-        concatenated_lstm.lstm.hidden = hidden_concat
-        concatenated_lstm.lstm.cell_state = cell_concat
+        concatenated_lstm.lstm.hidden[0] = hidden_concat
+        concatenated_lstm.lstm.hidden[1] = cell_concat
 
-        lstm.hidden = hidden_single_step
-        lstm.cell_state = cell_single_step
+        lstm.hidden[0] = hidden_single_step
+        lstm.hidden[1] = cell_single_step
 
         # Construct random input and compare the results
         random_input_concat = np.random.randn(input_size)

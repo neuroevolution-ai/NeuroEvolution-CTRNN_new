@@ -2,9 +2,9 @@ from gym.spaces import Space, Box
 import numpy as np
 
 from brains.i_brain import IBrain
-from brains.lstm import LSTMNumPy
 from brains.ffnn import FeedForwardNumPy
-from tools.configurations import ConcatenatedBrainLSTMCfg, LSTMCfg, FeedForwardCfg
+from brains.lstm import LSTMLayered
+from tools.configurations import ConcatenatedBrainLSTMCfg, FeedForwardCfg, LstmLayeredCfg
 
 
 class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
@@ -33,10 +33,10 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
                                                        feed_forward_front_cfg)
             current_index += ff_front_individual_size
 
-        lstm_individual_size = LSTMNumPy.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
+        lstm_individual_size = LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
                                                              Box(-1, 1, (lstm_output_size,)))
 
-        self.lstm = LSTMNumPy(Box(-1, 1, (lstm_input_size,)), Box(-1, 1, (lstm_output_size,)),
+        self.lstm = LSTMLayered(Box(-1, 1, (lstm_input_size,)), Box(-1, 1, (lstm_output_size,)),
                               individual[current_index:current_index + lstm_individual_size], lstm_config)
 
         current_index += lstm_individual_size
@@ -54,11 +54,8 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
 
         assert current_index == len(individual)
 
-    def step(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
         x = ob
-
-        if self.config.normalize_input:
-            x = self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
 
         if self.feed_forward_front:
             x = self.feed_forward_front.step(x)
@@ -80,7 +77,7 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
 
         feed_forward_front_cfg = None
         feed_forward_back_cfg = None
-        lstm_config = config.lstm if isinstance(config.lstm, LSTMCfg) else LSTMCfg(**config.lstm)
+        lstm_config = config.lstm if isinstance(config.lstm, LstmLayeredCfg) else LstmLayeredCfg(**config.lstm)
 
         if config.feed_forward_front:
             feed_forward_front_cfg = (
@@ -110,7 +107,7 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
             individual_size += FeedForwardNumPy.get_individual_size(feed_forward_front_cfg, input_space,
                                                                     Box(-1, 1, (lstm_input_size,)))
 
-        individual_size += LSTMNumPy.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
+        individual_size += LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
                                                          Box(-1, 1, (lstm_output_size,)))
 
         if config.feed_forward_back:
