@@ -20,7 +20,7 @@ def brain_class_from_config_type(config_type_string: str):
                 if target_brain_cfg == type_args:
                     if not brain_class:
                         brain_class = brain_class_candidate
-                    elif not issubclass(brain_class, brain_class_candidate):
+                    elif brain_class != brain_class_candidate:
                         raise RuntimeError("Multiple brain classes are registered for this configuration-class.")
     if not brain_class:
         # this is either a typo in the json, or the target brain is not a proper subclass of IBrain, or the

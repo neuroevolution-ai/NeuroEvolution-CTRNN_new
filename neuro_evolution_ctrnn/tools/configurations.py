@@ -108,7 +108,6 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_y0: bool
     delta_t: float
     optimize_state_boundaries: str
-    set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
     neuron_activation: str
     set_principle_diagonal_elements_of_W_negative: bool = True
