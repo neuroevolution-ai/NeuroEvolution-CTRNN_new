@@ -22,7 +22,7 @@ jobs:
         python-version: 3.8.7
     - name: Install dependencies
       run: |
-        apt install swig
+        apt update && apt install -y swig
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
