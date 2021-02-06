@@ -33,7 +33,8 @@ class TestExperiment:
             -102.16727461334207,  # Python 3.8 + conda 4.9.2 + NumPy + MKL
             -98.80537742389652,  # Python 3.8 + Python virtualenv + standard NumPy
             -98.9895922078135,  # Python 3.8 in GitHub Action Runner
-            -98.2224  # Python 3.8 in GitHub Action Runner since 2021-02-06
+            -98.2224,  # Python 3.8 in GitHub Action Runner since 2021-02-06
+            -98.22243436025839,  # Python 3.8 in self-hosted GitHub Action Runner since 2021-02-06
             -109.27841881864515,  # Python 3.8 + Python virtualenv + standard NumPy updated after 2021-02-04
         ]
 
