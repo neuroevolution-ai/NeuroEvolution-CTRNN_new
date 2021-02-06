@@ -27,6 +27,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         self.hidden = []  # Initial values for state storage
         self.layer_output = []  # Weights from output last Layer to output nodes
         number_gates = self.get_number_gates()
+        number_hidden_values = self.get_number_hidden_values()
 
         # iterate for all given layers in the structure
         for layer in range(len(hidden_layer_structure)):
@@ -86,13 +87,13 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
             # initialize initial state values
 
             if config.optimize_initial_neuron_state:
-                number_elements = hidden_layer_structure[layer]
+                number_elements = hidden_layer_structure[layer] * number_hidden_values
                 self.hidden.append(np.array(
                     individual[individual_index: individual_index + number_elements]
-                ))
+                ).reshape((number_hidden_values, hidden_layer_structure[layer])))
                 individual_index += number_elements
             else:
-                self.hidden.append(np.zeros((hidden_layer_structure[layer])))
+                self.hidden.append(np.zeros((number_hidden_values, hidden_layer_structure[layer])))
             self.layer_output.append(np.zeros((hidden_layer_structure[layer])))
         # for end
 
@@ -113,40 +114,47 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         # Haw many matrices are needed for each layer to calculate the next state and output value
         pass
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_number_hidden_values():
+        # How many hidden values are used in one cell
+        pass
+
     @classmethod
     def get_individual_size(cls, config: ILayerBasedBrainCfg, input_space: Space, output_space: Space):
 
         number_gates = cls.get_number_gates()
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
-        hidden_struc = config.hidden_layer_structure
+        hidden_size = cls.get_number_hidden_values()
+        hidden_structure = config.hidden_layer_structure
 
         individual_size = 0
 
-        for layer in range(len(hidden_struc)):
+        for layer in range(len(hidden_structure)):
             # Matrices for weighted input values
             if layer == 0:  # The first Layer don't has an output from the previous layer, but the input values
-                individual_size += number_gates * input_size * hidden_struc[0]
+                individual_size += number_gates * input_size * hidden_structure[0]
             else:
-                individual_size += number_gates * hidden_struc[layer] * hidden_struc[layer - 1]
+                individual_size += number_gates * hidden_structure[layer] * hidden_structure[layer - 1]
 
             # Matrices for weighted state values
             if config.diagonal_hidden_to_hidden:
-                individual_size += number_gates * hidden_struc[layer]
+                individual_size += number_gates * hidden_structure[layer]
             else:
-                individual_size += number_gates * hidden_struc[layer] * hidden_struc[layer]
+                individual_size += number_gates * hidden_structure[layer] * hidden_structure[layer]
 
             # initialize biases
             if config.use_bias:
-                individual_size += hidden_struc[layer] * number_gates
+                individual_size += hidden_structure[layer] * number_gates
 
             # Hidden values
             if config.optimize_initial_neuron_state:
-                individual_size += hidden_struc[layer]
+                individual_size += hidden_structure[layer] * hidden_size
         # for end
 
         # Matrix for transforming output of last layer into output neurons
-        individual_size += hidden_struc[len(hidden_struc) - 1] * output_size
+        individual_size += hidden_structure[len(hidden_structure) - 1] * output_size
         return individual_size
 
     def brainstep(self, ob: np.ndarray):
@@ -158,7 +166,6 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
                 x = layer_input
             else:
                 x = self.layer_output[layer - 1]
-
             # Returns a list with two elements.
             # The first element is the calculated new hidden cell state, the second is the layer output
             # Necessary for LSTM
@@ -166,7 +173,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
                                            self.hidden[layer])
             self.hidden[layer] = layer_result[0]
             self.layer_output[layer] = layer_result[1]
-        return np.dot(self.weight_ho, self.layer_output[len(self.layer_output) - 1].T)
+        return np.dot(self.weight_ho, self.layer_output[len(self.layer_output) - 1])
 
     @staticmethod
     @abc.abstractmethod

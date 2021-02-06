@@ -19,6 +19,10 @@ class BrainParam:
 
 class LayerTestCase(ILayerBasedBrain[ILayerBasedBrainCfg]):
 
+    @staticmethod
+    def get_number_hidden_values():
+        return 1
+
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
         super().__init__(input_space, output_space, individual, config)
 
@@ -28,8 +32,8 @@ class LayerTestCase(ILayerBasedBrain[ILayerBasedBrainCfg]):
 
     @staticmethod
     def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h, hidden):
-        result = np.dot(weight_ih[0], layer_input) + np.dot(weight_hh[0], hidden) + bias_h[0]
-        return [result, result]
+        result = np.dot(weight_ih[0], layer_input) + np.dot(weight_hh[0], hidden[0]) + bias_h[0]
+        return [[result], result]
 
 
 class TestILayeredBrain:
@@ -40,7 +44,7 @@ class TestILayeredBrain:
             weight_ih=np.array([[[[1, 2], [3, 4]]]]),
             weight_hh=np.array([[[[5, 6], [7, 8]]]]),
             bias_h=np.array([[[9, 10]]]),
-            hidden=np.array([[11, 12]]),
+            hidden=np.array([[[11, 12]]]),
             weight_ho=np.array([[13, 14], [15, 16]])
         )
 
@@ -50,7 +54,7 @@ class TestILayeredBrain:
             weight_ih=np.array([[[[1, 0], [0, 1]]]]),
             weight_hh=np.array([[[[1, 0], [0, 1]]]]),
             bias_h=np.array([[[0, 0]]]),
-            hidden=np.array([[0, 0]]),
+            hidden=np.array([[[0, 0]]]),
             weight_ho=np.array([[1, 0], [0, 1]])
         )
 
@@ -78,7 +82,7 @@ class TestILayeredBrain:
         bp = brain_param_identity
         brain = LayerTestCase(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
                               config=layer_config)
-        ob = np.array([1, 1])
+        ob = np.array([1, 2])
         assert np.allclose(brain.hidden, np.zeros([2, 2]))
         res = brain.step(ob)
         # due to identity matrices after one iteration the internal state is now exactly the observersion
@@ -86,4 +90,6 @@ class TestILayeredBrain:
         # due to identity matrices after one iteration the output is just the input, but with tanh.
         assert np.allclose(res, ob)
         brain.step(ob)
+        print(brain.hidden)
+        print(ob+ob)
         assert np.allclose(brain.hidden, ob + ob)

@@ -10,7 +10,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
-from brains.lstm import LSTMPyTorch, LSTMNumPy
+from brains.lstm import LSTMPyTorch, LSTMLayered
 from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -46,8 +46,8 @@ class Experiment(object):
             self.brain_class = FeedForwardPyTorch
         elif self.config.brain.type == "LSTM_PyTorch":
             self.brain_class = LSTMPyTorch
-        elif self.config.brain.type == "LSTM_NumPy":
-            self.brain_class = LSTMNumPy
+        elif self.config.brain.type == "LSTMLayered":
+            self.brain_class = LSTMLayered
         elif self.config.brain.type == "ELMAN":
             self.brain_class = ElmanNetwork
         elif self.config.brain.type == "ElmanTorch":

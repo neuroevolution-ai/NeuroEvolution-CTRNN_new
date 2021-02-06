@@ -179,15 +179,6 @@ class FeedForwardCfg(IBrainCfg):
     indirect_encoding: bool
     cppn_hidden_layers: List[int]
 
-
-@register('LSTM_NumPy')
-@register('LSTMNumPy')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
-class LSTMCfg(IBrainCfg):
-    num_layers: int
-    hidden_size: int
-
-
 @register('ElmanTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
@@ -209,7 +200,7 @@ class LstmTorchCfg(IPytorchBrainCfg):
 @register('ConcatenatedBrain_LSTM')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
-    lstm: LSTMCfg
+    lstm: LstmLayeredCfg
     feed_forward_front: FeedForwardCfg = None
     feed_forward_back: FeedForwardCfg = None
 

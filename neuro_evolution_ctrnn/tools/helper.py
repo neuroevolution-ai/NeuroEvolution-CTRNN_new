@@ -12,7 +12,7 @@ import gym
 
 from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
                                   EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
-                                  LSTMCfg, IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
+                                  IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
                                   ConcatenatedBrainLSTMCfg, CnnCtrnnCfg, ConvolutionalNNCfg, AtariEnvAttributesCfg)
 
 

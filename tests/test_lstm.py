@@ -1,5 +1,5 @@
-from brains.lstm import LSTMPyTorch, LSTMNumPy
-from tools.configurations import LSTMCfg
+from brains.lstm import LSTMPyTorch, LSTMLayered
+from tools.configurations import LstmTorchCfg, LstmLayeredCfg
 
 import numpy as np
 import gym
@@ -9,7 +9,7 @@ import time
 
 class TestLSTM:
 
-    def test_lstm_output(self, lstm_config: LSTMCfg):
+    def test_lstm_output(self, lstm_torch_config: LstmTorchCfg, lstm_layered_config: LstmLayeredCfg):
 
         input_size = 28
         output_size = 8
@@ -19,59 +19,47 @@ class TestLSTM:
         input_space = gym.spaces.Box(-1, 1, (input_size,))
         output_space = gym.spaces.Box(-1, 1, (output_size,))
 
-        individual_size = LSTMPyTorch.get_individual_size(lstm_config, input_space, output_space)
+        individual_size = LSTMPyTorch.get_individual_size(lstm_torch_config, input_space, output_space)
 
         # Make two copies to avoid possible errors due to PyTorch reusing data from the same memory address
         individual_pytorch = np.random.randn(individual_size).astype(np.float32)
         individual_numpy = np.copy(individual_pytorch)
 
         with torch.no_grad():
-            lstm_pytorch = LSTMPyTorch(input_space, output_space, individual_pytorch, lstm_config)
+            lstm_pytorch = LSTMPyTorch(input_space, output_space, individual_pytorch, lstm_torch_config)
 
-        lstm_numpy = LSTMNumPy(input_space, output_space, individual_numpy, lstm_config)
+        lstm_numpy = LSTMLayered(input_space, output_space, individual_numpy, lstm_layered_config)
 
         # Also initialize the values for the hidden and cell states the same
         hidden_pytorch = np.random.randn(*lstm_pytorch.hidden[0].size()).astype(np.float32)
         cell_pytorch = np.random.randn(*lstm_pytorch.hidden[1].size()).astype(np.float32)
 
-        hidden_numpy = np.copy(hidden_pytorch).reshape(lstm_config.num_layers, -1)
-        cell_numpy = np.copy(cell_pytorch).reshape(lstm_config.num_layers, -1)
+        hidden_numpy = np.copy(hidden_pytorch).reshape(len(lstm_layered_config.hidden_layer_structure), -1)
+        cell_numpy = np.copy(cell_pytorch).reshape(len(lstm_layered_config.hidden_layer_structure), -1)
 
         lstm_pytorch.hidden = (torch.from_numpy(hidden_pytorch), torch.from_numpy(cell_pytorch))
 
-        lstm_numpy.hidden = np.copy(hidden_numpy)
-        lstm_numpy.cell_state = np.copy(cell_numpy)
+        lstm_numpy.hidden = [[np.copy(hidden_numpy)[i], np.copy(cell_numpy)[i]]for i in range(len(np.copy(hidden_numpy)))]
 
         with torch.no_grad():
-            for i in range(lstm_config.num_layers):
+            for i in range(len(lstm_layered_config.hidden_layer_structure)):
                 attr_weight_ih_li = "weight_ih_l{}".format(i)
                 attr_weight_hh_li = "weight_hh_l{}".format(i)
+                weight_ih = "weight_ih".format(i)
+                weight_hh = "weight_hh".format(i)
 
-                # Even if bias is not used they got initialized (to zeros in this case)
-                attr_bias_ih_li = "bias_ih_l{}".format(i)
-                attr_bias_hh_li = "bias_hh_l{}".format(i)
+                weight_ih_li_pytorch = getattr(lstm_pytorch.brain, attr_weight_ih_li).detach().numpy()
+                weight_hh_li_pytorch = getattr(lstm_pytorch.brain, attr_weight_hh_li).detach().numpy()
 
-                weight_ih_li_pytorch = getattr(lstm_pytorch.lstm, attr_weight_ih_li).detach().numpy()
-                weight_hh_li_pytorch = getattr(lstm_pytorch.lstm, attr_weight_hh_li).detach().numpy()
-
-                weight_ih_li_numpy = getattr(lstm_numpy, attr_weight_ih_li).reshape(weight_ih_li_pytorch.shape)
-                weight_hh_li_numpy = getattr(lstm_numpy, attr_weight_hh_li).reshape(weight_hh_li_pytorch.shape)
-
-                bias_ih_li_pytorch = getattr(lstm_pytorch.lstm, attr_bias_ih_li).detach().numpy()
-                bias_hh_li_pytorch = getattr(lstm_pytorch.lstm, attr_bias_hh_li).detach().numpy()
-
-                bias_ih_li_numpy = getattr(lstm_numpy, attr_bias_ih_li).reshape(bias_ih_li_pytorch.shape)
-                bias_hh_li_numpy = getattr(lstm_numpy, attr_bias_hh_li).reshape(bias_hh_li_pytorch.shape)
+                weight_ih_li_numpy = getattr(lstm_numpy, weight_ih)[i].reshape(weight_ih_li_pytorch.shape)
+                weight_hh_li_numpy = getattr(lstm_numpy, weight_hh)[i].reshape(weight_hh_li_pytorch.shape)
 
                 assert np.array_equal(weight_ih_li_pytorch, weight_ih_li_numpy)
                 assert np.array_equal(weight_hh_li_pytorch, weight_hh_li_numpy)
 
-                assert np.array_equal(bias_ih_li_pytorch, bias_ih_li_numpy)
-                assert np.array_equal(bias_hh_li_pytorch, bias_hh_li_numpy)
-
                 # Check hidden and cell states
-                assert np.array_equal(lstm_pytorch.hidden[0][i].view(-1).detach().numpy(), lstm_numpy.hidden[i])
-                assert np.array_equal(lstm_pytorch.hidden[1][i].view(-1).detach().numpy(), lstm_numpy.cell_state[i])
+                assert np.array_equal(lstm_pytorch.hidden[0][i].view(-1).detach().numpy(), lstm_numpy.hidden[i][0])
+                assert np.array_equal(lstm_pytorch.hidden[1][i].view(-1).detach().numpy(), lstm_numpy.hidden[i][1])
 
         inputs = np.random.randn(number_of_inputs, 28).astype(np.float32)
 
@@ -118,8 +106,7 @@ class TestLSTM:
         # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
         close_percentage = np.count_nonzero(
             np.isclose(lstm_pytorch_outputs, lstm_numpy_outputs)) / lstm_pytorch_outputs.size
-
-        assert close_percentage > 0.98
+        assert close_percentage > 0.95
 
         print(
             "Equal predictions between PyTorch and NumPy",
