@@ -33,7 +33,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         super().__init__(input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
-        optimize_y0 = config.optimize_y0
+        optimize_y0 = config.optimize_initial_neuron_state
         delta_t = config.delta_t
         self.config = config
         self.input_space: Space = input_space
@@ -97,14 +97,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             for j in range(N_n):
                 if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
                     self.W[j, j] = -abs(self.W[j, j])
-
         assert self.config.substeps > 0
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-
-        if self.config.normalize_input:
-            ob = self._scale_observation(ob=ob, input_space=self.input_space, target=self.config.normalize_input_target)
-
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         if isinstance(self.input_space, Discrete):
             # todo: do this observation-transformation in a cleaner way
             ob = self.discrete_to_vector(ob)
@@ -141,7 +136,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             else:
                 self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
-        o: Union[np.ndarray, np.generic] = np.tanh(self.T.T.dot(self.y))
+        o: Union[np.ndarray, np.generic] = np.tanh(self.T.dot(self.y))
         return o
 
     @classmethod
@@ -149,7 +144,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         info_dict = {'V': np.count_nonzero(cls.v_mask),
                      'W': np.count_nonzero(cls.w_mask),
                      'T': np.count_nonzero(cls.t_mask)}
-        if config.optimize_y0:
+        if config.optimize_initial_neuron_state:
             info_dict['optimize_y0'] = config.number_neurons
 
         if config.optimize_state_boundaries == "legacy":
@@ -177,7 +172,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
         w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
                                     config.w_mask_param)
-        t_mask = cls._generate_mask(config.t_mask, config.number_neurons, output_size, config.t_mask_param)
+        # TODO The mask was flipped on the diagonal for mathematical correct structure. check if no errer exist
+        t_mask = cls._generate_mask(config.t_mask, output_size, config.number_neurons, config.t_mask_param)
 
         cls.set_class_state(v_mask=v_mask, w_mask=w_mask, t_mask=t_mask)
 
@@ -216,3 +212,15 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             return np.ones((n, m), dtype=bool)
         else:
             raise RuntimeError("unknown mask_type: " + str(mask_type))
+
+    def get_neuron_states(self):
+        return self.y
+
+    def get_internal_weight_matrix(self):
+        return self.W.todense()
+
+    def get_input_weight_matrix(self):
+        return self.V.toarray()
+
+    def get_output_weight_matrix(self):
+        return self.T.toarray()

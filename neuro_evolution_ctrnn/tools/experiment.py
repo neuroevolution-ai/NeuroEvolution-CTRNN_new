@@ -10,7 +10,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
-from brains.lstm import LSTMPyTorch, LSTMNumPy
+from brains.lstm import LSTMPyTorch, LSTMLayered
 from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -23,6 +23,8 @@ from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
+from brains.elman import ElmanNetwork, ElmanPytorch
+from brains.gru import GruNetwork, GruPyTorch
 
 
 class Experiment(object):
@@ -48,8 +50,16 @@ class Experiment(object):
             self.brain_class = FeedForwardPyTorch
         elif self.config.brain.type == "LSTM_PyTorch":
             self.brain_class = LSTMPyTorch
-        elif self.config.brain.type == "LSTM_NumPy":
-            self.brain_class = LSTMNumPy
+        elif self.config.brain.type == "LSTMLayered":
+            self.brain_class = LSTMLayered
+        elif self.config.brain.type == "ELMAN":
+            self.brain_class = ElmanNetwork
+        elif self.config.brain.type == "ElmanTorch":
+            self.brain_class = ElmanPytorch
+        elif self.config.brain.type == "GruTorch":
+            self.brain_class = GruPyTorch
+        elif self.config.brain.type == "GRU":
+            self.brain_class = GruNetwork
         elif self.config.brain.type == "ConcatenatedBrain_LSTM":
             self.brain_class = ConcatenatedLSTM
         elif self.config.brain.type == "CNN_CTRNN":

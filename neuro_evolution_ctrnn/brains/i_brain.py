@@ -16,8 +16,17 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         self.output_space = output_space
         self.config = config
 
-    @abc.abstractmethod
     def step(self, ob: np.ndarray):
+        return self.brainstep(self.prepare_input(ob))
+
+    def prepare_input(self, ob: np.ndarray):
+        if self.config.normalize_input:
+            return self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+        else:
+            return ob
+
+    @abc.abstractmethod
+    def brainstep(self, ob: np.ndarray):
         pass
 
     @classmethod
@@ -119,3 +128,15 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         ob_new = np.zeros(self.input_space.n)
         ob_new[ob] = 1
         return ob_new
+
+    def get_neuron_states(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_internal_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_input_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_output_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
