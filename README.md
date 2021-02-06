@@ -108,6 +108,7 @@ PYTHONPATH=neuro_evolution_ctrnn pytest -q --disable-pytest-warnings tests
 
     Write `tests` in the `Additional Arguments` field. Then simply select the configuration and run it.
 
+
 ### Generate statistics 
 
 ```
