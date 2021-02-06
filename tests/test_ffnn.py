@@ -75,12 +75,15 @@ class TestFeedForwardNN:
 
         ffnn_pytorch_outputs = np.array(ffnn_pytorch_outputs)
         ffnn_numpy_outputs = np.array(ffnn_numpy_outputs)
+        ffnn_numpy_predict_outputs = ffnn_numpy.predict(inputs.reshape(number_of_inputs, input_size, 1))
 
         ffnn_pytorch_times = np.array(ffnn_pytorch_times)
         ffnn_numpy_times = np.array(ffnn_numpy_times)
 
         assert len(ffnn_pytorch_outputs) == len(ffnn_numpy_outputs)
+        assert len(ffnn_pytorch_outputs) == len(ffnn_numpy_predict_outputs)
         assert ffnn_pytorch_outputs.size == ffnn_numpy_outputs.size
+        assert ffnn_pytorch_outputs.size == ffnn_numpy_predict_outputs.size
 
         print("\nPyTorch Mean Prediction Time {}s | NumPy Mean Prediction Time {}s"
               .format(np.mean(ffnn_pytorch_times), np.mean(ffnn_numpy_times)))
@@ -103,3 +106,83 @@ class TestFeedForwardNN:
         print(
             "Equal predictions between PyTorch and NumPy",
             "Implementation of FFNN: {}% of {} predictions".format(close_percentage*100, number_of_inputs))
+
+        assert ffnn_numpy_outputs.size == np.count_nonzero(
+            np.isclose(ffnn_numpy_predict_outputs.reshape(number_of_inputs, output_size),
+                       ffnn_numpy_outputs))
+
+    def test_ffnn_predict_speedtest(self):
+
+        def predict_with_maximum_speed(u, A, B, C, D, E, a, b, c, d, e):
+            x = np.matmul(A, u)
+            x = np.add(x, a)
+            x = np.maximum(0, x)
+
+            x = np.matmul(B, x)
+            x = np.add(x, b)
+            x = np.maximum(0, x)
+
+            x = np.matmul(C, x)
+            x = np.add(x, c)
+            x = np.maximum(0, x)
+
+            x = np.matmul(D, x)
+            x = np.add(x, d)
+            x = np.maximum(0, x)
+
+            x = np.matmul(E, x)
+            x = np.add(x, e)
+
+            return x
+
+        input_size = 6
+        output_size = 1
+
+        number_of_inputs = 3000000
+
+        input_space = gym.spaces.Box(-1, 1, (input_size,))
+        output_space = gym.spaces.Box(-1, 1, (output_size,))
+
+        ffnn_config = FeedForwardCfg(type="FeedForward_Numpy", normalize_input=False, normalize_input_target=1,
+                                     use_bias=True,
+                                     hidden_layers=[[16, 32, 16, 8]], neuron_activation="relu",
+                                     neuron_activation_output="linear")
+
+        individual_size = FeedForwardPyTorch.get_individual_size(ffnn_config, input_space, output_space)
+        individual = np.random.rand(individual_size).astype(np.float32)
+
+        ffnn_numpy = FeedForwardNumPy(input_space, output_space, individual, ffnn_config)
+
+        # Weight Matrizes
+        A = ffnn_numpy.weights_hidden_layers[0].copy()
+        B = ffnn_numpy.weights_hidden_layers[1].copy()
+        C = ffnn_numpy.weights_hidden_layers[2].copy()
+        D = ffnn_numpy.weights_hidden_layers[3].copy()
+        E = ffnn_numpy.weights_output_layer.copy()
+
+        # Biases
+        a = ffnn_numpy.biases_hidden_layers[0].copy()
+        b = ffnn_numpy.biases_hidden_layers[1].copy()
+        c = ffnn_numpy.biases_hidden_layers[2].copy()
+        d = ffnn_numpy.biases_hidden_layers[3].copy()
+        e = ffnn_numpy.biases_output_layer.copy()
+
+        inputs = np.random.rand(number_of_inputs, input_size, 1).astype(np.float32)
+
+        t_start = time.time()
+        output_ffnn_class = ffnn_numpy.predict(inputs)
+        time_ffnn_class = time.time() - t_start
+        print(time_ffnn_class)
+
+        t_start = time.time()
+        output_maximum_speed = predict_with_maximum_speed(inputs, A, B, C, D, E, a, b, c, d, e)
+        time_maximum_speed = time.time() - t_start
+        print(time_maximum_speed)
+
+        relative_speed_tolerance = time_ffnn_class / time_maximum_speed - 1
+
+        print(relative_speed_tolerance)
+        assert relative_speed_tolerance < 0.02
+
+        print( np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed)))
+        assert number_of_inputs == np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed))
