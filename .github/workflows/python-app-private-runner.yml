@@ -22,7 +22,7 @@ jobs:
         python-version: 3.8.7
     - name: Install dependencies
       run: |
-        apt-get update && apt-get install -y swig build-essential cmake
+        apt-get update && apt-get install -y swig build-essential cmake libgl1-mesa-glx
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
