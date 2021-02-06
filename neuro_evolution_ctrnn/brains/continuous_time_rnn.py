@@ -8,6 +8,7 @@ from brains.i_brain import IBrain
 from scipy import sparse
 
 
+# noinspection PyPep8Naming
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray
@@ -96,6 +97,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             for j in range(N_n):
                 if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
                     self.W[j, j] = -abs(self.W[j, j])
+        assert self.config.substeps > 0
 
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         if isinstance(self.input_space, Discrete):
@@ -108,52 +110,53 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if self.config.use_bias:
             ob = np.append(ob, 1)
 
-        # Differential equation
-        if self.config.neuron_activation == "relu":
-            y_ = np.maximum(0, self.y)
-        elif self.config.neuron_activation == "tanh":
-            y_ = np.tanh(self.y)
-        elif self.config.neuron_activation == "learned":
-            # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-            raise NotImplementedError("learned activations are not yet implemented")
-        else:
-            raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+        for _ in range(self.config.substeps):
+            # Differential equation
+            if self.config.neuron_activation == "relu":
+                y_ = np.maximum(0, self.y)
+            elif self.config.neuron_activation == "tanh":
+                y_ = np.tanh(self.y)
+            elif self.config.neuron_activation == "learned":
+                # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
+                raise NotImplementedError("learned activations are not yet implemented")
+            else:
+                raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
 
-        if self.config.neuron_activation_inplace:
-            self.y = y_  # type:ignore
-        dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
+            dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
-        # Euler forward discretization
-        self.y = self.y + self.delta_t * dydt
+            # Euler forward discretization
+            self.y = self.y + self.delta_t * dydt
 
-        if self.config.parameter_perturbations:
-            self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
+            if self.config.parameter_perturbations:
+                self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
 
-        if self.config.optimize_state_boundaries == "legacy":
-            for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
-                self.y = np.clip(self.y, y_min, y_max)
-        else:
-            self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+            if self.config.optimize_state_boundaries == "legacy":
+                for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
+                    self.y = np.clip(self.y, y_min, y_max)
+            else:
+                self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
 
         o: Union[np.ndarray, np.generic] = np.tanh(self.T.dot(self.y))
         return o
 
     @classmethod
-    def get_individual_size(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        individual_size = np.count_nonzero(cls.v_mask) + np.count_nonzero(cls.w_mask) + np.count_nonzero(cls.t_mask)
+    def get_free_parameter_usage(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+        info_dict = {'V': np.count_nonzero(cls.v_mask),
+                     'W': np.count_nonzero(cls.w_mask),
+                     'T': np.count_nonzero(cls.t_mask)}
         if config.optimize_initial_neuron_state:
-            individual_size += config.number_neurons
+            info_dict['optimize_y0'] = config.number_neurons
 
         if config.optimize_state_boundaries == "legacy":
-            individual_size += 2 * config.number_neurons
+            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "per_neuron":
-            individual_size += 2 * config.number_neurons
+            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "global":
-            individual_size += 2
+            info_dict['optimize_state_boundaries'] = 2
         elif config.optimize_state_boundaries == "fixed":
-            individual_size += 0
+            pass
 
-        return individual_size
+        return info_dict
 
     @classmethod
     def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):

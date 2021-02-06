@@ -39,9 +39,9 @@ def register(name: str, as_key: bool = False):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
-    normalize_input: bool
-    normalize_input_target: float
     use_bias: bool
+    normalize_input: bool = False
+    normalize_input_target: float = False
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -109,7 +109,7 @@ class ProcGenEnvAttributesCfg(IEnvAttributesCfg):
 @register('episode_runner', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
-    reuse_env: bool
+    reuse_env: bool = True
     keep_env_seed_fixed_during_generation: bool = True
     novelty: Optional[NoveltyCfg] = None
     environment_attributes: Optional[IEnvAttributesCfg] = None
@@ -138,15 +138,14 @@ class GruCfg(ILayerBasedBrainCfg):
 
 
 @register('CTRNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_initial_neuron_state: bool
     delta_t: float
     optimize_state_boundaries: str
-    set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
     neuron_activation: str
-    neuron_activation_inplace: bool = False
+    set_principle_diagonal_elements_of_W_negative: bool = True
     parameter_perturbations: float = 0.0
     v_mask: str = 'dense'
     v_mask_param: float = 0.0
@@ -156,10 +155,11 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask_param: float = 0.0
     clipping_range_min: float = 0
     clipping_range_max: float = 0
+    substeps: int = 1
 
 
 @register('CNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
     conv_feat1: int
@@ -174,7 +174,7 @@ class ConvolutionalNNCfg(IBrainCfg):
 
 
 @register('CNN_CTRNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
@@ -182,7 +182,7 @@ class CnnCtrnnCfg(IBrainCfg):
 
 @register('FeedForward_PyTorch')
 @register('FeedForward_NumPy')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     non_linearity: str
@@ -208,7 +208,7 @@ class LstmTorchCfg(IPytorchBrainCfg):
 
 
 @register('ConcatenatedBrain_LSTM')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LstmLayeredCfg
     feed_forward_front: FeedForwardCfg = None

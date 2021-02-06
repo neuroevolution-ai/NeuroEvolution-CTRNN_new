@@ -2,7 +2,6 @@ import os
 
 import pytest
 from gym.spaces import Box
-
 from tools.config_reader import ConfigReader
 from tools.configurations import (ExperimentCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
                                   ConcatenatedBrainLSTMCfg, OptimizerMuLambdaCfg, ILayerBasedBrainCfg, LstmTorchCfg,
