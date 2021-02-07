@@ -158,7 +158,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         # TODO better usage of the dict
         return {"all": individual_size}
 
-    def brainstep(self, ob: np.ndarray):
+    def step(self, ob: np.ndarray):
 
         layer_input = ob
         # iterate for all given layers

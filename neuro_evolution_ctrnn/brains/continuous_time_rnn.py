@@ -100,7 +100,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                     self.W[j, j] = -abs(self.W[j, j])
         assert self.config.substeps > 0
 
-    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         if isinstance(self.input_space, Discrete):
             # todo: do this observation-transformation in a cleaner way
             ob = self.discrete_to_vector(ob)
