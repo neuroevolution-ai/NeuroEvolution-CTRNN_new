@@ -14,7 +14,15 @@ from brains import IBrain
 def brain_class_from_config_type(config_type_string: str):
     brain_class = None
     target_brain_cfg = registered_types[config_type_string]
-    for brain_class_candidate in IBrain.__subclasses__():
+    all_brain_classes = []
+
+    def walk_subclass(brain_class_parent):
+        for brain_class_child in brain_class_parent.__subclasses__():
+            all_brain_classes.append(brain_class_child)
+            walk_subclass(brain_class_child)
+
+    walk_subclass(IBrain)
+    for brain_class_candidate in all_brain_classes:
         for bases in brain_class_candidate.__orig_bases__:  # iterate over all base-classes of this candidate
             for type_args in get_args(bases):  # iterate over all generic types used with this base-class
                 if target_brain_cfg == type_args:
