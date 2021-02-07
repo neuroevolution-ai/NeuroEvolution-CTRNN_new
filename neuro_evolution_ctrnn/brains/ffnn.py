@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from brains.i_brain import IBrain, register_brain
-from tools.configurations import FeedForwardNumpyCfg, FeedForwardPyTorchCfg, FeedForwardCfg
+from tools.configurations import FeedForwardCfg
 from gym.spaces import Space
 from typing import List, Callable, TypeVar
 
@@ -91,9 +91,9 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
 
 
 @register_brain("FeedForward_PyTorch")
-class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardPyTorchCfg]):
+class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardPyTorchCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
@@ -159,9 +159,9 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardPyTorchCfg]):
 
 
 @register_brain("FeedForward_NumPy")
-class FeedForwardNumPy(FeedForward[FeedForwardNumpyCfg]):
+class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardNumpyCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
         self.weights: [np.ndarray] = []

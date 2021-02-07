@@ -182,16 +182,6 @@ class FeedForwardCfg(IBrainCfg):
     cppn_hidden_layers: List[int]
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class FeedForwardPyTorchCfg(FeedForwardCfg):
-    pass
-
-
-@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class FeedForwardNumpyCfg(FeedForwardCfg):
-    pass
-
-
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
     pass

@@ -43,7 +43,6 @@ ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
-    config_class = ConfigClass
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
