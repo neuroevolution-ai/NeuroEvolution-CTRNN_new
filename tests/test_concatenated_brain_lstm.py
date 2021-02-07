@@ -1,6 +1,5 @@
 from brains.lstm import LSTMLayered
-from tools.configurations import ConcatenatedBrainLSTMCfg
-from brains.concatenated_brains import ConcatenatedLSTM
+from brains.concatenated_brains import ConcatenatedLSTM, ConcatenatedBrainLSTMCfg
 from brains.ffnn import FeedForwardNumPy
 
 import numpy as np

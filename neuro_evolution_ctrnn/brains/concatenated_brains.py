@@ -1,10 +1,17 @@
 from gym.spaces import Space, Box
 import numpy as np
+import attr
+from brains.i_brain import IBrain, IBrainCfg
+from brains.ffnn import FeedForwardNumPy, FeedForwardCfg
+from brains.lstm import LSTMLayered, LstmLayeredCfg
+from tools.config_reader import register
 
-from brains.i_brain import IBrain
-from brains.ffnn import FeedForwardNumPy
-from brains.lstm import LSTMLayered
-from tools.configurations import ConcatenatedBrainLSTMCfg, FeedForwardCfg, LstmLayeredCfg
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ConcatenatedBrainLSTMCfg(IBrainCfg):
+    lstm: LstmLayeredCfg
+    feed_forward_front: FeedForwardCfg = None
+    feed_forward_back: FeedForwardCfg = None
 
 
 class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
@@ -34,10 +41,10 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
             current_index += ff_front_individual_size
 
         lstm_individual_size = LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
-                                                             Box(-1, 1, (lstm_output_size,)))
+                                                               Box(-1, 1, (lstm_output_size,)))
 
         self.lstm = LSTMLayered(Box(-1, 1, (lstm_input_size,)), Box(-1, 1, (lstm_output_size,)),
-                              individual[current_index:current_index + lstm_individual_size], lstm_config)
+                                individual[current_index:current_index + lstm_individual_size], lstm_config)
 
         current_index += lstm_individual_size
 
@@ -108,10 +115,13 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
                                                                     Box(-1, 1, (lstm_input_size,)))
 
         individual_size += LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
-                                                         Box(-1, 1, (lstm_output_size,)))
+                                                           Box(-1, 1, (lstm_output_size,)))
 
         if config.feed_forward_back:
             individual_size += FeedForwardNumPy.get_individual_size(feed_forward_back_cfg,
                                                                     Box(-1, 1, (lstm_output_size,)), output_space)
 
         return {'individual_size': individual_size}
+
+
+register('ConcatenatedBrain_LSTM', brain_class=ConcatenatedLSTM)(ConcatenatedBrainLSTMCfg)

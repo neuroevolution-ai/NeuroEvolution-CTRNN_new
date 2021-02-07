@@ -1,14 +1,34 @@
 from abc import ABC
-
+import attr
 import numpy as np
-from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
+from tools.config_reader import register
 from typing import Union
 from gym.spaces import Space, Box
-from brains.i_brain import IBrain
-from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains.i_brain import IBrain, IBrainCfg
+from brains.continuous_time_rnn import ContinuousTimeRNN, ContinuousTimeRNNCfg
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ConvolutionalNNCfg(IBrainCfg):
+    conv_size1: int
+    conv_feat1: int
+    maxp_size1: int
+    maxp_stride1: int
+    conv_size2: int
+    conv_feat2: int
+    maxp_size2: int
+    maxp_stride2: int
+    conv_stride1: int = 1
+    conv_stride2: int = 1
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class CnnCtrnnCfg(IBrainCfg):
+    cnn_conf: ConvolutionalNNCfg
+    ctrnn_conf: ContinuousTimeRNNCfg
 
 
 # noinspection PyPep8Naming
@@ -38,10 +58,10 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
         cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf, input_space=input_space,
-                                                    output_space=cnn_output_space)
+                                                          output_space=cnn_output_space)
         ctrnn_paramter_usage = ContinuousTimeRNN.get_free_parameter_usage(config=config.ctrnn_conf,
-                                                                    input_space=cnn_output_space,
-                                                                    output_space=output_space)
+                                                                          input_space=cnn_output_space,
+                                                                          output_space=output_space)
         return {'CNN': cnn_paramter_usage, 'CTRNN': ctrnn_paramter_usage, cls._usage_key_cnn_output: cnn_output_space}
 
     @classmethod
@@ -163,3 +183,7 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
         w = (h_w[1] + (2 * pad[1]) - (dilation * (kernel_size[1] - 1)) - 1) // stride[1] + 1
 
         return h, w
+
+
+register('CNN', brain_class=CnnCtrnn)(ConvolutionalNNCfg)
+register('CNN_CTRNN', brain_class=Cnn)(CnnCtrnnCfg)

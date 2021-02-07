@@ -3,9 +3,13 @@ import os
 import pytest
 from gym.spaces import Box
 from tools.config_reader import ConfigReader
-from tools.configurations import (ExperimentCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
-                                  ConcatenatedBrainLSTMCfg, OptimizerMuLambdaCfg, ILayerBasedBrainCfg, LstmTorchCfg,
-                                  LstmLayeredCfg)
+from tools.configurations import (ExperimentCfg, OptimizerMuLambdaCfg)
+
+from brains.continuous_time_rnn import ContinuousTimeRNNCfg
+from brains.ffnn import FeedForwardCfg
+from brains.concatenated_brains import ConcatenatedBrainLSTMCfg
+from brains.i_layer_based_brain import ILayerBasedBrainCfg
+from brains.lstm import LstmLayeredCfg, LstmTorchCfg
 
 
 @pytest.fixture
@@ -18,7 +22,8 @@ def config() -> ExperimentCfg:
     current_directory = os.path.dirname(os.path.realpath(__file__))
     config_location = os.path.join(current_directory, "basic_test_config.json")
     global_config = ConfigReader.config_from_file(config_location)
-    return global_config
+
+    return ExperimentCfg(**global_config)
 
 
 @pytest.fixture
@@ -48,7 +53,8 @@ def lstm_torch_config() -> LstmTorchCfg:
 @pytest.fixture
 def lstm_layered_config() -> LstmLayeredCfg:
     return LstmLayeredCfg(type="LSTMLayered", normalize_input=False, normalize_input_target=1,
-                          hidden_layer_structure=[8, 8, 8], diagonal_hidden_to_hidden=False, use_bias=False, optimize_initial_neuron_state=False)
+                          hidden_layer_structure=[8, 8, 8], diagonal_hidden_to_hidden=False, use_bias=False,
+                          optimize_initial_neuron_state=False)
 
 
 @pytest.fixture

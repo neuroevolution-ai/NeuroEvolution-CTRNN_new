@@ -7,6 +7,7 @@ from tap import Tap
 
 from tools.experiment import Experiment
 from tools.config_reader import ConfigReader
+from tools.configurations import ExperimentCfg
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
@@ -45,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     args = TrainArgs(underscores_to_dashes=True).parse_args()
 
-    experiment = Experiment(configuration=ConfigReader.config_from_file(args.configuration),
+    experiment = Experiment(configuration=ExperimentCfg(**ConfigReader.config_from_file(args.configuration)),
                             result_path=args.result_path,
                             from_checkpoint=args.from_checkpoint,
                             processing_framework=args.processing_framework,

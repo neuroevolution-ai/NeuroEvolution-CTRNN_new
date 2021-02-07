@@ -1,5 +1,5 @@
-from brains.ffnn import FeedForwardPyTorch, FeedForwardNumPy
-from tools.configurations import FeedForwardCfg
+from brains.ffnn import FeedForwardPyTorch, FeedForwardNumPy, FeedForwardCfg
+
 import gym
 import numpy as np
 import time

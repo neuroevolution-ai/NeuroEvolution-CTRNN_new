@@ -1,11 +1,22 @@
+import attr
 from gym.spaces import Space
 import numpy as np
 import torch
 import torch.nn as nn
 
-from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
-from brains.i_pytorch_brain import IPytorchBrain
-from tools.configurations import LstmLayeredCfg, LstmTorchCfg, IPytorchBrainCfg
+from brains.i_layer_based_brain import ILayerBasedBrain, ILayerBasedBrainCfg
+from brains.i_pytorch_brain import IPytorchBrain, IPytorchBrainCfg
+from tools.config_reader import register
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LstmLayeredCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LstmTorchCfg(IPytorchBrainCfg):
+    pass
 
 
 class LSTMPyTorch(IPytorchBrain):
@@ -36,7 +47,7 @@ class LSTMLayered(ILayerBasedBrain[LstmLayeredCfg]):
     def get_number_hidden_values():
         return 2
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ILayerBasedBrainCfg):
         super().__init__(input_space, output_space, individual, config)
 
     @staticmethod
@@ -64,3 +75,7 @@ class LSTMLayered(ILayerBasedBrain[LstmLayeredCfg]):
         cell_state = np.multiply(f_t, hidden[1]) + np.multiply(i_t, g_t)
         hid = np.multiply(o_t, np.tanh(cell_state))
         return [[hid, cell_state], hid]
+
+
+register('LSTMLayered', brain_class=LSTMLayered)(LstmLayeredCfg)
+register('LSTM_PyTorch', brain_class=LSTMPyTorch)(LstmTorchCfg)

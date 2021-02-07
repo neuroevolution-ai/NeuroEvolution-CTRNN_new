@@ -1,9 +1,22 @@
 import abc
-from brains.i_brain import IBrain, ConfigClass
+import attr
 from gym import Space
 import numpy as np
-from tools.configurations import ILayerBasedBrainCfg
 from typing import List, TypeVar, Generic
+
+from brains.i_brain import IBrain, IBrainCfg
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ILayerBasedBrainCfg(IBrainCfg):
+    # The structure of the layers
+    # Each list entry translates to the size of one layer
+    # The layers are in the given order
+    hidden_layer_structure: List[int]
+    optimize_initial_neuron_state: bool
+    # Whether a neuron can only use its own state form the last timestep
+    diagonal_hidden_to_hidden: bool = True
+
 
 LayerdConfigClass = TypeVar('LayerdConfigClass', bound=ILayerBasedBrainCfg)
 

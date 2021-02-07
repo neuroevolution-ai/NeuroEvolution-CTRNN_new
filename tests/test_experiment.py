@@ -3,7 +3,7 @@ from attr import evolve
 import os
 from tools.helper import sample_from_design_space
 from tools.config_reader import ConfigReader
-from tools.configurations import ProcGenEnvAttributesCfg
+from tools.configurations import ProcGenEnvAttributesCfg, ExperimentCfg
 import json
 
 
@@ -102,7 +102,7 @@ class TestExperiment:
                 c = ConfigReader.config_from_dict(sample_from_design_space(design_space))
             else:
                 c = ConfigReader.config_from_file(path)
-
+            c = ExperimentCfg(**c)
             if c.environment in ['ReacherMemory-v0']:
                 print("skipping, because Mujoco")
                 continue

@@ -1,8 +1,17 @@
 import abc
-from tools.configurations import IBrainCfg
 import numpy as np
+import attr
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic, Dict
+from typing import TypeVar, Generic
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class IBrainCfg(abc.ABC):
+    type: str
+    normalize_input: bool = False
+    normalize_input_target: float = 1.0
+    use_bias: bool = False
+
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 

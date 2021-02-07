@@ -1,15 +1,49 @@
 import json
 import copy
-from typing import Type
+from typing import Type, Dict
 import logging
 import random
 
-from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, registered_keys
+registered_types: Dict = {}
+registered_keys: Dict = {}
+registered_brains: Dict = {}
+
+
+def register(name: str, as_key: bool = False, brain_class: Type = None):
+    """
+    This decorator registers a class, so that it can later be found by the config_reader with a specific string.
+    To map between the class and the string, it uses the content of the type-value of the json node.
+    If no type-attribute exists for that node, it uses the key of the node instead.
+
+    We explicitly separate between a mapping by key and by type-string, and thus we manage two separate lists for it.
+    Technically this separate isn't needed and it adds clutter, but I think explicit behavior here will help in
+    the long run.
+
+    :param name: the name and which the class shall be registered
+    :param as_key: if true, the node's key will be used for mapping. If false that type-value will be used
+    :param brain_class: this class is the config file for a Brain, the linked brain-class must be passed as a paramter
+    :return: a wrapper of the class
+    """
+
+    # registering magic
+    # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
+    def _register(type_class: type):
+        if brain_class:
+            assert name not in registered_brains, 'brain "' + str(name) + '" was already registered'
+            registered_brains[name] = brain_class
+        if as_key:
+            assert name not in registered_keys, 'key "' + str(name) + '" was already registered'
+            registered_keys[name] = type_class
+        else:
+            assert name not in registered_types, 'type "' + str(name) + '" was already registered'
+            registered_types[name] = type_class
+        return type_class
+
+    return _register
 
 
 class ConfigReader:
     """Reads a configuration from a JSON string and returns a valid config object."""
-
 
     @classmethod
     def _replace_dicts_with_types(cls, node, depth=0):
@@ -60,4 +94,4 @@ class ConfigReader:
         cls._replace_dicts_with_types(config_dict)
 
         config_dict["raw_dict"] = raw_dict
-        return ExperimentCfg(**config_dict)
+        return config_dict

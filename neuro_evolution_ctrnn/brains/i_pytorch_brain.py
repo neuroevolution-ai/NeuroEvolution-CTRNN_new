@@ -1,11 +1,18 @@
 import abc
 import torch
+import attr
 from gym import Space
 from torch import nn
 import numpy as np
 from typing import TypeVar
-from brains.i_brain import IBrain
-from tools.configurations import IPytorchBrainCfg
+from brains import IBrain, IBrainCfg
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class IPytorchBrainCfg(IBrainCfg):
+    num_layers: int
+    hidden_size: int
+
 
 PytorchBrainConfigClass = TypeVar('PytorchBrainConfigClass', bound=IPytorchBrainCfg)
 

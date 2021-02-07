@@ -1,6 +1,6 @@
 
 # import IBrain explicitly so it's a little bit easier to access from outside
-from .i_brain import IBrain
+from .i_brain import IBrain, IBrainCfg
 
 
 # __all__ doesn't work, because classes are only loaded when they are actually imported.

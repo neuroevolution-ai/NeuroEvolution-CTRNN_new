@@ -1,5 +1,4 @@
-from brains.lstm import LSTMPyTorch, LSTMLayered
-from tools.configurations import LstmTorchCfg, LstmLayeredCfg
+from brains.lstm import LSTMPyTorch, LSTMLayered, LstmTorchCfg, LstmLayeredCfg
 
 import numpy as np
 import gym
@@ -39,7 +38,8 @@ class TestLSTM:
 
         lstm_pytorch.hidden = (torch.from_numpy(hidden_pytorch), torch.from_numpy(cell_pytorch))
 
-        lstm_numpy.hidden = [[np.copy(hidden_numpy)[i], np.copy(cell_numpy)[i]]for i in range(len(np.copy(hidden_numpy)))]
+        lstm_numpy.hidden = [[np.copy(hidden_numpy)[i], np.copy(cell_numpy)[i]] for i in
+                             range(len(np.copy(hidden_numpy)))]
 
         with torch.no_grad():
             for i in range(len(lstm_layered_config.hidden_layer_structure)):
@@ -110,4 +110,4 @@ class TestLSTM:
 
         print(
             "Equal predictions between PyTorch and NumPy",
-            "Implementation of LSTM: {}% of {} predictions".format(close_percentage*100, number_of_inputs))
+            "Implementation of LSTM: {}% of {} predictions".format(close_percentage * 100, number_of_inputs))

@@ -1,11 +1,32 @@
+import attr
 import numpy as np
-from tools.configurations import ContinuousTimeRNNCfg
 from typing import List, Union
-from gym.spaces import Space,  Discrete
+from gym.spaces import Space, Discrete
 import logging
 import math
-from brains.i_brain import IBrain
 from scipy import sparse
+from brains.i_brain import IBrain, IBrainCfg
+from tools.config_reader import register
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ContinuousTimeRNNCfg(IBrainCfg):
+    optimize_initial_neuron_state: bool
+    delta_t: float
+    optimize_state_boundaries: str
+    number_neurons: int
+    neuron_activation: str
+    set_principle_diagonal_elements_of_W_negative: bool = True
+    parameter_perturbations: float = 0.0
+    v_mask: str = 'dense'
+    v_mask_param: float = 0.0
+    w_mask: str = 'dense'
+    w_mask_param: float = 0.0
+    t_mask: str = 'dense'
+    t_mask_param: float = 0.0
+    clipping_range_min: float = 0
+    clipping_range_max: float = 0
+    substeps: int = 1
 
 
 # noinspection PyPep8Naming
@@ -224,3 +245,6 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def get_output_weight_matrix(self):
         return self.T.toarray()
+
+
+register('CTRNN', brain_class=ContinuousTimeRNN)(ContinuousTimeRNNCfg)

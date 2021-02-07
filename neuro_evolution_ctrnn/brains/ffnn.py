@@ -1,10 +1,30 @@
+import attr
 import torch
 import numpy as np
 import torch.nn as nn
-from brains.i_brain import IBrain
-from tools.configurations import FeedForwardNumpyCfg, FeedForwardPyTorchCfg, FeedForwardCfg
+from brains.i_brain import IBrain, IBrainCfg
+from tools.config_reader import register
 from gym.spaces import Space
 from typing import List, Callable, TypeVar
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class FeedForwardCfg(IBrainCfg):
+    hidden_layers: List[int]
+    non_linearity: str
+    indirect_encoding: bool
+    cppn_hidden_layers: List[int]
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class FeedForwardPyTorchCfg(FeedForwardCfg):
+    pass
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class FeedForwardNumpyCfg(FeedForwardCfg):
+    pass
+
 
 FeedForwardConfigClass = TypeVar('FeedForwardConfigClass', bound=FeedForwardCfg)
 
@@ -197,3 +217,7 @@ class FeedForwardNumPy(FeedForward[FeedForwardNumpyCfg]):
             x = self.non_linearity(self.layer_step(x, weight, bias))
 
         return x
+
+
+register('FeedForward_PyTorch', brain_class=FeedForwardPyTorch)(FeedForwardPyTorchCfg)
+register('FeedForward_NumPy', brain_class=FeedForwardNumPy)(FeedForwardPyTorchCfg)

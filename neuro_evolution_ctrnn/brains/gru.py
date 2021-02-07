@@ -1,12 +1,22 @@
+import attr
 import numpy as np
 import torch
 from gym import Space
 from torch import nn
 
-from brains.i_brain import IBrain, ConfigClass
-from brains.i_pytorch_brain import IPytorchBrain
-from tools.configurations import GruCfg, IPytorchBrainCfg, GruTorchCfg
-from brains.i_layer_based_brain import ILayerBasedBrain
+from brains.i_pytorch_brain import IPytorchBrain, IPytorchBrainCfg
+from tools.config_reader import register
+from brains.i_layer_based_brain import ILayerBasedBrain, ILayerBasedBrainCfg
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruTorchCfg(IPytorchBrainCfg):
+    pass
 
 
 class GruNetwork(ILayerBasedBrain[GruCfg]):
@@ -15,7 +25,7 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
     def get_number_hidden_values():
         return 1
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: GruCfg):
         super().__init__(input_space, output_space, individual, config)
 
     @staticmethod
@@ -62,3 +72,7 @@ class GruPyTorch(IPytorchBrain):
     @staticmethod
     def get_number_gates():
         return 3
+
+
+register('GRU', brain_class=GruNetwork)(GruCfg)
+register('GruTorch', brain_class=GruPyTorch)(GruTorchCfg)
