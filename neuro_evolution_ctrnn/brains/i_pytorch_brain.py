@@ -3,11 +3,14 @@ import torch
 from gym import Space
 from torch import nn
 import numpy as np
-from brains.i_brain import IBrain, ConfigClass
+from typing import TypeVar
+from brains.i_brain import IBrain
 from tools.configurations import IPytorchBrainCfg
 
+PytorchBrainConfigClass = TypeVar('PytorchBrainConfigClass', bound=IPytorchBrainCfg)
 
-class IPytorchBrain(nn.Module, IBrain, abc.ABC):
+
+class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IPytorchBrainCfg):
         nn.Module.__init__(self)
@@ -70,7 +73,7 @@ class IPytorchBrain(nn.Module, IBrain, abc.ABC):
             self.hidden = self.get_hidden(config)
 
     @classmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: IPytorchBrainCfg, input_space: Space, output_space: Space):
         num_layers = config.num_layers
         number_gates = cls.get_number_gates()
         hidden_size = config.hidden_size

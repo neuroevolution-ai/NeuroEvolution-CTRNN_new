@@ -21,7 +21,7 @@ class BrainClass(brains.i_brain.IBrain[BrainCfgClass]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
-    def step(self, *nargs, **kwargs):
+    def brainstep(self, *nargs, **kwargs):
         return 1
 
     @classmethod
@@ -33,7 +33,7 @@ class BrainClassDupe1(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
-    def step(self, *nargs, **kwargs):
+    def brainstep(self, *nargs, **kwargs):
         return 1
 
     @classmethod
@@ -45,7 +45,7 @@ class BrainClassDupe2(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
-    def step(self, *nargs, **kwargs):
+    def brainstep(self, *nargs, **kwargs):
         return 1
 
     @classmethod

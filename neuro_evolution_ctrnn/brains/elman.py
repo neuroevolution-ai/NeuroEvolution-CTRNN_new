@@ -2,7 +2,7 @@ import numpy as np
 from gym import Space
 from brains.i_brain import ConfigClass, IBrain
 from brains.i_pytorch_brain import IPytorchBrain
-from tools.configurations import ElmanCfg, IPytorchBrainCfg
+from tools.configurations import ElmanCfg, IPytorchBrainCfg, ElmanTorchCfg
 from brains.i_layer_based_brain import ILayerBasedBrain
 import torch
 import torch.nn as nn
@@ -68,7 +68,7 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         )
 
 
-class ElmanPytorch(IPytorchBrain):
+class ElmanPytorch(IPytorchBrain[ElmanTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)

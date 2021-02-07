@@ -180,8 +180,6 @@ class CnnCtrnnCfg(IBrainCfg):
     ctrnn_conf: ContinuousTimeRNNCfg
 
 
-@register('FeedForward_PyTorch')
-@register('FeedForward_NumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
@@ -189,16 +187,29 @@ class FeedForwardCfg(IBrainCfg):
     indirect_encoding: bool
     cppn_hidden_layers: List[int]
 
+
+@register('FeedForward_PyTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class FeedForwardPyTorchCfg(FeedForwardCfg):
+    pass
+
+
+@register('FeedForward_NumPy')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class FeedForwardNumpyCfg(FeedForwardCfg):
+    pass
+
+
 @register('ElmanTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
     pass
 
+
 @register('GruTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class GruTorchCfg(IPytorchBrainCfg):
     pass
-
 
 
 @register('LSTM_PyTorch')
@@ -215,7 +226,7 @@ class ConcatenatedBrainLSTMCfg(IBrainCfg):
     feed_forward_back: FeedForwardCfg = None
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True , kw_only=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class IOptimizerCfg(abc.ABC):
     type: str
     novelty: Optional[NoveltyCfg] = None
