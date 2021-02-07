@@ -1,13 +1,13 @@
 import numpy as np
 from gym import Space
-from brains.i_brain import ConfigClass, IBrain
+from brains.i_brain import IBrain, register_brain
 from brains.i_pytorch_brain import IPytorchBrain
 from tools.configurations import ElmanCfg, IPytorchBrainCfg, ElmanTorchCfg
 from brains.i_layer_based_brain import ILayerBasedBrain
 import torch
 import torch.nn as nn
 
-
+@register_brain("ELMAN")
 class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
 
     @staticmethod
@@ -26,7 +26,7 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
             bias_h[0])
         return [[result], result]
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanCfg):
         super().__init__(input_space, output_space, individual, config)
 
     def get_neuron_states(self):
@@ -68,9 +68,10 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         )
 
 
+@register_brain("ElmanTorch")
 class ElmanPytorch(IPytorchBrain[ElmanTorchCfg]):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanTorchCfg):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)
 
     def get_brain(self, config: IPytorchBrainCfg, input_size):

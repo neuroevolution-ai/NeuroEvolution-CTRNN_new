@@ -4,37 +4,8 @@ import pickle
 import os
 import logging
 import torch
-from typing import get_args
 from bz2 import compress
 import gym
-from tools.configurations import registered_types
-from brains import IBrain
-
-
-def brain_class_from_config_type(config_type_string: str):
-    brain_class = None
-    target_brain_cfg = registered_types[config_type_string]
-    all_brain_classes = []
-
-    def walk_subclass(brain_class_parent):
-        for brain_class_child in brain_class_parent.__subclasses__():
-            all_brain_classes.append(brain_class_child)
-            walk_subclass(brain_class_child)
-
-    walk_subclass(IBrain)
-    for brain_class_candidate in all_brain_classes:
-        for bases in brain_class_candidate.__orig_bases__:  # iterate over all base-classes of this candidate
-            for type_args in get_args(bases):  # iterate over all generic types used with this base-class
-                if target_brain_cfg == type_args:
-                    if not brain_class:
-                        brain_class = brain_class_candidate
-                    elif brain_class != brain_class_candidate:
-                        raise RuntimeError("Multiple brain classes are registered for this configuration-class.")
-    if not brain_class:
-        # this is either a typo in the json, or the target brain is not a proper subclass of IBrain, or the
-        # config-class is not linked to the brain class as a generic of IBrain.
-        raise RuntimeError("no brain_class found for type: " + str(config_type_string))
-    return brain_class
 
 
 def output_to_action(output, action_space):

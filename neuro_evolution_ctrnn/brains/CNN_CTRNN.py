@@ -4,7 +4,7 @@ import numpy as np
 from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
 from typing import Union
 from gym.spaces import Space, Box
-from brains.i_brain import IBrain
+from brains import IBrain, register_brain
 from brains.continuous_time_rnn import ContinuousTimeRNN
 import torch
 import torch.nn as nn
@@ -12,6 +12,7 @@ import torch.nn.functional as F
 
 
 # noinspection PyPep8Naming
+@register_brain("CNN_CTRNN")
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     _usage_key_cnn_output = '_cnn_output_space'
 
@@ -67,6 +68,7 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.deterministic = False
 
 
+@register_brain("CNN")
 class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     _number_input_channels = 3
 

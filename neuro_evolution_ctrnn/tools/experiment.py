@@ -11,12 +11,13 @@ from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds, brain_class_from_config_type
+from tools.helper import set_random_seeds
 from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
+from brains import registered_brains
 
 
 class Experiment(object):
@@ -33,7 +34,7 @@ class Experiment(object):
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.write_final_checkpoint = write_final_checkpoint
-        self.brain_class = brain_class_from_config_type(self.config.brain.type)
+        self.brain_class = registered_brains[self.config.brain.type]
 
         self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == "CMA_ES":

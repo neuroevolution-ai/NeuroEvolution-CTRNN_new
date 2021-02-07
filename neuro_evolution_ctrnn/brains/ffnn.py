@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from brains.i_brain import IBrain
+from brains.i_brain import IBrain, register_brain
 from tools.configurations import FeedForwardNumpyCfg, FeedForwardPyTorchCfg, FeedForwardCfg
 from gym.spaces import Space
 from typing import List, Callable, TypeVar
@@ -90,6 +90,7 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         return {'individual_size': individual_size}
 
 
+@register_brain("FeedForward_PyTorch")
 class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardPyTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardPyTorchCfg):
@@ -157,6 +158,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardPyTorchCfg]):
             return x.view(self.output_size).numpy()
 
 
+@register_brain("FeedForward_NumPy")
 class FeedForwardNumPy(FeedForward[FeedForwardNumpyCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardNumpyCfg):

@@ -1,12 +1,12 @@
 from gym.spaces import Space, Box
 import numpy as np
 
-from brains.i_brain import IBrain
+from brains import IBrain, register_brain
 from brains.ffnn import FeedForwardNumPy
 from brains.lstm import LSTMLayered
 from tools.configurations import ConcatenatedBrainLSTMCfg, FeedForwardCfg, LstmLayeredCfg
 
-
+@register_brain("ConcatenatedBrain_LSTM")
 class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray,
                  config: ConcatenatedBrainLSTMCfg):
