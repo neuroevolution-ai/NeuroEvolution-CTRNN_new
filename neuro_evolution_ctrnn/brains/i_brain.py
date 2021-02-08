@@ -22,9 +22,6 @@ ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
 
-    def get_config_type(cls) -> Type:
-        pass
-
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
         # todo: remove these default assignments from derived classes
