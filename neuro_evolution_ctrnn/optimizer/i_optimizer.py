@@ -11,7 +11,6 @@ from typing import TypeVar, Generic, Callable
 from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
 from tools.configurations import IOptimizerCfg
 
-
 ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
 
@@ -66,15 +65,16 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         logbook = tools.Logbook()
         logbook.chapters["fitness"].header = "min", "avg", "std", "max"
         logbook.chapters["fitness"].columns_len = [8] * 4
-
+        header = "gen", "nevals", "steps", "val_fit", "fitness"
+        columns_len = [4, 4, 4, 8, 0]
         if conf.novelty:
-            logbook.header = "gen", "nevals", "steps", "fitness", "novelty"
-            logbook.columns_len = [4, 4, 8, 0, 0]
+            header = header + ("novelty",)
+            columns_len = columns_len + [0]
             logbook.chapters["novelty"].header = "min", "avg", "std", "max"
             logbook.chapters["novelty"].columns_len = [8] * 4
-        else:
-            logbook.columns_len = [4, 4, 8, 0]
-            logbook.header = "gen", "nevals", "steps", "fitness"
+
+        logbook.columns_len = columns_len
+        logbook.header = header
 
         return logbook
 
