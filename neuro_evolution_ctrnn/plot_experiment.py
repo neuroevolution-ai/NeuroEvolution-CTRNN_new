@@ -89,8 +89,8 @@ fig, ax1 = plt.subplots()
 plt.style.use('seaborn-paper')
 
 generations = [i for i in range(len(log))]
-val_fit = log.select('val_fit')
-if val_fit:
+if "val_fit" in log[0]:
+    val_fit = log.select('val_fit')
     my_plot(ax1, generations, val_fit, '-', color='orange', label="val_fit")
 plot_chapter(ax1, log.chapters["fitness"], generations, ("green", "teal", "teal", 'blue'))
 
