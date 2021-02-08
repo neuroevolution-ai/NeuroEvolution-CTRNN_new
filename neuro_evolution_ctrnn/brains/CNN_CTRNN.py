@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 
 # noinspection PyPep8Naming
-@register_brain("CNN_CTRNN")
+@register_brain("CNN_CTRNN", CnnCtrnnCfg)
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     _usage_key_cnn_output = '_cnn_output_space'
 
@@ -39,10 +39,10 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
         cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf, input_space=input_space,
-                                                    output_space=cnn_output_space)
+                                                          output_space=cnn_output_space)
         ctrnn_paramter_usage = ContinuousTimeRNN.get_free_parameter_usage(config=config.ctrnn_conf,
-                                                                    input_space=cnn_output_space,
-                                                                    output_space=output_space)
+                                                                          input_space=cnn_output_space,
+                                                                          output_space=output_space)
         return {'CNN': cnn_paramter_usage, 'CTRNN': ctrnn_paramter_usage, cls._usage_key_cnn_output: cnn_output_space}
 
     @classmethod
@@ -68,7 +68,7 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.deterministic = False
 
 
-@register_brain("CNN")
+@register_brain("CNN", ConvolutionalNNCfg)
 class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     _number_input_channels = 3
 

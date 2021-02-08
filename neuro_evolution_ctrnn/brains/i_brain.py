@@ -2,38 +2,16 @@ import abc
 from tools.configurations import IBrainCfg, register
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic, get_args
+from typing import TypeVar, Generic, get_args, Type
 
 registered_brains = {}
 
 
-def register_brain(name: str):
+def register_brain(name: str, config_class: Type[IBrainCfg]):
     def _register(type_class: type):
-
-        def walk_base_class(type_class_walk):
-            # This method does introspection into the class, its base class and its generics to find
-            # the config-class bound to this brain
-            if not hasattr(type_class_walk, "__orig_bases__"):
-                # this is not a generic subclass, thus neither it nor it base-classes are
-                # a IBrain to which a config is bound
-                return
-            for base in type_class_walk.__orig_bases__:  # iterate over all base-classes of this class
-                if not hasattr(base, "__origin__"):
-                    # this is not a generic base class, but it could be a child of one. So recursion is needed
-                    walk_base_class(base)
-                    # Note: A better check would be isinstance(base, _GenericAlias), but pycharm doesn't
-                    # seem to like _GenericAlias.
-                elif issubclass(base.__origin__, IBrain):
-                    for type_arg in get_args(base):  # iterate over all generic types used with this base-class
-                        if isinstance(type_arg, TypeVar):
-                            type_arg = type_arg.__bound__
-                        if issubclass(type_arg, IBrainCfg):
-                            # we have found the Config-Class Bound to this class.
-                            register(name)(type_arg)
-
         assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
         registered_brains[name] = type_class
-        walk_base_class(type_class)
+        register(name)(config_class)
         return type_class
 
     return _register
@@ -43,6 +21,9 @@ ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
+
+    def get_config_type(cls) -> Type:
+        pass
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):

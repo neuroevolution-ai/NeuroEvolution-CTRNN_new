@@ -7,7 +7,8 @@ from brains.i_layer_based_brain import ILayerBasedBrain
 import torch
 import torch.nn as nn
 
-@register_brain("ELMAN")
+
+@register_brain("ELMAN", ElmanCfg)
 class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
 
     @staticmethod
@@ -68,7 +69,7 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         )
 
 
-@register_brain("ElmanTorch")
+@register_brain("ElmanTorch", ElmanTorchCfg)
 class ElmanPytorch(IPytorchBrain[ElmanTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanTorchCfg):

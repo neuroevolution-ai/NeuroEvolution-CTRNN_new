@@ -9,7 +9,7 @@ from tools.configurations import GruCfg, IPytorchBrainCfg, GruTorchCfg
 from brains.i_layer_based_brain import ILayerBasedBrain
 
 
-@register_brain("GRU")
+@register_brain("GRU", GruCfg)
 class GruNetwork(ILayerBasedBrain[GruCfg]):
 
     @staticmethod
@@ -44,8 +44,8 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
         return 3
 
 
-@register_brain("GruTorch")
-class GruPyTorch(IPytorchBrain):
+@register_brain("GruTorch", GruTorchCfg)
+class GruPyTorch(IPytorchBrain[GruTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: GruTorchCfg):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)

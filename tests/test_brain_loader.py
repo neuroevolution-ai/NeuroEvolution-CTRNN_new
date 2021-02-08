@@ -14,7 +14,7 @@ class BrainCfgClassDuplicate(tools.configurations.IBrainCfg):
     pass
 
 
-@brains.i_brain.register_brain("TestBrain")
+@brains.i_brain.register_brain("TestBrain", BrainCfgClass)
 class BrainClass(brains.i_brain.IBrain[BrainCfgClass]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
@@ -66,9 +66,9 @@ class TestBrainLoader:
         assert 1 == brain.step(input_space.sample())
 
     def test_two_brains_for_one_config(self):
+        brains.i_brain.register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe1)
         with pytest.raises(AssertionError, match='TestBrainDupe'):
-            brains.i_brain.register_brain("TestBrainDupe")(BrainClassDupe1)
-            brains.i_brain.register_brain("TestBrainDupe")(BrainClassDupe2)
+            brains.i_brain.register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe2)
 
     def test_unregistered_type(self):
         config = tools.configurations.IBrainCfg(type='Smooth')

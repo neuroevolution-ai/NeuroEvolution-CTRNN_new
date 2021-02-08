@@ -9,7 +9,7 @@ from scipy import sparse
 
 
 # noinspection PyPep8Naming
-@register_brain("CTRNN")
+@register_brain("CTRNN", ContinuousTimeRNNCfg)
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray
