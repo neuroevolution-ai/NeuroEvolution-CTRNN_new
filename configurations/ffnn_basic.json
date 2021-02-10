@@ -12,7 +12,7 @@
   "brain": {
     "type": "FeedForward_NumPy",
     "use_bias": true,
-    "hidden_layers": [[64, 64]],
+    "hidden_layers": [[8, 8]],
     "non_linearity": "relu",
     "indirect_encoding": false,
     "cppn_hidden_layers": [[10, 10]]
