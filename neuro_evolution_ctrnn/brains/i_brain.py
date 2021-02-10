@@ -22,16 +22,13 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         """
         Takes an observation from a gym.Environment object and calculates a step of the brain.
 
-        If config.normalize_input is set the observations get normalized before the calculations inside the brain
-        are done.
+        The observation will be transformed according to the input space to a suitable form for the brain, for example
+        an observation coming from a Discrete Space will be transformed into a one-hot encoded vector.
 
         :param ob: Observation from a gym.Environment object
-        :return: The output of the step of the Brain, the format of the output corresponds to the output_space variable
-            of the Brain
+        :return: The output of the step of the Brain, the format of the output corresponds to the output Space of the
+                 Brain
         """
-        if self.config.normalize_input:
-            ob = self._scale_observation(ob)
-
         ob = self.parse_brain_input_output(ob, is_brain_input=True)
 
         brain_output = self.brainstep(ob)
@@ -82,29 +79,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     @classmethod
     def set_masks_globally(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
         pass
-
-    @staticmethod
-    def _normalize(x, low, high):
-        """Scales a value x from the interval [low,high] to the interval [0,1]."""
-        return (x - low) / (high - low)
-
-    def _scale_observation(self, ob):
-        if isinstance(self.input_space, spaces.Box):
-            # Note: some Spaces from some envs do not define input_space.bounded_below properly so we treat
-            # very high bounds as unbounded, too
-            mask = (self.input_space.bounded_below
-                    & self.input_space.bounded_above
-                    & (self.input_space.bounded_below > -1e5)
-                    & (self.input_space.bounded_above < 1e5))
-
-            # scaled is now between 0 and 1
-            scaled = self._normalize(ob[mask], self.input_space.low[mask], self.input_space.high[mask])
-
-            # ob[mask] is now between -target and +target
-            ob[mask] = (scaled - 0.5) * (2 * self.config.normalize_input_target)
-            return ob
-        else:
-            raise NotImplementedError("_scale_observation is only implemented for the input Spaces of type Box.")
 
     @staticmethod
     def _size_from_space(space: spaces.Space) -> int:

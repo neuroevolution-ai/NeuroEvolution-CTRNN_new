@@ -21,8 +21,6 @@
     "hidden_layer_structure": [4,4],
     "diagonal_hidden_to_hidden": true,
     "use_bias": true,
-    "normalize_input": false,
-    "normalize_input_target": 3,
     "optimize_initial_neuron_state": false
   },
   "episode_runner": {

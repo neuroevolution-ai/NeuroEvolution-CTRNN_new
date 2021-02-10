@@ -14,8 +14,6 @@
   },
   "brain": {
       "type": "LSTMLayered",
-      "normalize_input": false,
-      "normalize_input_target": 5,
       "use_bias": true,
       "hidden_layer_structure": [2,2,2],
       "optimize_initial_neuron_state": false

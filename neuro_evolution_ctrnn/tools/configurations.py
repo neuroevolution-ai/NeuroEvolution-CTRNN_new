@@ -40,8 +40,6 @@ def register(name: str, as_key: bool = False):
 class IBrainCfg(abc.ABC):
     type: str
     use_bias: bool
-    normalize_input: bool = False
-    normalize_input_target: float = False
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)

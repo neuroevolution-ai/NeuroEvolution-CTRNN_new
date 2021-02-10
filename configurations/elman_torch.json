@@ -16,9 +16,7 @@
     "type": "ElmanTorch",
     "hidden_size": 5,
     "num_layers": 2,
-    "use_bias": true,
-    "normalize_input": false,
-    "normalize_input_target": 3
+    "use_bias": true
   },
   "episode_runner": {
     "keep_env_seed_fixed_during_generation": true,
