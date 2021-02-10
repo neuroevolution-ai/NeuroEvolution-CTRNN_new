@@ -170,7 +170,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 brain_input = []
                 for i, sub_input in enumerate(brain_input_output):
                     if isinstance(relevant_space[i], spaces.Tuple):
-                        raise RuntimeError("Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose another environment")
+                        raise RuntimeError("""Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
+                                              another environment""")
                     parsed_sub_input = self.parse_brain_input_output(sub_input,
                                                                      is_brain_input=True,
                                                                      relevant_space=relevant_space[i])
@@ -205,13 +206,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     @classmethod
     def generate_and_set_class_state(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
         pass
-
-    def discrete_to_vector(self, ob):
-        # todo: use this function in all derived classes
-        #  and maybe find a even cleaner way to do this without violating DRY
-        ob_new = np.zeros(self.input_space.n)
-        ob_new[ob] = 1
-        return ob_new
 
     def get_neuron_states(self):
         raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")

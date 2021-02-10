@@ -16,7 +16,6 @@ from tools.configurations import IBrainCfg
 from brains.continuous_time_rnn import ContinuousTimeRNN
 
 
-
 class BrainVisualizerHandler:
     def __init__(self):
         self.current_visualizer = None
@@ -112,7 +111,7 @@ class BrainVisualizer:
         # If the dimension of the input (the observation) is three-dimensional we assume that the environment delivers
         # RGB pixels as inputs of kind [Width, Height, RGB]
 
-        initial_observation = self._transform_observation(initial_observation)
+        initial_observation = self.brain.parse_brain_input_output(initial_observation, is_brain_input=True)
         self.input_shape = initial_observation.shape
 
         if len(self.input_shape) == 1:
@@ -229,7 +228,10 @@ class BrainVisualizer:
     def process_update(self, in_values: np.ndarray, out_values: np.ndarray):
         # Fill screen with neutral_color
         self.screen.fill(self.display_color)
-        in_values = self._transform_observation(in_values)
+
+        # Only transform the input because this comes directly from the environment while out_values comes from the
+        # brain where this has already been transformed
+        in_values = self.brain.parse_brain_input_output(in_values, is_brain_input=True)
 
         if self.rgb_input:
             in_values = np.concatenate(
@@ -323,9 +325,3 @@ class BrainVisualizer:
 
         # Updates the content of the window
         pygame.display.flip()
-
-    def _transform_observation(self, observation):
-        if isinstance(self.brain.input_space, Discrete):
-            # todo: clean up this observation-transformation in a cleaner way
-            return self.brain.discrete_to_vector(observation)
-        return observation
