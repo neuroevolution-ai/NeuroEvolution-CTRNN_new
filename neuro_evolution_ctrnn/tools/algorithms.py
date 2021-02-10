@@ -12,9 +12,9 @@ import copy
 
 def evaluate_candidates(candidates, toolbox):
     if toolbox.initial_seed:
-        seed_after_map: int = random.randint(1, 10000)
+        seed_after_map: int = np.random.randint(1, 10000)
         if toolbox.conf.fix_seed_for_generation:
-            seed_for_generation = random.randint(1, 10000)
+            seed_for_generation = np.random.randint(1, 10000)
             seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
             seeds_for_recorded = seed_for_generation * np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
         else:

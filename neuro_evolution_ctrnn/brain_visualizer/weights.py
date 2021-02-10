@@ -1,6 +1,6 @@
 import math
 from typing import Tuple
-
+import logging
 import pygame
 import numpy as np
 
@@ -114,6 +114,11 @@ class Weights:
             max_end_neuron = np.argmax(np.abs(start_neuron_weights))
             weight = start_neuron_weights[max_end_neuron]
 
+            logging.debug(max_end_neuron)
+            logging.debug(start_neuron_weights)
+            logging.debug("----")
+            logging.debug(end_pos_dict)
+
             start_pos = start_pos_dict[start_neuron]
             end_pos = end_pos_dict[max_end_neuron]
 
@@ -122,6 +127,7 @@ class Weights:
     @staticmethod
     def draw_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
                      weight_matrix, is_input: bool = False, in_values: np.ndarray = None) -> None:
+        weight_matrix = weight_matrix.T
         if visualizer.draw_weight_mode & Weights.WEIGHT_ALL:
             for (start_neuron, end_neuron), weight in np.ndenumerate(weight_matrix):
                 Weights.check_zero_input(is_input, visualizer.draw_weight_mode, start_neuron, in_values)
@@ -137,6 +143,7 @@ class Weights:
                     end_pos = end_pos_dict[end_neuron]
 
                     Weights.draw_connection(visualizer, start_pos, end_pos, weight)
+        # TODO wenn die Weights.WEIGHT_MAX usw. flags sind, warum ist dann hier elseif?
         elif visualizer.draw_weight_mode & Weights.WEIGHT_MAX:
             Weights.draw_maximum_weights(visualizer, start_pos_dict, end_pos_dict, weight_matrix, is_input, in_values)
         else:

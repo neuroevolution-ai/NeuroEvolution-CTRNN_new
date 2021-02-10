@@ -1,0 +1,32 @@
+{
+  "environment": "LunarLander-v2",
+  "random_seed": 0,
+  "number_generations": 200,
+  "optimizer": {
+    "type": "CMA_ES",
+    "population_size": 100,
+    "sigma": 1.0,
+    "checkpoint_frequency": 0,
+    "hof_size": 5,
+    "mu": 25,
+    "efficiency_weight": 0.0,
+    "fix_seed_for_generation": true
+  },
+  "brain": {
+    "type": "ELMAN",
+    "hidden_layer_structure": [4,10,2],
+    "diagonal_hidden_to_hidden": true,
+    "use_bias": true,
+    "normalize_input": false,
+    "normalize_input_target": 3,
+    "optimize_initial_neuron_state": false
+  },
+  "episode_runner": {
+    "keep_env_seed_fixed_during_generation": true,
+    "number_fitness_runs": 1,
+    "max_steps_per_run": 0,
+    "max_steps_penalty": 0,
+    "reuse_env": true,
+    "use_autoencoder": false
+  }
+}

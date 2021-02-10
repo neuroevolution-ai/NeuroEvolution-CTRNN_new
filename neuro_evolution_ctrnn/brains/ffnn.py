@@ -1,4 +1,3 @@
-import abc
 from typing import List, Callable
 
 import numpy as np
@@ -10,10 +9,10 @@ from brains.i_brain import IBrain
 from tools.configurations import FeedForwardCfg
 
 
-class FeedForward(IBrain[FeedForwardCfg], abc.ABC):
+class FeedForward(IBrain[FeedForwardCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
-        IBrain.__init__(self, input_space, output_space, individual, config)
+        super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
                                                            output_space=output_space)
@@ -41,9 +40,8 @@ class FeedForward(IBrain[FeedForwardCfg], abc.ABC):
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
                 "".format(config.non_linearity))
 
-    @abc.abstractmethod
-    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
-        pass
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
 
     @staticmethod
     def relu(x: np.ndarray) -> np.ndarray:
@@ -71,7 +69,7 @@ class FeedForward(IBrain[FeedForwardCfg], abc.ABC):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_individual_size(cls, config: FeedForwardCfg, input_space: Space, output_space: Space) -> int:
+    def get_free_parameter_usage(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -89,7 +87,7 @@ class FeedForward(IBrain[FeedForwardCfg], abc.ABC):
         if config.use_bias:
             individual_size += sum(hidden_layers) + output_size
 
-        return individual_size
+        return {'individual_size': individual_size}
 
 
 class FeedForwardPyTorch(nn.Module, FeedForward):
@@ -148,7 +146,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
         #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
         #
 
-    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         with torch.no_grad():
@@ -192,7 +190,7 @@ class FeedForwardNumPy(FeedForward):
         # If bias is not used it will be zero, see constructor
         return np.dot(layer_weights, x) + bias
 
-    def calculate_brain_output(self, ob: np.ndarray) -> np.ndarray:
+    def step(self, ob: np.ndarray) -> np.ndarray:
         x = ob
 
         for weight, bias in zip(self.weights, self.bias):

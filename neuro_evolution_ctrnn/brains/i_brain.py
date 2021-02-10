@@ -34,17 +34,41 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
         ob = self.parse_brain_input_output(ob, is_brain_input=True)
 
-        brain_output = self.calculate_brain_output(ob)
+        brain_output = self.brainstep(ob)
 
         return self.parse_brain_input_output(brain_output, is_brain_input=False)
 
     @abc.abstractmethod
-    def calculate_brain_output(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
         pass
 
     @classmethod
+    def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> int:
+        """uses context information to calculate the required number of free parameter needed to construct
+                an individual of this class"""
+        def sum_dict(node):
+            sum_ = 0
+            for key, item in node.items():
+                if str(key).startswith('_'):
+                    continue
+                if isinstance(item, dict):
+                    sum_ += sum_dict(item)
+                else:
+                    sum_ += item
+            return sum_
+        usage_dict = cls.get_free_parameter_usage(config, input_space, output_space)
+        return sum_dict(usage_dict)
+
+    @classmethod
     @abc.abstractmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> dict:
+        """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
+        only the sum of the individual leaves is relevant at the time of writing this docstring.
+        Items (and their respective subtrees) are ignored if their key starts with '_'.
+
+        The sum of the values of the leaves of this dict, must be exactly the dimension of the individual, which
+        is parsed by the constructor of the respective brain.
+        """
         pass
 
     @classmethod
@@ -62,7 +86,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     @staticmethod
     def _normalize(x, low, high):
         """Scales a value x from the interval [low,high] to the interval [0,1]."""
-        return ((x - low) / (high - low))
+        return (x - low) / (high - low)
 
     def _scale_observation(self, ob):
         if isinstance(self.input_space, spaces.Box):
@@ -78,7 +102,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
             # ob[mask] is now between -target and +target
             ob[mask] = (scaled - 0.5) * (2 * self.config.normalize_input_target)
-
             return ob
         else:
             raise NotImplementedError("_scale_observation is only implemented for the input Spaces of type Box.")
@@ -168,3 +191,26 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             raise RuntimeError(
                 "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
             )
+
+    @classmethod
+    def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
+        pass
+
+    def discrete_to_vector(self, ob):
+        # todo: use this function in all derived classes
+        #  and maybe find a even cleaner way to do this without violating DRY
+        ob_new = np.zeros(self.input_space.n)
+        ob_new[ob] = 1
+        return ob_new
+
+    def get_neuron_states(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_internal_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_input_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    def get_output_weight_matrix(self):
+        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")

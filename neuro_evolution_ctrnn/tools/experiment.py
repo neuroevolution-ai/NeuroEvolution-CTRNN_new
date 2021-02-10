@@ -10,7 +10,7 @@ from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
-from brains.lstm import LSTMPyTorch, LSTMNumPy
+from brains.lstm import LSTMPyTorch, LSTMLayered
 from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
@@ -23,6 +23,8 @@ from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
 from brains.CNN_CTRNN import CnnCtrnn
+from brains.elman import ElmanNetwork, ElmanPytorch
+from brains.gru import GruNetwork, GruPyTorch
 
 
 class Experiment(object):
@@ -48,8 +50,16 @@ class Experiment(object):
             self.brain_class = FeedForwardPyTorch
         elif self.config.brain.type == "LSTM_PyTorch":
             self.brain_class = LSTMPyTorch
-        elif self.config.brain.type == "LSTM_NumPy":
-            self.brain_class = LSTMNumPy
+        elif self.config.brain.type == "LSTMLayered":
+            self.brain_class = LSTMLayered
+        elif self.config.brain.type == "ELMAN":
+            self.brain_class = ElmanNetwork
+        elif self.config.brain.type == "ElmanTorch":
+            self.brain_class = ElmanPytorch
+        elif self.config.brain.type == "GruTorch":
+            self.brain_class = GruPyTorch
+        elif self.config.brain.type == "GRU":
+            self.brain_class = GruNetwork
         elif self.config.brain.type == "ConcatenatedBrain_LSTM":
             self.brain_class = ConcatenatedLSTM
         elif self.config.brain.type == "CNN_CTRNN":
@@ -79,20 +89,18 @@ class Experiment(object):
         self.output_space = env.action_space
         logging.info("Input space: " + str(self.input_space))
         logging.info("Output space: " + str(self.output_space))
-        self.brain_class.set_masks_globally(config=self.config.brain,
-                                            input_space=self.input_space,
-                                            output_space=self.output_space)
+        self.brain_class.generate_and_set_class_state(config=self.config.brain,
+                                                      input_space=self.input_space,
+                                                      output_space=self.output_space)
 
         self.individual_size = self.brain_class.get_individual_size(self.config.brain,
                                                                     input_space=self.input_space,
                                                                     output_space=self.output_space)
         logging.info("Individual size for this experiment: " + str(self.individual_size))
-        if issubclass(self.brain_class, CnnCtrnn):
-            cnn_size, ctrnn_size, cnn_output_space = self.brain_class._get_sub_individual_size(self.config.brain,
-                                                                                               input_space=self.input_space,
-                                                                                               output_space=self.output_space)
-            logging.info("cnn_size: " + str(cnn_size) + "\tctrnn_size: " + str(ctrnn_size) + "\tcnn_output: " +
-                         str(cnn_output_space))
+        info = self.brain_class.get_free_parameter_usage(self.config.brain,
+                                                         input_space=self.input_space,
+                                                         output_space=self.output_space)
+        logging.info("Usage of free parameters: " + str(info))
 
         self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
                                        brain_class=self.brain_class, input_space=self.input_space,
@@ -117,12 +125,12 @@ class Experiment(object):
                                "".format(self.number_of_workers, system_cpu_count))
 
         if self.processing_framework == "dask":
-            self.processing_handler = DaskHandler(self.number_of_workers, self.optimizer_class.create_classes,
-                                                  self.brain_class)
+            self.processing_handler = DaskHandler(
+                number_of_workers=self.number_of_workers, brain_class=self.brain_class)
         elif self.processing_framework == "mp":
-            self.processing_handler = MPHandler(self.number_of_workers)
+            self.processing_handler = MPHandler(number_of_workers=self.number_of_workers)
         elif self.processing_framework == "sequential":
-            self.processing_handler = SequentialHandler(self.number_of_workers)
+            self.processing_handler = SequentialHandler(number_of_workers=self.number_of_workers)
         else:
             raise RuntimeError(
                 "The processing framework '{}' is not supported.".format(self.processing_framework))
@@ -132,7 +140,7 @@ class Experiment(object):
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
                                               eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkoint=self.from_checkpoint,
+                                              stats=stats, from_checkpoint=self.from_checkpoint,
                                               reset_hof=self.reset_hof, random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,

@@ -21,6 +21,7 @@ def register(name: str, as_key: bool = False):
     :param as_key: if true, the node's key will be used for mapping. If false that type-value will be used
     :return: a wrapper of the class
     """
+
     # registering magic
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
@@ -38,9 +39,26 @@ def register(name: str, as_key: bool = False):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
-    normalize_input: bool
-    normalize_input_target: float
     use_bias: bool
+    normalize_input: bool = False
+    normalize_input_target: float = False
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class IPytorchBrainCfg(IBrainCfg):
+    num_layers: int
+    hidden_size: int
+
+
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ILayerBasedBrainCfg(IBrainCfg):
+    # The structure of the layers
+    # Each list entry translates to the size of one layer
+    # The layers are in the given order
+    hidden_layer_structure: List[int]
+    optimize_initial_neuron_state: bool
+    # Whether a neuron can only use its own state form the last timestep
+    diagonal_hidden_to_hidden: bool = True
 
 
 @register('novelty', True)
@@ -53,10 +71,10 @@ class NoveltyCfg:
     recorded_behaviors_per_generation: int
     behavioral_interval: int
     behavioral_max_length: int
-    behavior_source: str
+    behavior_source: str  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class IEnvAttributesCfg(abc.ABC):
     type: str
 
@@ -78,10 +96,20 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
+@register('ProcGenAttr')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class ProcGenEnvAttributesCfg(IEnvAttributesCfg):
+    screen_size: int = 64
+    distribution_mode: str = 'memory'
+    use_monochrome_assets: bool = False
+    restrict_themes: bool = True
+    use_backgrounds: bool = False
+
+
 @register('episode_runner', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
-    reuse_env: bool
+    reuse_env: bool = True
     keep_env_seed_fixed_during_generation: bool = True
     novelty: Optional[NoveltyCfg] = None
     environment_attributes: Optional[IEnvAttributesCfg] = None
@@ -91,16 +119,33 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
-@register('CTRNN')
+@register('ELMAN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
+class ElmanCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@register('LSTMLayered')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class LstmLayeredCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@register('GRU')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruCfg(ILayerBasedBrainCfg):
+    pass
+
+
+@register('CTRNN')
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
-    optimize_y0: bool
+    optimize_initial_neuron_state: bool
     delta_t: float
     optimize_state_boundaries: str
-    set_principle_diagonal_elements_of_W_negative: bool
     number_neurons: int
     neuron_activation: str
-    neuron_activation_inplace: bool = False
+    set_principle_diagonal_elements_of_W_negative: bool = True
     parameter_perturbations: float = 0.0
     v_mask: str = 'dense'
     v_mask_param: float = 0.0
@@ -110,10 +155,11 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     t_mask_param: float = 0.0
     clipping_range_min: float = 0
     clipping_range_max: float = 0
+    substeps: int = 1
 
 
 @register('CNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
     conv_feat1: int
@@ -128,7 +174,7 @@ class ConvolutionalNNCfg(IBrainCfg):
 
 
 @register('CNN_CTRNN')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
@@ -136,26 +182,35 @@ class CnnCtrnnCfg(IBrainCfg):
 
 @register('FeedForward_PyTorch')
 @register('FeedForward_NumPy')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     non_linearity: str
     indirect_encoding: bool
     cppn_hidden_layers: List[int]
 
+@register('ElmanTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class ElmanTorchCfg(IPytorchBrainCfg):
+    pass
+
+@register('GruTorch')
+@attr.s(slots=True, auto_attribs=True, frozen=True)
+class GruTorchCfg(IPytorchBrainCfg):
+    pass
+
+
 
 @register('LSTM_PyTorch')
-@register('LSTM_NumPy')
-@register('LSTMNumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class LSTMCfg(IBrainCfg):
-    lstm_num_layers: int
+class LstmTorchCfg(IPytorchBrainCfg):
+    pass
 
 
 @register('ConcatenatedBrain_LSTM')
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
-    lstm: LSTMCfg
+    lstm: LstmLayeredCfg
     feed_forward_front: FeedForwardCfg = None
     feed_forward_back: FeedForwardCfg = None
 
