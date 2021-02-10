@@ -193,7 +193,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             )
 
     @classmethod
-    def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
         pass
 
     def discrete_to_vector(self, ob):
