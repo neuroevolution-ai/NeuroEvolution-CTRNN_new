@@ -12,6 +12,16 @@ class TestIBrain:
     input_n = 50
     output_n = 10
 
+    def test_size_from_space(self):
+        test_discrete = spaces.Discrete(self.input_n)
+        assert FeedForwardNumPy._size_from_space(test_discrete) == self.input_n
+
+        test_box = spaces.Box(self.low, self.high, shape=self.multi_dimensional_shape)
+        assert FeedForwardNumPy._size_from_space(test_box) == np.prod(self.multi_dimensional_shape)
+
+        test_tuple = spaces.Tuple([test_discrete, test_box])
+        assert FeedForwardNumPy._size_from_space(test_tuple) == (self.input_n + np.prod(self.multi_dimensional_shape))
+
     # @pytest.mark.skip(reason="Not yet implemented")
     def test_parse_box_space(self, ffnn_config):
         input_space = spaces.Box(low=self.low, high=self.high, shape=self.one_dimensional_shape)
@@ -87,10 +97,9 @@ class TestIBrain:
         multi_dimensional_box = spaces.Box(low=self.low, high=self.high, shape=self.multi_dimensional_shape)
         first_discrete = spaces.Discrete(n=self.input_n)
         second_discrete = spaces.Discrete(n=self.output_n)
-        nested_tuple = spaces.Tuple([one_dimensional_box, multi_dimensional_box])
 
-        input_space = spaces.Tuple([nested_tuple, one_dimensional_box, first_discrete])
-        output_space = spaces.Tuple([nested_tuple, multi_dimensional_box, second_discrete])
+        input_space = spaces.Tuple([one_dimensional_box, first_discrete, multi_dimensional_box, second_discrete])
+        output_space = spaces.Tuple([second_discrete, multi_dimensional_box, one_dimensional_box, first_discrete])
 
         dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
             ffnn_config, input_space=input_space, output_space=output_space)))
@@ -99,27 +108,31 @@ class TestIBrain:
                                    config=ffnn_config)
 
         # Test input space
-
         sample_input = input_space.sample()
         parsed_input = brain.parse_brain_input_output(sample_input, is_brain_input=True)
-
-        assert len(parsed_input) == 3
-        assert len(parsed_input[0]) == 2
-        assert parsed_input[0][0].shape == one_dimensional_box.shape
-        assert parsed_input[0][1].shape == multi_dimensional_box.shape
-        assert parsed_input[1].shape == one_dimensional_box.shape
-        assert len(parsed_input[2].shape) == 1  # One-Hot encoded, rest of one-hot encoding is tested in other test case
-        assert len(parsed_input[2]) == first_discrete.n
+        assert len(parsed_input.shape) == 1
+        assert FeedForwardNumPy._size_from_space(input_space) == len(parsed_input)
 
         # Test output space
-
         brain_output = brain.step(input_space.sample())
 
-        # See definition of output_space
-        assert len(brain_output) == 3
-        assert len(brain_output[0]) == 2
-        assert brain_output[0][0].shape == one_dimensional_box.shape
-        assert brain_output[0][1].shape == multi_dimensional_box.shape
-        assert brain_output[1].shape == multi_dimensional_box.shape
-        assert isinstance(brain_output[2], np.integer)
-        assert 0 <= brain_output[2] < second_discrete.n
+        # 4 nested spaces inside the input space
+        assert len(brain_output) == 4
+
+        # First nested space is second_discrete
+        nested_output = brain_output[0]
+        assert isinstance(nested_output, np.integer)
+
+        # Second nested space is multi_dimensional_box
+        nested_output = brain_output[1]
+        assert len(nested_output.shape) == len(self.multi_dimensional_shape)
+        assert all([x == y for (x, y) in zip(nested_output.shape, self.multi_dimensional_shape)])
+
+        # Third nested space is one_dimensional_box
+        nested_output = brain_output[2]
+        assert len(nested_output.shape) == len(self.one_dimensional_shape)
+        assert all([x == y for (x, y) in zip(nested_output.shape, self.one_dimensional_shape)])
+
+        # Fourth nested space is first_discrete
+        nested_output = brain_output[3]
+        assert isinstance(nested_output, np.integer)

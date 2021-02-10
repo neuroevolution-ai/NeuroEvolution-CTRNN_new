@@ -131,8 +131,16 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
         An input for the brain equals the output of an environment and vice versa.
 
+        Discrete Space as input space will be encoded as a one hot vector, Discrete Space as output takes the argmax.
+        Box Space as input will not be transformed, Box Space as output will be reshaped to match the environment.
+        Tuple Space as input unpacks each subspace, transforms it with this function (recursive) and then flattens every
+        output of the subspaces. For Tuple Space as output a tuple will be created from the brain output where the
+        entries are of the correct shape for the environment.
+
+        Note that Tuple Spaces inside Tuple Spaces are not supported.
+
         :param brain_input_output: The to be parsed variable
-        :param is_brain_input: True if to_transform is the input for a Brain, False if not
+        :param is_brain_input: Should be True if brain_input_output is the input for a Brain, False if not
         :param relevant_space: relevant_space is normally chosen depending on is_brain_input but it can be provided
         directly with this parameter. This is used for Tuple spaces which are nested
         :return: The parsed variable
@@ -155,19 +163,21 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             else:
                 return np.argmax(brain_input_output)
         elif isinstance(relevant_space, spaces.Tuple):
-            # TODO Tuple input spaces need to be rethinked, FFNNNumpy for example cannot handle this
-            #   possible solution would be to flatten nested spaces then it can be handled
             # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
             # a tuple where each entry in the tuple is linked to the corresponding Space.
             if is_brain_input:
                 # Transform the brain input (a tuple) into a list which is structured to resemble the "nested" Spaces.
                 brain_input = []
                 for i, sub_input in enumerate(brain_input_output):
+                    if isinstance(relevant_space[i], spaces.Tuple):
+                        raise RuntimeError("Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose another environment")
                     parsed_sub_input = self.parse_brain_input_output(sub_input,
                                                                      is_brain_input=True,
                                                                      relevant_space=relevant_space[i])
 
-                    brain_input.append(parsed_sub_input)
+                    # Inputs from the sub spaces are flattened and concatenated here, otherwise some brains could not
+                    # work with this
+                    brain_input = np.concatenate((brain_input, parsed_sub_input.flatten()))
                 return np.array(brain_input)
             else:
                 # Transform the brain output into a tuple which match the corresponding "nested" Spaces
