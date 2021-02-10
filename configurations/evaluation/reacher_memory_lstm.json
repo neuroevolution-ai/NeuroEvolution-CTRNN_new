@@ -26,11 +26,10 @@
       "neuron_activation": "relu"
     },
     "lstm": {
-      "type": "LSTMNumPy",
-      "normalize_input": false,
-      "normalize_input_target": 5,
+      "type": "LSTMLayered",
       "use_bias": true,
-      "lstm_num_layers": 1
+      "hidden_layer_structure": [1],
+      "optimize_initial_neuron_state": false
     },
     "feed_forward_back": {
       "type": "FeedForward_NumPy",

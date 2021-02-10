@@ -16,7 +16,6 @@
             "type": "CTRNN",
             "number_neurons": 200,
             "neuron_activation": "tanh",
-            "neuron_activation_inplace": false,
             "use_bias": false,
             "delta_t": 0.05,
             "normalize_input": false,
@@ -24,7 +23,7 @@
             "optimize_state_boundaries": "fixed",
             "clipping_range_max": 1.0,
             "clipping_range_min": -1.0,
-            "optimize_y0": false,
+            "optimize_initial_neuron_state": false,
             "set_principle_diagonal_elements_of_W_negative": false,
             "parameter_perturbations": 0.0,
             "v_mask": "random",
@@ -44,4 +43,3 @@
         }
     }
 }
-
