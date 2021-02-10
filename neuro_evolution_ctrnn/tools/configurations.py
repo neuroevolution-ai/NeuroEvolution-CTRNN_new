@@ -117,6 +117,7 @@ class EpisodeRunnerCfg(abc.ABC):
     max_steps_per_run: int = 0
     max_steps_penalty: int = 0
     use_autoencoder: bool = False
+    fitness_as_observation: bool = False
 
 
 @register('ELMAN')
@@ -189,16 +190,17 @@ class FeedForwardCfg(IBrainCfg):
     indirect_encoding: bool
     cppn_hidden_layers: List[int]
 
+
 @register('ElmanTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
     pass
 
+
 @register('GruTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class GruTorchCfg(IPytorchBrainCfg):
     pass
-
 
 
 @register('LSTM_PyTorch')

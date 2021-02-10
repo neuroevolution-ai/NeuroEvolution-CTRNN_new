@@ -1,8 +1,8 @@
 import abc
 from tools.configurations import IBrainCfg
 import numpy as np
-from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic
+from gym.spaces import Space, Discrete, Box, Tuple as TupleSpace, tuple as tupleSpace
+from typing import TypeVar, Generic, Tuple
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
@@ -20,6 +20,9 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         return self.brainstep(self.prepare_input(ob))
 
     def prepare_input(self, ob: np.ndarray):
+
+        ob = self.discrete_to_vector(ob,  self.input_space)
+
         if self.config.normalize_input:
             return self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
         else:
@@ -33,6 +36,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
+
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
@@ -43,6 +47,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 else:
                     sum_ += item
             return sum_
+
         usage_dict = cls.get_free_parameter_usage(config, input_space, output_space)
         return sum_dict(usage_dict)
 
@@ -110,7 +115,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             return space.n  # type: ignore
         elif isinstance(space, Box):
             return np.prod(space.shape)  # type: ignore
-        elif isinstance(space, tuple.Tuple):
+        elif isinstance(space, tupleSpace.Tuple):
             sum_ = 0
             for x in space:
                 sum_ += IBrain._size_from_space(x)
@@ -122,11 +127,17 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
         pass
 
-    def discrete_to_vector(self, ob):
-        # todo: use this function in all derived classes
-        #  and maybe find a even cleaner way to do this without violating DRY
-        ob_new = np.zeros(self.input_space.n)
-        ob_new[ob] = 1
+    def discrete_to_vector(self, ob, space):
+        """recurse though observatin and replace discrete spaces with n-dimensional vectors"""
+        ob_new = ob
+        if isinstance(space, Discrete):
+            ob_new = np.zeros(space.n)
+            ob_new[ob] = 1
+        elif isinstance(space, TupleSpace):
+            temp = list(ob)
+            for i, (o, x) in enumerate(zip(ob, space)):
+                temp[i] = self.discrete_to_vector(o, x)
+            ob_new = np.array(temp, dtype=object)
         return ob_new
 
     def get_neuron_states(self):

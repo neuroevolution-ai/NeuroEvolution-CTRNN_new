@@ -1,6 +1,6 @@
 import numpy as np
 from tools.configurations import ContinuousTimeRNNCfg
-from typing import List, Union
+from typing import List, Union, Tuple
 from gym.spaces import Space, Box, Discrete
 import logging
 import math
@@ -100,12 +100,11 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         assert self.config.substeps > 0
 
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        if isinstance(self.input_space, Discrete):
-            # todo: do this observation-transformation in a cleaner way
-            ob = self.discrete_to_vector(ob)
-        else:
-            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
-            ob = ob.flatten()
+
+
+        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+        ob = ob.flatten()
+        ob = np.hstack(ob) # flatten does not work on vectors with uneven dimensions
 
         if self.config.use_bias:
             ob = np.append(ob, 1)

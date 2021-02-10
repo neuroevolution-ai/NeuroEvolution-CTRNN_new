@@ -1,7 +1,7 @@
 import copy
 import logging
 from bz2 import BZ2Compressor
-from typing import Union, Iterable
+from typing import Union, Iterable, Tuple, Optional
 
 import cv2
 import gym
@@ -9,7 +9,7 @@ import numpy as np
 # noinspection PyUnresolvedReferences
 import pybullet_envs  # Needs to be imported to register PyBullet environments
 from gym import Wrapper
-from gym.spaces import Box
+from gym.spaces import Box, Tuple as TupleSpace
 from gym.wrappers.atari_preprocessing import AtariPreprocessing
 
 # noinspection PyUnresolvedReferences
@@ -84,6 +84,7 @@ class EnvHandler:
 
         if str(env_id).startswith("BipedalWalker"):
             logging.debug("wrapping env in Box2DWalkerWrapper")
+            gym.logger.MIN_LEVEL = gym.logger.ERROR
             env = Box2DWalkerWrapper(env)
 
         if self.config.novelty:
@@ -100,7 +101,39 @@ class EnvHandler:
         if record is not None:
             env = gym.wrappers.Monitor(env, record, force=record_force)
 
+        if self.config.fitness_as_observation:
+            env = FitnessAsObsWrapper(env)
         return env
+
+
+class FitnessAsObsWrapper(Wrapper):
+
+    def __init__(self, env, scale_bound: Optional[Tuple[float, float]] = None):
+        super().__init__(env)
+        self.scale_bound = scale_bound
+        if scale_bound:
+            obs_space = Box(low=0, high=1, shape=(1,), dtype=float)
+        else:
+            obs_space = Box(low=-np.inf, high=np.inf, shape=(1,), dtype=float)
+        self.observation_space = TupleSpace([self.observation_space, obs_space])
+
+    @staticmethod
+    def _normalize(x, low, high):
+        """scales a value x from interval [low,high] to interval [0,1]"""
+        return (x - low) / (high - low)
+
+    def _append_rew_to_ob(self, ob, rew):
+        if self.scale_bound:
+            rew = self._normalize(rew, self.scale_bound[0], self.scale_bound[1])
+        return ob, rew
+
+    def reset(self, *nargs, **kwargs):
+        ob = super(FitnessAsObsWrapper, self).reset(*nargs, **kwargs)
+        return self._append_rew_to_ob(ob, 0)
+
+    def step(self, *nargs, **kwargs):
+        ob, rew, done, info = super(FitnessAsObsWrapper, self).step(*nargs, **kwargs)
+        return self._append_rew_to_ob(ob, rew), rew, done, info
 
 
 class ProcEnvHandler(gym.Env):
