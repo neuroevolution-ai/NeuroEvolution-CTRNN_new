@@ -107,7 +107,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
     def get_hidden(config: IPytorchBrainCfg):
         pass
 
-    def step(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
 
         with torch.no_grad():
             # Input requires the form (seq_len, batch, input_size)

@@ -55,7 +55,7 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
 
         assert current_index == len(individual)
 
-    def step(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
         x = ob
 
         if self.feed_forward_front:

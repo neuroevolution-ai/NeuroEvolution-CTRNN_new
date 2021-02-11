@@ -26,7 +26,7 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
     @staticmethod
@@ -108,7 +108,7 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
             output_bias, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
             self.output_layer.bias.data = torch.from_numpy(output_bias.flatten())
 
-    def step(self, u: np.ndarray) -> np.ndarray:
+    def brainstep(self, u: np.ndarray) -> np.ndarray:
 
         assert u.ndim == 1
         assert u.size == self.input_size
@@ -163,7 +163,7 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         if self.use_bias:
             self.biases_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
 
         assert ob.ndim == 1
         assert ob.size == self.input_size

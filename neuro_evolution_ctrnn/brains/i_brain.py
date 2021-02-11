@@ -31,7 +31,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         self.config = config
 
     def step(self, ob: np.ndarray):
-        return self.step(self.prepare_input(ob))
+        return self.brainstep(self.prepare_input(ob))
 
     def prepare_input(self, ob: np.ndarray):
         if self.config.normalize_input:
@@ -40,7 +40,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             return ob
 
     @abc.abstractmethod
-    def step(self, ob: np.ndarray):
+    def brainstep(self, ob: np.ndarray):
         pass
 
     @classmethod
