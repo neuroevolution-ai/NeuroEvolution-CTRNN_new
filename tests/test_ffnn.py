@@ -4,6 +4,7 @@ import gym
 import numpy as np
 import time
 import torch
+import pytest
 
 
 class TestFeedForwardNN:
