@@ -172,13 +172,13 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
         return x.flatten()
 
-    def predict(self, u: np.ndarray) -> np.ndarray:
+    def predict(self, ob: np.ndarray) -> np.ndarray:
 
-        assert u.ndim > 1
-        assert u.shape[-2] == self.input_size
-        assert u.shape[-1] == 1
+        assert ob.ndim > 1
+        assert ob.shape[-2] == self.input_size
+        assert ob.shape[-1] == 1
 
-        x = u
+        x = ob
 
         # Calculate hidden layers
         # Note: itertools.zip_longest is necessary here instead of zip, since self.biases_hidden_layers is
