@@ -111,6 +111,7 @@ class TestFeedForwardNN:
             np.isclose(ffnn_numpy_predict_outputs.reshape(number_of_inputs, output_size),
                        ffnn_numpy_outputs))
 
+    @pytest.mark.skip(reason="General Testing, not a test case of the program itself")
     def test_ffnn_predict_speedtest(self):
 
         def predict_with_maximum_speed(u, A, B, C, D, E, a, b, c, d, e):
