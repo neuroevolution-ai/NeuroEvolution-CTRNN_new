@@ -108,12 +108,12 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
             output_bias, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
             self.output_layer.bias.data = torch.from_numpy(output_bias.flatten())
 
-    def brainstep(self, u: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
 
-        assert u.ndim == 1
-        assert u.size == self.input_size
+        assert ob.ndim == 1
+        assert ob.size == self.input_size
 
-        x = u
+        x = ob
 
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))
