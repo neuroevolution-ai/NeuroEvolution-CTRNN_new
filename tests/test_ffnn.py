@@ -182,7 +182,6 @@ class TestFeedForwardNN:
         relative_speed_tolerance = time_ffnn_class / time_maximum_speed - 1
 
         print(relative_speed_tolerance)
-        assert relative_speed_tolerance < 0.02
 
         print( np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed)))
         assert number_of_inputs == np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed))
