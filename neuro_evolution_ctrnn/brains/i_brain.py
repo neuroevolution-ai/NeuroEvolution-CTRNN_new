@@ -32,7 +32,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         self.output_space = output_space
         self.config = config
 
-    def step(self, ob: np.ndarray):
+    def step(self, ob: Union[np.ndarray, int, Tuple]):
         """
         Takes an observation from a gym.Environment object and calculates a step of the brain.
 
@@ -43,27 +43,11 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         :return: The output of the step of the Brain, the format of the output corresponds to the output Space of the
                  Brain
         """
-        ob = self._flatten(ob)
+        ob = self.parse_brain_input(ob)
 
         brain_output = self.brainstep(ob)
 
-        return self._unflatten(brain_output)
-
-    def _flatten(self, ob: Union[np.ndarray, int, Tuple]):
-        # Simply pass through input of a Box Space because the util function from gym completely flattens ob
-        # For RGB input we would like to retain these input shapes
-        if isinstance(self.input_space, spaces.Box):
-            return ob
-        else:
-            return spaces.flatten(self.input_space, ob)
-
-    def _unflatten(self, brain_output: np.ndarray):
-        # If the output Space is of type Discrete take the argmax of the brain_output. The unflatten util function
-        # from the gym would take the first non-zero element of brain_output which is not desired for us
-        if isinstance(self.output_space, spaces.Discrete):
-            return np.argmax(brain_output)
-        else:
-            return spaces.unflatten(self.output_space, brain_output)
+        return self.parse_brain_output(brain_output)
 
     @abc.abstractmethod
     def brainstep(self, ob: np.ndarray):
@@ -138,6 +122,95 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         else:
             raise NotImplementedError("Calculating the size is not implemented for Spaces of type '{}'"
                                       "".format(type(space)))
+
+    def _recursive_parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple], relevant_space: spaces.Space):
+        if isinstance(relevant_space, spaces.Box):
+            return brain_input
+        elif isinstance(relevant_space, spaces.Discrete):
+            # We encode Discrete Spaces as one-hot vectors
+            one_hot_vector = np.zeros(relevant_space.n)
+            one_hot_vector[brain_input] = 1
+            return one_hot_vector
+        elif isinstance(relevant_space, spaces.Tuple):
+            # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
+            # a tuple where each entry in the tuple is linked to the corresponding Space.
+            brain_input = []
+            for i, sub_input in enumerate(brain_input):
+                if isinstance(relevant_space[i], spaces.Tuple):
+                    raise RuntimeError("""Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
+                                          another environment""")
+                parsed_sub_input = self._recursive_parse_brain_input(sub_input, relevant_space=relevant_space[i])
+
+                # Inputs from the sub spaces are flattened and concatenated here, otherwise some brains could not
+                # work with this
+                brain_input = np.concatenate((brain_input, parsed_sub_input.flatten()))
+            return np.array(brain_input)
+
+        else:
+            raise RuntimeError(
+                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+            )
+
+    def parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple]):
+        """
+        Pre-processes the input for the brain according to the gym.Space it comes from.
+
+        If the input space is a:
+            - spaces.Box then nothing is done to brain_input
+            - spaces.Discrete then brain_input is encoded as a one-hot vector
+            - spaces.Tuple then the brain_input is a tuple of inputs where each entry corresponds to a sub-space inside
+                the Tuple Space. These entries get recursively pre-processed and concatenated into a one-dimensional
+                NumPy array.
+
+        Other Spaces or Tuple Spaces inside Tuple Spaces are currently not supported.
+
+        :param brain_input: An observation from an environment
+        :return: Pre-processed observation, according to self.input_space
+        """
+        # We are coming from the input space therefore set relevant space accordingly
+        return self._recursive_parse_brain_input(brain_input, relevant_space=self.input_space)
+
+    def _recursive_parse_brain_output(self, brain_output: np.ndarray, relevant_space: spaces.Space):
+        if isinstance(relevant_space, spaces.Box):
+            return brain_output.reshape(relevant_space.shape)
+        elif isinstance(relevant_space, spaces.Discrete):
+            return np.argmax(brain_output)
+        elif isinstance(relevant_space, spaces.Tuple):
+            # Transform the brain output into a tuple which match the corresponding "nested" Spaces
+            parsed_brain_output = []
+            index = 0
+            for sub_space in relevant_space:
+                current_range = self._size_from_space(sub_space)
+
+                parsed_brain_output.append(
+                    self._recursive_parse_brain_output(brain_output[index:index + current_range],
+                                                       relevant_space=sub_space)
+                )
+                index += current_range
+            return tuple(parsed_brain_output)
+        else:
+            raise RuntimeError(
+                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+            )
+
+    def parse_brain_output(self, brain_output: np.ndarray):
+        """
+        Post-processes the output of the brain so that it can be applied in the output space (i.e. the action space of
+        the environment).
+
+        If the output space is a:
+            - spaces.Box then brain_output is reshaped to the shape of self.output_space
+            - spaces.Discrete then the argmax is taken from brain_output
+            - spaces.Tuple then brain_output is reshaped into a tuple where each entry of the tuple is recursively
+                created to match its sub-space.
+
+        Other Spaces are currently not supported.
+
+        :param brain_output: The output that is coming from the brain
+        :return: Post-processed brain output, according to self.output_space
+        """
+        # We are going to the output space
+        return self._recursive_parse_brain_output(brain_output, relevant_space=self.output_space)
 
     @classmethod
     def generate_and_set_class_state(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
