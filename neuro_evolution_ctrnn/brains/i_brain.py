@@ -3,7 +3,7 @@ import torch.nn as nn
 from tools.configurations import IBrainCfg, register
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic, get_args, Type, Callable
+from typing import TypeVar, Generic, Type, Callable
 
 registered_brains = {}
 
