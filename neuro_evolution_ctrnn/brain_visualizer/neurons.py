@@ -4,8 +4,8 @@ from typing import Tuple
 import numpy as np
 import pygame
 
-from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
+from brain_visualizer.color import Colors
 
 
 class Neurons:

@@ -1,10 +1,10 @@
-from brains.lstm import LSTMLayered
-from tools.configurations import ConcatenatedBrainLSTMCfg
-from brains.concatenated_brains import ConcatenatedLSTM
-from brains.ffnn import FeedForwardNumPy
-
 import numpy as np
 from gym.spaces import Box
+
+from brains.concatenated_brains import ConcatenatedLSTM
+from brains.ffnn import FeedForwardNumPy
+from brains.lstm import LSTMLayered
+from tools.configurations import ConcatenatedBrainLSTMCfg
 
 
 class TestConcatenatedLSTM:
@@ -35,7 +35,8 @@ class TestConcatenatedLSTM:
         # First construct the leading Feed Forward part
         ff_front_cfg = concat_lstm_config.feed_forward_front
         ff_front_output_space = Box(-1, 1, (ff_front_cfg.hidden_layers[-1],))
-        ff_front_individual_size = FeedForwardNumPy.get_individual_size(ff_front_cfg, input_space, ff_front_output_space)
+        ff_front_individual_size = FeedForwardNumPy.get_individual_size(ff_front_cfg, input_space,
+                                                                        ff_front_output_space)
 
         current_index = 0
         ff_front_individual = individual[current_index:current_index + ff_front_individual_size]

@@ -1,8 +1,9 @@
-from brains.continuous_time_rnn import ContinuousTimeRNN
 import numpy as np
-from gym.spaces import Box
 import pytest
 from attr import evolve, s
+from gym.spaces import Box
+
+from brains.continuous_time_rnn import ContinuousTimeRNN
 
 
 @s(auto_attribs=True, frozen=True, slots=True)

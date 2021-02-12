@@ -1,11 +1,11 @@
-import sys
 import math
+import sys
 from typing import Tuple
 
 import pygame
 
-from brain_visualizer.color import Colors
 from brain_visualizer import brain_visualizer
+from brain_visualizer.color import Colors
 
 
 class Events:

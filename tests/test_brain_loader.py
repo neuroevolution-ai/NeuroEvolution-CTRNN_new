@@ -1,9 +1,11 @@
-import brains.i_brain
-import tools.configurations
 import typing
+
 import gym.spaces.discrete
 import numpy as np
 import pytest
+
+import brains.i_brain
+import tools.configurations
 
 
 class BrainCfgClass(tools.configurations.IBrainCfg):

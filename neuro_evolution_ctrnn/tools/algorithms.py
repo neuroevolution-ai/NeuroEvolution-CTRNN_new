@@ -1,13 +1,14 @@
 import random
+from bz2 import decompress
+from functools import partial
+from itertools import tee
+from typing import Collection
 
 import numpy as np
-from tools.helper import set_random_seeds
-from typing import Collection
-from deap.algorithms import varOr
 from deap import tools
-from bz2 import decompress
-from itertools import tee
-from functools import partial
+from deap.algorithms import varOr
+
+from tools.helper import set_random_seeds
 
 
 def evaluate_candidates(candidates, toolbox):

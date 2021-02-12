@@ -1,8 +1,7 @@
+import numpy as np
 import pytest
 from attr import s
-import numpy as np
 from gym import Space
-from gym.spaces import Box
 
 from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
 from tools.configurations import ILayerBasedBrainCfg
@@ -91,5 +90,5 @@ class TestILayeredBrain:
         assert np.allclose(res, ob)
         brain.step(ob)
         print(brain.hidden)
-        print(ob+ob)
+        print(ob + ob)
         assert np.allclose(brain.hidden, ob + ob)

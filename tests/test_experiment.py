@@ -1,10 +1,12 @@
-from tools.experiment import Experiment
-from attr import evolve
+import json
 import os
-from tools.helper import sample_from_design_space
+
+from attr import evolve
+
 from tools.config_reader import ConfigReader
 from tools.configurations import ProcGenEnvAttributesCfg
-import json
+from tools.experiment import Experiment
+from tools.helper import sample_from_design_space
 
 
 def mock_eval(*nargs, **kwargs):

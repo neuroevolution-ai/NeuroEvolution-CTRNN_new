@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import logging
 import os
 from datetime import datetime
-import logging
+
 from tap import Tap
 
-from tools.experiment import Experiment
 from tools.config_reader import ConfigReader
+from tools.experiment import Experiment
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 

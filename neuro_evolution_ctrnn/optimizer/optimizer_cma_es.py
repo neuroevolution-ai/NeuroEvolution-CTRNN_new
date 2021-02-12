@@ -1,10 +1,10 @@
 from typing import Callable
 
-from deap import tools
 from deap import cma
+from deap import tools
 
-from optimizer.i_optimizer import IOptimizer
 from optimizer.creator_classes import Individual
+from optimizer.i_optimizer import IOptimizer
 from tools import algorithms
 from tools.configurations import OptimizerCmaEsCfg
 from tools.helper import get_checkpoint

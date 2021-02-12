@@ -1,6 +1,7 @@
-import os
 import logging
+import os
 import subprocess
+
 from tap import Tap
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)

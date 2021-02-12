@@ -1,12 +1,12 @@
+import logging
+
+import cv2
+import gym
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import cv2
-import gym
-
 from gym.spaces import Box
-import logging
 
 
 class AEWrapper(gym.Wrapper):

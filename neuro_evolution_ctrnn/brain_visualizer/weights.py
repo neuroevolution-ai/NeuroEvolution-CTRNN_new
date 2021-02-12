@@ -1,8 +1,9 @@
+import logging
 import math
 from typing import Tuple
-import logging
-import pygame
+
 import numpy as np
+import pygame
 
 from brain_visualizer import brain_visualizer
 

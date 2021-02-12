@@ -3,10 +3,10 @@ import torch
 from gym import Space
 from torch import nn
 
-from brains.i_brain import IBrain, register_brain
+from brains.i_brain import register_brain
+from brains.i_layer_based_brain import ILayerBasedBrain
 from brains.i_pytorch_brain import IPytorchBrain
 from tools.configurations import GruCfg, IPytorchBrainCfg, GruTorchCfg
-from brains.i_layer_based_brain import ILayerBasedBrain
 
 
 @register_brain("GRU", GruCfg)

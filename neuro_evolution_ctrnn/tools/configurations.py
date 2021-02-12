@@ -1,7 +1,8 @@
 # the configurations need to be in a separate file from the actual objects to avoid circular imports
-import attr
 import abc
 from typing import Dict, List, Optional
+
+import attr
 
 registered_types: Dict = {}
 registered_keys: Dict = {}

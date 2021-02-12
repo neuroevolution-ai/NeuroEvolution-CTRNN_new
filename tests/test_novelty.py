@@ -1,7 +1,7 @@
-from tools.helper import euklidian_distance, normalized_compression_distance, equal_elements_distance
 import math
-
 from bz2 import compress
+
+from tools.helper import euklidian_distance, normalized_compression_distance, equal_elements_distance
 
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):

@@ -1,16 +1,16 @@
 """In this experiment instead of training a CTRNN we construct it directly.
 The goal is to demonstrate, that CTRNN can solve algorithmical problems very efficiently"""
 
-from tools.experiment import Experiment
-from brain_visualizer.brain_visualizer import BrainVisualizerHandler
-
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, StandardEpisodeRunnerCfg
-from tools.helper import config_from_file
 import os
 import threading
-from brains.continuous_time_rnn import ContinuousTimeRNN
-from attr import s
+
 import numpy as np
+from attr import s
+
+from brain_visualizer.brain_visualizer import BrainVisualizerHandler
+from brains.continuous_time_rnn import ContinuousTimeRNN
+from tools.experiment import Experiment
+from tools.helper import config_from_file
 from tools.helper import transform
 
 cfg_path = os.path.join('configurations', 'reverse_fixed.json')

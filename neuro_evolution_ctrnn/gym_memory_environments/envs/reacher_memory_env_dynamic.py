@@ -1,8 +1,9 @@
 """Modification of ReacherMemoryEnv inspired by openAi's Algorithmic environments, which become more
 dificualt as agents become better"""
 
-from . import ReacherMemoryEnv
 import logging
+
+from . import ReacherMemoryEnv
 
 
 class ReacherMemoryEnvDynamic(ReacherMemoryEnv):

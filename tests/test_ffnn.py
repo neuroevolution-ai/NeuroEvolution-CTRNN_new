@@ -89,16 +89,16 @@ class TestFeedForwardNN:
 
         # Note: {:f} is used to suppress scientific notation (i.e. displaying 0.00001 instead of 1e-5)
         print("\nPyTorch Mean Prediction Time {:f} ms | NumPy Mean Prediction Time {:f} ms"
-              .format(np.mean(ffnn_pytorch_times)*1000, np.mean(ffnn_numpy_times)*1000))
+              .format(np.mean(ffnn_pytorch_times) * 1000, np.mean(ffnn_numpy_times) * 1000))
 
         print("PyTorch Stddev Prediction Time {:f} ms | NumPy Stddev Prediction Time {:f} ms"
-              .format(np.std(ffnn_pytorch_times)*1000, np.std(ffnn_numpy_times)*1000))
+              .format(np.std(ffnn_pytorch_times) * 1000, np.std(ffnn_numpy_times) * 1000))
 
         print("PyTorch Max Prediction Time {:f} ms | NumPy Max Prediction Time {:f} ms"
-              .format(np.max(ffnn_pytorch_times)*1000, np.max(ffnn_numpy_times)*1000))
+              .format(np.max(ffnn_pytorch_times) * 1000, np.max(ffnn_numpy_times) * 1000))
 
         print("PyTorch Min Prediction Time {:f} ms | NumPy Min Prediction Time {:f} ms"
-              .format(np.min(ffnn_pytorch_times)*1000, np.min(ffnn_numpy_times)*1000))
+              .format(np.min(ffnn_pytorch_times) * 1000, np.min(ffnn_numpy_times) * 1000))
 
         # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
         close_percentage = np.count_nonzero(
@@ -108,7 +108,7 @@ class TestFeedForwardNN:
 
         print(
             "Equal predictions between PyTorch and NumPy",
-            "Implementation of FFNN: {}% of {} predictions".format(close_percentage*100, number_of_inputs))
+            "Implementation of FFNN: {}% of {} predictions".format(close_percentage * 100, number_of_inputs))
 
         assert ffnn_numpy_outputs.size == np.count_nonzero(
             np.isclose(ffnn_numpy_predict_outputs.reshape(number_of_inputs, output_size),
@@ -186,5 +186,5 @@ class TestFeedForwardNN:
 
         print(relative_speed_tolerance)
 
-        print( np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed)))
-        assert number_of_inputs == np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed))
+        print(np.count_nonzero(np.isclose(output_ffnn_class, output_maximum_speed)))
+        assert number_of_inputs == np.count_nonzero(np.isclose(output_ffnn_class, output_maximum_speed))

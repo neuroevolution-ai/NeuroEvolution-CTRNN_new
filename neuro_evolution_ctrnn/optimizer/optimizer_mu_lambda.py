@@ -1,8 +1,8 @@
 import random
 from typing import Callable
 
-from deap import tools
 import numpy as np
+from deap import tools
 
 from optimizer.creator_classes import Individual
 from optimizer.i_optimizer import IOptimizer

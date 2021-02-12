@@ -1,11 +1,9 @@
-
-
-import pickle
 import os
+import pickle
+
+import numpy as np
 from deap import base
 from deap import creator
-from deap import tools
-import numpy as np
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)

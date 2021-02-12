@@ -1,6 +1,7 @@
+import os
+
 from tools.config_reader import ConfigReader
 from tools.experiment import Experiment
-import os
 
 
 class TestConfigReader:

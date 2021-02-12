@@ -1,11 +1,11 @@
-from gym.spaces import Space
 import numpy as np
 import torch
 import torch.nn as nn
+from gym.spaces import Space
 
+from brains import register_brain
 from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
 from brains.i_pytorch_brain import IPytorchBrain
-from brains import register_brain
 from tools.configurations import LstmLayeredCfg, LstmTorchCfg, IPytorchBrainCfg
 
 

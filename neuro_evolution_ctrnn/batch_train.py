@@ -1,10 +1,11 @@
-import os
-import logging
 import argparse
-import subprocess
 import json
+import logging
+import os
+import subprocess
 import tempfile
 from datetime import datetime
+
 from tools.helper import sample_from_design_space
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
@@ -24,9 +25,7 @@ parser.add_argument('--max-experiments', type=int, dest='max_experiments',
 
 params = parser.parse_args()
 
-
 for i in range(params.max_experiments):
-
     logging.info("Starting experiment number: " + str(i) + " out of " + str(params.max_experiments))
     with open(params.design_space_path, "r") as read_file:
         design_space = json.load(read_file)

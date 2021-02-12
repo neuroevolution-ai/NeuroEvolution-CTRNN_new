@@ -90,7 +90,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
         for hidden_layer_size in self.hidden_layers:
 
             current_layer = nn.Linear(previous_layer_size, hidden_layer_size, bias=self.use_bias)
-            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer_size, previous_layer_size)
+            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer_size,
+                                                                 previous_layer_size)
             current_layer.weight.data = torch.from_numpy(current_weight)
 
             if self.use_bias:
@@ -103,7 +104,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
         # Output Layer
         self.output_layer: nn.Linear = nn.Linear(previous_layer_size, self.output_size, bias=config.use_bias)
-        weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, previous_layer_size)
+        weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size,
+                                                                   previous_layer_size)
         self.output_layer.weight.data = torch.from_numpy(weights_output_layer)
 
         if self.use_bias:

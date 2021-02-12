@@ -1,7 +1,9 @@
+from typing import Tuple
+
 import numpy as np
 from gym.envs.mujoco import ReacherEnv
-from typing import Tuple
 from mujoco_py import const
+
 
 class ReacherMemoryEnv(ReacherEnv):
 

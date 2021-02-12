@@ -1,7 +1,8 @@
-import numpy as np
 from collections import deque
-from PIL import Image
+
 import gym
+import numpy as np
+from PIL import Image
 from gym import spaces
 
 

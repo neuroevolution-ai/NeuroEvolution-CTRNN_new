@@ -1,8 +1,9 @@
-import numpy as np
-from scipy.ndimage import convolve
-import torch
 import time
+
+import numpy as np
 import pytest
+import torch
+from scipy.ndimage import convolve
 
 
 @pytest.mark.skip(reason="General Testing, not a test case of the program itself")
@@ -50,5 +51,3 @@ class TestConvolutionTimes:
         print(result_scipy)
         print("---- TORCH:--------")
         print(result_torch)
-
-

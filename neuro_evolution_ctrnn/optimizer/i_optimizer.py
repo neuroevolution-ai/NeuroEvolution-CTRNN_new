@@ -2,14 +2,14 @@ import abc
 import copy
 import logging
 import os
-
-from deap import base, tools
-import numpy as np
 from pathlib import Path
 from typing import TypeVar, Generic, Callable
 
-from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
+import numpy as np
+from deap import base, tools
+
 from tools.configurations import IOptimizerCfg
+from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
 
 ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 

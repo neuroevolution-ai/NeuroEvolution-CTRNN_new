@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
-import pickle
-import os
 import json
-import matplotlib.pyplot as plt
-from operator import add, sub
-from scipy.ndimage.filters import gaussian_filter1d
 import logging
-import numpy as np
+import os
+import pickle
+from operator import add, sub
+
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import tikzplotlib
+from scipy.ndimage.filters import gaussian_filter1d
 from tap import Tap
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-import pickle
-import os
 import json
 import logging
+import os
+import pickle
+
+from deap import base
+from deap import creator
 from tap import Tap
 
-from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 from tools.config_reader import ConfigReader
 from tools.configurations import OptimizerMuLambdaCfg
-from deap import base
-from deap import creator
+from tools.experiment import Experiment
+
 
 class RenderArgs(Tap):
     # Note: Comments in lines become helpstring when called with --help
@@ -18,7 +20,7 @@ class RenderArgs(Tap):
 
     dir: str  # Directory path to the simulation result
     no_render: bool = False  # disable rendering to screen?
-    render_raw_ob: bool = False # should the env be rendered from the perspective of the agent?
+    render_raw_ob: bool = False  # should the env be rendered from the perspective of the agent?
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
     neuron_vis: bool = False  # show neuron visualizer?
@@ -83,7 +85,8 @@ if hasattr(config.optimizer, "mutation_learned"):
                                                                       config.optimizer.mutation_learned)
 elif isinstance(config.optimizer, OptimizerMuLambdaCfg):
     # later version of don't have the "mutation_learned" option anymore and instead always use that option
-    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True, config.optimizer.strategy_parameter_per_gene)
+    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True,
+                                                                      config.optimizer.strategy_parameter_per_gene)
 
 render = not args.no_render
 

@@ -2,18 +2,17 @@
 import os
 from typing import Tuple
 
-import pygame
 import numpy as np
-from gym.spaces import Discrete
+import pygame
 
+from brain_visualizer.color import Colors
+from brain_visualizer.events import Events
+from brain_visualizer.neurons import Neurons
 from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
-from brain_visualizer.neurons import Neurons
-from brain_visualizer.events import Events
-from brain_visualizer.color import Colors
+from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.i_brain import IBrain
 from tools.configurations import IBrainCfg
-from brains.continuous_time_rnn import ContinuousTimeRNN
 
 
 class BrainVisualizerHandler:
@@ -259,17 +258,20 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.get_input_weight_matrix(),
+            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict,
+                                 self.brain.get_input_weight_matrix(),
                                  is_input=True, in_values=in_values)
 
         # Connections between the Neurons
         # TODO CTRNN was W.toarray(), not .todense(). check for error
-        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.get_internal_weight_matrix(),
+        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict,
+                             self.brain.get_internal_weight_matrix(),
                              is_input=False, in_values=None)
 
         # Connections between the Neurons and the Output
         if self.output_weights:
-            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.get_output_weight_matrix(),
+            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict,
+                                 self.brain.get_output_weight_matrix(),
                                  is_input=False, in_values=None)
 
         # Draw neurons

@@ -1,15 +1,14 @@
-import json
 import copy
-from typing import Type
+import json
 import logging
 import random
+from typing import Type
 
-from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, registered_keys
+from tools.configurations import ExperimentCfg, registered_types, registered_keys
 
 
 class ConfigReader:
     """Reads a configuration from a JSON string and returns a valid config object."""
-
 
     @classmethod
     def _replace_dicts_with_types(cls, node, depth=0):
