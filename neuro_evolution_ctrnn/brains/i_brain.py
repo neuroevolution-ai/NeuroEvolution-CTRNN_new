@@ -1,8 +1,9 @@
 import abc
+import torch.nn as nn
 from tools.configurations import IBrainCfg, register
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic, get_args, Type
+from typing import TypeVar, Generic, Type, Callable
 
 registered_brains = {}
 
@@ -72,6 +73,17 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         is parsed by the constructor of the respective brain.
         """
         pass
+
+    @staticmethod
+    def read_matrix_from_genome(individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int):
+        matrix_size = matrix_columns * matrix_rows
+
+        matrix = np.array(individual[index:index + matrix_size], dtype=np.single)
+        matrix = matrix.reshape(matrix_rows, matrix_columns)
+
+        index += matrix_size
+
+        return matrix, index
 
     @classmethod
     def get_class_state(cls):
@@ -144,6 +156,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         ob_new[ob] = 1
         return ob_new
 
+
     def get_neuron_states(self):
         raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
 
@@ -155,3 +168,44 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     def get_output_weight_matrix(self):
         raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    @classmethod
+    def get_activation_function_numpy(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+
+        if activation == "relu":
+            return cls.relu
+        elif activation == "linear":
+            return cls.linear
+        elif activation == "tanh":
+            return cls.tanh
+        else:
+            raise RuntimeError(
+                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                "".format(activation))
+
+    @staticmethod
+    def relu(x: np.ndarray) -> np.ndarray:
+        return np.maximum(0, x)
+
+    @staticmethod
+    def linear(x: np.ndarray) -> np.ndarray:
+        return x
+
+    @staticmethod
+    def tanh(x: np.ndarray) -> np.ndarray:
+        return np.tanh(x)
+
+    @classmethod
+    def get_activation_function_pytorch(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+
+        if activation == "relu":
+            return nn.ReLU()  # type:ignore
+        elif activation == "linear":
+            return nn.Identity()  # type:ignore
+        elif activation == "tanh":
+            return nn.Tanh()  # type:ignore
+        else:
+            raise RuntimeError(
+                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                "".format(activation))
+
