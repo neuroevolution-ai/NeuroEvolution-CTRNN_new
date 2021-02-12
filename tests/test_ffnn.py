@@ -1,10 +1,11 @@
-from brains.ffnn import FeedForwardPyTorch, FeedForwardNumPy
-from tools.configurations import FeedForwardCfg
+import time
+
 import gym
 import numpy as np
-import time
 import torch
-import pytest
+
+from brains.ffnn import FeedForwardPyTorch, FeedForwardNumPy
+from tools.configurations import FeedForwardCfg
 
 
 class TestFeedForwardNN:
@@ -145,7 +146,7 @@ class TestFeedForwardNN:
         input_space = gym.spaces.Box(-1, 1, (input_size,))
         output_space = gym.spaces.Box(-1, 1, (output_size,))
 
-        ffnn_config = FeedForwardCfg(type="FeedForward_Numpy", normalize_input=False, normalize_input_target=1,
+        ffnn_config = FeedForwardCfg(type="FeedForward_Numpy",
                                      use_bias=True,
                                      hidden_layers=[[16, 32, 16, 8]], neuron_activation="relu",
                                      neuron_activation_output="linear")
