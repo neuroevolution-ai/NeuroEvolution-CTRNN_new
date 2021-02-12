@@ -1,8 +1,24 @@
 import abc
-from typing import Generic, Tuple, Union, TypeVar
+from typing import Tuple, Union, TypeVar, Generic, Type, Callable
 
 import numpy as np
+import torch.nn as nn
 from gym import spaces
+
+from tools.configurations import IBrainCfg, register
+
+registered_brains = {}
+
+
+def register_brain(name: str, config_class: Type[IBrainCfg]):
+    def _register(type_class: type):
+        assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
+        registered_brains[name] = type_class
+        register(name)(config_class)  # call to @register-decorator for the config class
+        return type_class
+
+    return _register
+
 
 from tools.configurations import IBrainCfg
 
@@ -43,6 +59,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
+
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
@@ -53,12 +70,14 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 else:
                     sum_ += item
             return sum_
+
         usage_dict = cls.get_free_parameter_usage(config, input_space, output_space)
         return sum_dict(usage_dict)
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> dict:
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space,
+                                 output_space: spaces.Space) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.
@@ -67,6 +86,17 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         is parsed by the constructor of the respective brain.
         """
         pass
+
+    @staticmethod
+    def read_matrix_from_genome(individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int):
+        matrix_size = matrix_columns * matrix_rows
+
+        matrix = np.array(individual[index:index + matrix_size], dtype=np.single)
+        matrix = matrix.reshape(matrix_rows, matrix_columns)
+
+        index += matrix_size
+
+        return matrix, index
 
     @classmethod
     def get_class_state(cls):
@@ -192,3 +222,43 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     def get_output_weight_matrix(self):
         raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+
+    @classmethod
+    def get_activation_function_numpy(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+
+        if activation == "relu":
+            return cls.relu
+        elif activation == "linear":
+            return cls.linear
+        elif activation == "tanh":
+            return cls.tanh
+        else:
+            raise RuntimeError(
+                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                "".format(activation))
+
+    @staticmethod
+    def relu(x: np.ndarray) -> np.ndarray:
+        return np.maximum(0, x)
+
+    @staticmethod
+    def linear(x: np.ndarray) -> np.ndarray:
+        return x
+
+    @staticmethod
+    def tanh(x: np.ndarray) -> np.ndarray:
+        return np.tanh(x)
+
+    @classmethod
+    def get_activation_function_pytorch(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+
+        if activation == "relu":
+            return nn.ReLU()  # type:ignore
+        elif activation == "linear":
+            return nn.Identity()  # type:ignore
+        elif activation == "tanh":
+            return nn.Tanh()  # type:ignore
+        else:
+            raise RuntimeError(
+                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                "".format(activation))

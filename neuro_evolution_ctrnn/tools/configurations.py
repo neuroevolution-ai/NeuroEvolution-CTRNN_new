@@ -39,7 +39,7 @@ def register(name: str, as_key: bool = False):
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class IBrainCfg(abc.ABC):
     type: str
-    use_bias: bool
+    use_bias: bool = False
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
@@ -117,25 +117,21 @@ class EpisodeRunnerCfg(abc.ABC):
     use_autoencoder: bool = False
 
 
-@register('ELMAN')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanCfg(ILayerBasedBrainCfg):
     pass
 
 
-@register('LSTMLayered')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LstmLayeredCfg(ILayerBasedBrainCfg):
     pass
 
 
-@register('GRU')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class GruCfg(ILayerBasedBrainCfg):
     pass
 
 
-@register('CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ContinuousTimeRNNCfg(IBrainCfg):
     optimize_initial_neuron_state: bool
@@ -156,7 +152,6 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     substeps: int = 1
 
 
-@register('CNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConvolutionalNNCfg(IBrainCfg):
     conv_size1: int
@@ -171,41 +166,34 @@ class ConvolutionalNNCfg(IBrainCfg):
     conv_stride2: int = 1
 
 
-@register('CNN_CTRNN')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class CnnCtrnnCfg(IBrainCfg):
     cnn_conf: ConvolutionalNNCfg
     ctrnn_conf: ContinuousTimeRNNCfg
 
 
-@register('FeedForward_PyTorch')
-@register('FeedForward_NumPy')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
-    non_linearity: str
-    indirect_encoding: bool
-    cppn_hidden_layers: List[int]
+    neuron_activation: str
+    neuron_activation_output: str = 'linear'
 
-@register('ElmanTorch')
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
     pass
 
-@register('GruTorch')
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class GruTorchCfg(IPytorchBrainCfg):
     pass
 
 
-
-@register('LSTM_PyTorch')
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class LstmTorchCfg(IPytorchBrainCfg):
     pass
 
 
-@register('ConcatenatedBrain_LSTM')
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ConcatenatedBrainLSTMCfg(IBrainCfg):
     lstm: LstmLayeredCfg
@@ -213,7 +201,7 @@ class ConcatenatedBrainLSTMCfg(IBrainCfg):
     feed_forward_back: FeedForwardCfg = None
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class IOptimizerCfg(abc.ABC):
     type: str
     novelty: Optional[NoveltyCfg] = None

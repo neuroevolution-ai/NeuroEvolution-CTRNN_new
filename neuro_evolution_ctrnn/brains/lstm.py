@@ -5,10 +5,12 @@ import torch.nn as nn
 
 from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
 from brains.i_pytorch_brain import IPytorchBrain
+from brains import register_brain
 from tools.configurations import LstmLayeredCfg, LstmTorchCfg, IPytorchBrainCfg
 
 
-class LSTMPyTorch(IPytorchBrain):
+@register_brain("LSTM_PyTorch", LstmTorchCfg)
+class LSTMPyTorch(IPytorchBrain[LstmTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LstmTorchCfg):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)
@@ -30,6 +32,7 @@ class LSTMPyTorch(IPytorchBrain):
         return 4
 
 
+@register_brain("LSTMLayered", LstmLayeredCfg)
 class LSTMLayered(ILayerBasedBrain[LstmLayeredCfg]):
 
     @staticmethod

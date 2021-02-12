@@ -1,15 +1,18 @@
-from typing import List, Callable
+import itertools
+from typing import List, TypeVar
 
 import numpy as np
 import torch
 import torch.nn as nn
 from gym.spaces import Space
 
-from brains.i_brain import IBrain
+from brains.i_brain import IBrain, register_brain
 from tools.configurations import FeedForwardCfg
 
+FeedForwardConfigClass = TypeVar('FeedForwardConfigClass', bound=FeedForwardCfg)
 
-class FeedForward(IBrain[FeedForwardCfg]):
+
+class FeedForward(IBrain[FeedForwardConfigClass]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
@@ -20,36 +23,13 @@ class FeedForward(IBrain[FeedForwardCfg]):
         self.input_size: int = self._size_from_space(input_space)
         self.output_size: int = self._size_from_space(output_space)
         self.config = config
+        self.use_bias = config.use_bias
 
         # If the check fails the program aborts
         self.hidden_layers: List[int] = self.check_hidden_layers(config.hidden_layers)
 
-        self.non_linearity: Callable[[np.ndarray], np.ndarray]
-        if config.non_linearity == "relu":
-            if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.ReLU()  # type:ignore
-            else:
-                self.non_linearity = self.relu
-        elif config.non_linearity == "tanh":
-            if isinstance(self, FeedForwardPyTorch):
-                self.non_linearity = nn.Tanh()  # type:ignore
-            else:
-                self.non_linearity = self.tanh
-        else:
-            raise RuntimeError(
-                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(config.non_linearity))
-
     def brainstep(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
-
-    @staticmethod
-    def relu(x: np.ndarray) -> np.ndarray:
-        return np.maximum(0, x)
-
-    @staticmethod
-    def tanh(x: np.ndarray) -> np.ndarray:
-        return np.tanh(x)
 
     @staticmethod
     def check_hidden_layers(hidden_layers: List[int]) -> List[int]:
@@ -69,7 +49,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_free_parameter_usage(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -90,110 +70,131 @@ class FeedForward(IBrain[FeedForwardCfg]):
         return {'individual_size': individual_size}
 
 
-class FeedForwardPyTorch(nn.Module, FeedForward):
+@register_brain("FeedForward_PyTorch", FeedForwardCfg)
+class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
-        self.layers: [nn.Linear] = []
+        # Set activation functions for hidden layers and output layer based on config
+        self.activation_hidden_layers = self.get_activation_function_pytorch(config.neuron_activation)
+        self.activation_output_layer = self.get_activation_function_pytorch(config.neuron_activation_output)
 
-        current_index = 0
-        last_layer = self.input_size
-        for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_size = last_layer * hidden_layer
+        self.layers: List[nn.Linear] = []
 
-            next_layer = nn.Linear(last_layer, hidden_layer, bias=config.use_bias)
-            next_layer.weight.data = torch.from_numpy(
-                np.array(individual[current_index:current_index + current_size], dtype=np.single).reshape(
-                    (hidden_layer, last_layer)))
+        index = 0
+        previous_layer_size = self.input_size
 
-            self.layers.append(next_layer)
-            last_layer = hidden_layer
-            current_index += current_size
+        # Hidden Layers
+        for hidden_layer_size in self.hidden_layers:
 
-        if config.use_bias:
-            # Take extra loop for bias because we have the "convention" to add bias to the end of the individual array
-            for index, hidden_layer in enumerate(self.hidden_layers + [self.output_size]):
-                self.layers[index].bias.data = torch.from_numpy(
-                    np.array(individual[current_index:current_index + hidden_layer]))
-                current_index += hidden_layer
+            current_layer = nn.Linear(previous_layer_size, hidden_layer_size, bias=self.use_bias)
+            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer_size, previous_layer_size)
+            current_layer.weight.data = torch.from_numpy(current_weight)
 
-        # TODO this has to be redone if it shall be used
-        # # Indirect encoding
-        # if config.indirect_encoding:
-        #
-        #     config_cppn = LayeredNNCfg(number_neurons_layer1=config.cppn_hidden_size1,
-        #                                number_neurons_layer2=config.cppn_hidden_size2, indirect_encoding=False,
-        #                                use_biases=False, cppn_hidden_size1=0, cppn_hidden_size2=0, type="LNN")
-        #
-        #     cppn_weights = LayeredNN(4, 1, individual, config_cppn)
-        #
-        #     self.W1 = np.zeros((self.hidden_size1, self.input_size), dtype=np.single)
-        #     self.W2 = np.zeros((self.hidden_size2, self.hidden_size1), dtype=np.single)
-        #     self.W3 = np.zeros((self.output_size, self.hidden_size2), dtype=np.single)
-        #
-        #     for i, j in np.ndindex(self.W1.shape):
-        #         self.W1[i, j] = cppn_weights.step(
-        #             np.array([i / (self.hidden_size1 - 1), 0.33, j / (self.input_size - 1), 0]))
-        #
-        #     for i, j in np.ndindex(self.W2.shape):
-        #         self.W2[i, j] = cppn_weights.step(
-        #             np.array([i / (self.hidden_size2 - 1), 0.66, j / (self.hidden_size1 - 1), 0.33]))
-        #
-        #     for i, j in np.ndindex(self.W3.shape):
-        #         self.W3[i, j] = cppn_weights.step(
-        #             np.array([i / (self.output_size - 1), 1.0, j / (self.hidden_size2 - 1), 0.66]))
-        #
+            if self.use_bias:
+                current_bias, index = self.read_matrix_from_genome(individual, index, hidden_layer_size, 1)
+                current_layer.bias.data = torch.from_numpy(current_bias.flatten())
+
+            self.layers.append(current_layer)
+
+            previous_layer_size = hidden_layer_size
+
+        # Output Layer
+        self.output_layer: nn.Linear = nn.Linear(previous_layer_size, self.output_size, bias=config.use_bias)
+        weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, previous_layer_size)
+        self.output_layer.weight.data = torch.from_numpy(weights_output_layer)
+
+        if self.use_bias:
+            output_bias, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
+            self.output_layer.bias.data = torch.from_numpy(output_bias.flatten())
 
     def brainstep(self, ob: np.ndarray) -> np.ndarray:
+
+        assert ob.ndim == 1
+        assert ob.size == self.input_size
+
         x = ob
 
         with torch.no_grad():
             x = torch.from_numpy(x.astype(np.float32))
 
+            # Hidden Layers
             for layer in self.layers:
-                x = self.non_linearity(layer(x))
+                x = self.activation_hidden_layers(layer(x))
+
+            # Output Layer
+            x = self.activation_output_layer(self.output_layer(x))
+
             return x.view(self.output_size).numpy()
 
 
-class FeedForwardNumPy(FeedForward):
+@register_brain("FeedForward_NumPy", FeedForwardCfg)
+class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        self.weights: [np.ndarray] = []
-        self.bias: [np.ndarray] = []
+        # Set activation functions for hidden layers and output layer based on config
+        self.activation_hidden_layers = self.get_activation_function_numpy(config.neuron_activation)
+        self.activation_output_layer = self.get_activation_function_numpy(config.neuron_activation_output)
 
-        last_layer = self.input_size
-        current_index = 0
+        self.weights_hidden_layers: List[np.ndarray] = []
+        self.biases_hidden_layers: List[np.ndarray] = []
 
-        for hidden_layer in self.hidden_layers + [self.output_size]:
-            current_size = last_layer * hidden_layer
+        index = 0
+        previous_layer_size = self.input_size
 
-            current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
-            self.weights.append(current_weight.reshape((hidden_layer, last_layer)))
+        # Read out weight matrizes and bias matrizes from genome for hidden layers
+        for hidden_layer in self.hidden_layers:
+            current_weight, index = self.read_matrix_from_genome(individual, index, hidden_layer, previous_layer_size)
+            self.weights_hidden_layers.append(current_weight)
 
-            last_layer = hidden_layer
-            current_index += current_size
+            if self.use_bias:
+                current_bias, index = self.read_matrix_from_genome(individual, index, hidden_layer, 1)
+                self.biases_hidden_layers.append(current_bias)
 
-        if config.use_bias:
-            for hidden_layer in self.hidden_layers + [self.output_size]:
-                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
+            previous_layer_size = hidden_layer
 
-                current_index += hidden_layer
-        else:
-            self.bias = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
+        # Read out weight matrix from genome for output layer
+        self.weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size,
+                                                                        previous_layer_size)
 
-    @staticmethod
-    def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
-        # If bias is not used it will be zero, see constructor
-        return np.dot(layer_weights, x) + bias
+        # Read out bias matrix from genome for output layer
+        if self.use_bias:
+            self.biases_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, 1)
 
-    def step(self, ob: np.ndarray) -> np.ndarray:
+    def brainstep(self, ob: np.ndarray) -> np.ndarray:
+
+        assert ob.ndim == 1
+        assert ob.size == self.input_size
+
+        x = self.predict(ob.reshape(ob.size, 1))
+
+        return x.flatten()
+
+    def predict(self, ob: np.ndarray) -> np.ndarray:
+
+        assert ob.ndim > 1
+        assert ob.shape[-2] == self.input_size
+        assert ob.shape[-1] == 1
+
         x = ob
 
-        for weight, bias in zip(self.weights, self.bias):
-            x = self.non_linearity(self.layer_step(x, weight, bias))
+        # Calculate hidden layers
+        # Note: itertools.zip_longest is necessary here instead of zip, since self.biases_hidden_layers is
+        # an empty list, if self.use_bias is False
+        for weights, biases in itertools.zip_longest(self.weights_hidden_layers, self.biases_hidden_layers):
+            x = np.matmul(weights, x)
+            if self.use_bias:
+                x = np.add(x, biases)
+            x = self.activation_hidden_layers(x)
+
+        # Calculate output layer
+        x = np.matmul(self.weights_output_layer, x)
+        if self.use_bias:
+            x = np.add(x, self.biases_output_layer)
+        x = self.activation_output_layer(x)
 
         return x

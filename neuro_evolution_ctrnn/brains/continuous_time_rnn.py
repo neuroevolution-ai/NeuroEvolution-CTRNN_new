@@ -6,11 +6,13 @@ import numpy as np
 from gym.spaces import Space
 from scipy import sparse
 
+from brains import register_brain
 from brains.i_brain import IBrain
 from tools.configurations import ContinuousTimeRNNCfg
 
 
 # noinspection PyPep8Naming
+@register_brain("CTRNN", ContinuousTimeRNNCfg)
 class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray

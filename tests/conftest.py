@@ -34,8 +34,7 @@ def mu_lambda_es_config() -> OptimizerMuLambdaCfg:
 
 @pytest.fixture
 def ffnn_config() -> FeedForwardCfg:
-    return FeedForwardCfg(type="FeedForward_PyTorch", use_bias=True, hidden_layers=[[8, 16]], non_linearity="relu",
-                          indirect_encoding=False, cppn_hidden_layers=[[2, 4]])
+    return FeedForwardCfg(type="FeedForward_PyTorch", use_bias=True, hidden_layers=[[8, 16]], neuron_activation="relu")
 
 
 @pytest.fixture
@@ -60,14 +59,11 @@ def layer_config() -> ILayerBasedBrainCfg:
 
 @pytest.fixture
 def concat_lstm_config() -> ConcatenatedBrainLSTMCfg:
-    return ConcatenatedBrainLSTMCfg(type="ConcatenatedBrain_LSTM", use_bias=True,
+    return ConcatenatedBrainLSTMCfg(type="ConcatenatedBrain_LSTM",
+                                    use_bias=True,
                                     feed_forward_front=FeedForwardCfg(type="FeedForward_PyTorch", use_bias=True,
-                                                                      hidden_layers=[8, 16], non_linearity="relu",
-                                                                      indirect_encoding=False,
-                                                                      cppn_hidden_layers=[2, 4]),
+                                                                      hidden_layers=[8, 16], neuron_activation="relu"),
                                     lstm=LstmLayeredCfg(type="LSTM_PyTorch", hidden_layer_structure=[8, 8, 8],
                                                         optimize_initial_neuron_state=False, use_bias=True),
                                     feed_forward_back=FeedForwardCfg(type="FeedForward_PyTorch", use_bias=True,
-                                                                     hidden_layers=[32, 64], non_linearity="relu",
-                                                                     indirect_encoding=False,
-                                                                     cppn_hidden_layers=[2, 4]))
+                                                                     hidden_layers=[32, 64], neuron_activation="relu"))
