@@ -9,7 +9,9 @@ registered_brains = {}
 
 def register_brain(name: str, config_class: Type[IBrainCfg]):
     def _register(type_class: type):
-        assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
+        assert name not in registered_brains, (
+            'type "' + str(name) + '" was already registered'
+        )
         registered_brains[name] = type_class
         register(name)(config_class)  # call to @register-decorator for the config class
         return type_class
@@ -17,13 +19,18 @@ def register_brain(name: str, config_class: Type[IBrainCfg]):
     return _register
 
 
-ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
+ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
-
     @abc.abstractmethod
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(
+        self,
+        input_space: Space,
+        output_space: Space,
+        individual: np.ndarray,
+        config: ConfigClass,
+    ):
         # todo: remove these default assignments from derived classes
         self.input_space = input_space
         self.output_space = output_space
@@ -34,7 +41,9 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     def prepare_input(self, ob: np.ndarray):
         if self.config.normalize_input:
-            return self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
+            return self._normalize_input(
+                ob, self.input_space, self.config.normalize_input_target
+            )
         else:
             return ob
 
@@ -43,14 +52,16 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @classmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
+    def get_individual_size(
+        cls, config: ConfigClass, input_space: Space, output_space: Space
+    ) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
-                an individual of this class"""
+        an individual of this class"""
 
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
-                if str(key).startswith('_'):
+                if str(key).startswith("_"):
                     continue
                 if isinstance(item, dict):
                     sum_ += sum_dict(item)
@@ -63,7 +74,9 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
+    def get_free_parameter_usage(
+        cls, config: ConfigClass, input_space: Space, output_space: Space
+    ) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.
@@ -87,10 +100,16 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         for idx, item in enumerate(ob):
             if isinstance(input_space, Box):
                 if input_space.bounded_below[idx] and input_space.bounded_above[idx]:
-                    ob[idx] = IBrain._normalize(ob[idx], input_space.low[idx],
-                                                input_space.high[idx]) * normalize_input_target
+                    ob[idx] = (
+                        IBrain._normalize(
+                            ob[idx], input_space.low[idx], input_space.high[idx]
+                        )
+                        * normalize_input_target
+                    )
             else:
-                raise NotImplementedError("normalize_input is only defined for input-type Box")
+                raise NotImplementedError(
+                    "normalize_input is only defined for input-type Box"
+                )
 
         return ob
 
@@ -105,18 +124,24 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         if isinstance(input_space, Box):
             # note: some spaces from some envs don't define input_space.bounded_below properly so we treat
             # very high bounds as unbounded, too
-            mask = input_space.bounded_below & input_space.bounded_above \
-                   & (input_space.bounded_below > -1e5) \
-                   & (input_space.bounded_above < 1e5)
+            mask = (
+                input_space.bounded_below
+                & input_space.bounded_above
+                & (input_space.bounded_below > -1e5)
+                & (input_space.bounded_above < 1e5)
+            )
 
             # scaled is now between 0 and 1
-            scaled = IBrain._normalize(ob[mask], input_space.low[mask],
-                                       input_space.high[mask])
+            scaled = IBrain._normalize(
+                ob[mask], input_space.low[mask], input_space.high[mask]
+            )
 
             # ob[mask] is now between -target and +target
             ob[mask] = (scaled - 0.5) * (2 * target)
         else:
-            raise NotImplementedError("normalize_input is only defined for input-type Box")
+            raise NotImplementedError(
+                "normalize_input is only defined for input-type Box"
+            )
         return ob
 
     @staticmethod
@@ -131,10 +156,14 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 sum_ += IBrain._size_from_space(x)
             return sum_
         else:
-            raise NotImplementedError("not implemented input/output space: " + str(type(space)))
+            raise NotImplementedError(
+                "not implemented input/output space: " + str(type(space))
+            )
 
     @classmethod
-    def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(
+        cls, config: ConfigClass, input_space: Space, output_space: Space
+    ):
         pass
 
     def discrete_to_vector(self, ob):
@@ -145,13 +174,21 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         return ob_new
 
     def get_neuron_states(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_internal_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_input_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_output_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )

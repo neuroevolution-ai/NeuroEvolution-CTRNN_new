@@ -15,29 +15,43 @@ def evaluate_candidates(candidates, toolbox):
         seed_after_map: int = np.random.randint(1, 10000)
         if toolbox.conf.fix_seed_for_generation:
             seed_for_generation = np.random.randint(1, 10000)
-            seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
-            seeds_for_recorded = seed_for_generation * np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
+            seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(
+                len(candidates), dtype=np.int64
+            )
+            seeds_for_recorded = seed_for_generation * np.ones(
+                len(toolbox.recorded_individuals), dtype=np.int64
+            )
         else:
-            seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
-            seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+            seeds_for_evaluation: np.ndarray = np.random.randint(
+                1, 10000, size=len(candidates)
+            )
+            seeds_for_recorded: np.ndarray = np.random.randint(
+                1, 10000, size=len(candidates)
+            )
     else:
         seed_after_map = 0
         seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
         seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
 
     brain_genomes = toolbox.strip_strategy_from_population(candidates)
-    brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
+    brain_genomes_recorded = toolbox.strip_strategy_from_population(
+        toolbox.recorded_individuals
+    )
     nevals = len(brain_genomes) + len(brain_genomes_recorded)
     results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
 
     if toolbox.conf.novelty:
-        results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
+        results_recorded_orig = list(
+            toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)
+        )
         results_copy, results = tee(results, 2)
-        novelties = toolbox.map(calc_novelty,
-                                list(results_copy),
-                                [results_recorded_orig] * len(candidates),
-                                [toolbox.get_distance] * len(candidates),
-                                [toolbox.conf.novelty.novelty_nearest_k] * len(candidates))
+        novelties = toolbox.map(
+            calc_novelty,
+            list(results_copy),
+            [results_recorded_orig] * len(candidates),
+            [toolbox.get_distance] * len(candidates),
+            [toolbox.conf.novelty.novelty_nearest_k] * len(candidates),
+        )
     else:
         novelties = [0] * len(candidates)
 
@@ -56,7 +70,10 @@ def evaluate_candidates(candidates, toolbox):
 
     if toolbox.conf.novelty:
         # drop recorded_individuals, when there are too many
-        overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
+        overfill = (
+            len(toolbox.recorded_individuals)
+            - toolbox.conf.novelty.max_recorded_behaviors
+        )
         if overfill > 0:
             toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
@@ -65,12 +82,14 @@ def evaluate_candidates(candidates, toolbox):
 
 def record_individuals(toolbox, population):
     if toolbox.conf.novelty:
-        toolbox.recorded_individuals += random.choices(population,
-                                                       k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+        toolbox.recorded_individuals += random.choices(
+            population, k=toolbox.conf.novelty.recorded_behaviors_per_generation
+        )
 
 
-def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
-                   include_parents_in_next_generation=True):
+def eaMuPlusLambda(
+    toolbox, ngen, verbose=__debug__, include_parents_in_next_generation=True
+):
     population = toolbox.population
     halloffame = toolbox.hof
     gen = -1
@@ -80,8 +99,19 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         record_individuals(toolbox, population)
         extra = []
         if halloffame.items:
-            extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
-        offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
+            extra = list(
+                map(
+                    toolbox.clone,
+                    random.sample(population, toolbox.conf.extra_from_hof),
+                )
+            )
+        offspring = varOr(
+            population + extra,
+            toolbox,
+            toolbox.conf.lambda_,
+            1 - toolbox.conf.mutpb,
+            toolbox.conf.mutpb,
+        )
 
         for ind in offspring:
             # just a little extra for when we later want to analyze the hof manually
@@ -106,12 +136,26 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
-                                         recorded_individuals=toolbox.recorded_individuals))
-    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame, population=population,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
-                                         recorded_individuals=toolbox.recorded_individuals)
+            toolbox.checkpoint(
+                data=dict(
+                    generation=gen,
+                    halloffame=halloffame,
+                    population=population,
+                    logbook=toolbox.logbook,
+                    last_seed=current_seed,
+                    strategy=None,
+                    recorded_individuals=toolbox.recorded_individuals,
+                )
+            )
+    toolbox.final_checkpoint_data = dict(
+        generation=gen,
+        halloffame=halloffame,
+        population=population,
+        logbook=toolbox.logbook,
+        last_seed=current_seed,
+        strategy=None,
+        recorded_individuals=toolbox.recorded_individuals,
+    )
     return toolbox.logbook
 
 
@@ -126,8 +170,12 @@ def calc_novelty(res, results_recorded, get_distance, k):
         recorded_behavior_compressed = rec_res[1]
         recorded_behavior_data = decompress(recorded_behavior_compressed)
         recorded_behavior = np.frombuffer(recorded_behavior_data, dtype=np.float16)
-        dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
-                            b_len=len(recorded_behavior_compressed))
+        dist = get_distance(
+            a=behavior,
+            b=recorded_behavior,
+            a_len=len(behavior_compressed),
+            b_len=len(recorded_behavior_compressed),
+        )
         dist_list.append(dist)
 
     dist_sum = 0
@@ -158,11 +206,23 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
-                                         recorded_individuals=toolbox.recorded_individuals))
+            toolbox.checkpoint(
+                data=dict(
+                    generation=gen,
+                    halloffame=halloffame,
+                    logbook=toolbox.logbook,
+                    last_seed=current_seed,
+                    strategy=toolbox.strategy,
+                    recorded_individuals=toolbox.recorded_individuals,
+                )
+            )
 
-    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
-                                         recorded_individuals=toolbox.recorded_individuals)
+    toolbox.final_checkpoint_data = dict(
+        generation=gen,
+        halloffame=halloffame,
+        logbook=toolbox.logbook,
+        last_seed=current_seed,
+        strategy=toolbox.strategy,
+        recorded_individuals=toolbox.recorded_individuals,
+    )
     return toolbox.logbook

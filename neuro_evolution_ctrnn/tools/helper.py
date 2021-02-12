@@ -15,7 +15,7 @@ def output_to_action(output, action_space):
         index = 0
         action_list = []
         for space in action_space:
-            sub_output = output[index:index + space.n]
+            sub_output = output[index : index + space.n]
             action_list.append(output_to_action(sub_output, space))
             index += space.n
         return action_list

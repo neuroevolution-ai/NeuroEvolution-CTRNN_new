@@ -11,11 +11,26 @@ from tools.helper import get_checkpoint
 
 
 class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
-
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerCmaEsCfg, stats,
-                 map_func=map, from_checkpoint=None, reset_hof=False):
-        super(OptimizerCmaEs, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
-                                             from_checkpoint)
+    def __init__(
+        self,
+        eval_fitness: Callable,
+        individual_size: int,
+        random_seed: int,
+        conf: OptimizerCmaEsCfg,
+        stats,
+        map_func=map,
+        from_checkpoint=None,
+        reset_hof=False,
+    ):
+        super(OptimizerCmaEs, self).__init__(
+            eval_fitness,
+            individual_size,
+            random_seed,
+            conf,
+            stats,
+            map_func,
+            from_checkpoint,
+        )
         toolbox = self.toolbox
 
         if from_checkpoint:
@@ -37,16 +52,27 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             toolbox.logbook = self.create_logbook(conf)
             if conf.mu:
                 mu = conf.mu
-                assert conf.population_size >= mu, "The population size must be higher or equal to the chosen mu."
+                assert (
+                    conf.population_size >= mu
+                ), "The population size must be higher or equal to the chosen mu."
             else:
                 mu = conf.population_size // 2 if conf.population_size // 2 > 0 else 1
-            toolbox.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
-                                            lambda_=conf.population_size, mu=mu)
+            toolbox.strategy = cma.Strategy(
+                centroid=[0.0] * individual_size,
+                sigma=conf.sigma,
+                lambda_=conf.population_size,
+                mu=mu,
+            )
 
         toolbox.register("generate", toolbox.strategy.generate, Individual)
         toolbox.register("update", toolbox.strategy.update)
-        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=False)
+        toolbox.register(
+            "strip_strategy_from_population",
+            self.strip_strategy_from_population,
+            mutation_learned=False,
+        )
 
     def train(self, number_generations) -> tools.Logbook:
-        return algorithms.eaGenerateUpdate(self.toolbox, ngen=number_generations, halloffame=self.hof)
+        return algorithms.eaGenerateUpdate(
+            self.toolbox, ngen=number_generations, halloffame=self.hof
+        )

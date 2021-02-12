@@ -27,13 +27,21 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def learned_sparse(self, mat, percentile):
         M = np.abs(mat.toarray())
-        p = np.percentile(a=M, q=percentile, interpolation='higher')
+        p = np.percentile(a=M, q=percentile, interpolation="higher")
         mat[M < p] = 0
         return sparse.csr_matrix(mat, dtype=float)
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
+    def __init__(
+        self,
+        input_space: Space,
+        output_space: Space,
+        individual: np.ndarray,
+        config: ContinuousTimeRNNCfg,
+    ):
         super().__init__(input_space, output_space, individual, config)
-        assert len(individual) == self.get_individual_size(config, input_space, output_space)
+        assert len(individual) == self.get_individual_size(
+            config, input_space, output_space
+        )
         optimize_y0 = config.optimize_initial_neuron_state
         delta_t = config.delta_t
         self.config = config
@@ -52,23 +60,26 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.W = sparse.csr_matrix(self.w_mask, dtype=float)
         self.T = sparse.csr_matrix(self.t_mask, dtype=float)
         self.V.data[:] = [element for element in individual[0:V_size]]
-        self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
-        self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+        self.W.data[:] = [element for element in individual[V_size : V_size + W_size]]
+        self.T.data[:] = [
+            element
+            for element in individual[V_size + W_size : V_size + W_size + T_size]
+        ]
 
-        if self.config.v_mask == 'learned':
+        if self.config.v_mask == "learned":
             self.V = self.learned_sparse(self.V, self.config.v_mask_param)
 
-        if self.config.w_mask == 'learned':
+        if self.config.w_mask == "learned":
             self.W = self.learned_sparse(self.W, self.config.w_mask_param)
 
-        if self.config.t_mask == 'learned':
+        if self.config.t_mask == "learned":
             self.T = self.learned_sparse(self.T, self.config.t_mask_param)
 
         index: int = V_size + W_size + T_size
 
         # Initial state values y0
         if optimize_y0:
-            self.y0 = np.array([element for element in individual[index:index + N_n]])
+            self.y0 = np.array([element for element in individual[index : index + N_n]])
             index += N_n
         else:
             self.y0 = np.zeros(N_n)
@@ -79,14 +90,22 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.clipping_range_min: Union[int, np.ndarray, List[int]]
         self.clipping_range_max: Union[int, np.ndarray, List[int]]
         if self.config.optimize_state_boundaries == "per_neuron":
-            self.clipping_range_min = np.asarray([-abs(element) for element in individual[index:index + N_n]])
-            self.clipping_range_max = np.asarray([abs(element) for element in individual[index + N_n:]])
+            self.clipping_range_min = np.asarray(
+                [-abs(element) for element in individual[index : index + N_n]]
+            )
+            self.clipping_range_max = np.asarray(
+                [abs(element) for element in individual[index + N_n :]]
+            )
         elif self.config.optimize_state_boundaries == "global":
             self.clipping_range_min = -abs(individual[index])
             self.clipping_range_max = abs(individual[index + 1])
         elif self.config.optimize_state_boundaries == "legacy":
-            self.clipping_range_min = [-abs(element) for element in individual[index:index + N_n]]
-            self.clipping_range_max = [abs(element) for element in individual[index + N_n:]]
+            self.clipping_range_min = [
+                -abs(element) for element in individual[index : index + N_n]
+            ]
+            self.clipping_range_max = [
+                abs(element) for element in individual[index + N_n :]
+            ]
         elif self.config.optimize_state_boundaries == "fixed":
             self.clipping_range_min = np.asarray([config.clipping_range_min] * N_n)
             self.clipping_range_max = np.asarray([config.clipping_range_max] * N_n)
@@ -96,7 +115,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
             for j in range(N_n):
-                if self.W[j, j]:  # this if is a speedup when dealing with sparse matrices
+                if self.W[
+                    j, j
+                ]:  # this if is a speedup when dealing with sparse matrices
                     self.W[j, j] = -abs(self.W[j, j])
         assert self.config.substeps > 0
 
@@ -121,7 +142,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                 # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
                 raise NotImplementedError("learned activations are not yet implemented")
             else:
-                raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+                raise RuntimeError(
+                    "unknown aktivation function: " + str(self.config.neuron_activation)
+                )
 
             dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
@@ -129,52 +152,70 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             self.y = self.y + self.delta_t * dydt
 
             if self.config.parameter_perturbations:
-                self.y += np.random.normal([0] * len(self.y), self.config.parameter_perturbations)
+                self.y += np.random.normal(
+                    [0] * len(self.y), self.config.parameter_perturbations
+                )
 
             if self.config.optimize_state_boundaries == "legacy":
                 for y_min, y_max in zip(self.clipping_range_min, self.clipping_range_max):  # type: ignore
                     self.y = np.clip(self.y, y_min, y_max)
             else:
-                self.y = np.clip(self.y, self.clipping_range_min, self.clipping_range_max)
+                self.y = np.clip(
+                    self.y, self.clipping_range_min, self.clipping_range_max
+                )
 
         o: Union[np.ndarray, np.generic] = np.tanh(self.T.dot(self.y))
         return o
 
     @classmethod
-    def get_free_parameter_usage(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        info_dict = {'V': np.count_nonzero(cls.v_mask),
-                     'W': np.count_nonzero(cls.w_mask),
-                     'T': np.count_nonzero(cls.t_mask)}
+    def get_free_parameter_usage(
+        cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space
+    ):
+        info_dict = {
+            "V": np.count_nonzero(cls.v_mask),
+            "W": np.count_nonzero(cls.w_mask),
+            "T": np.count_nonzero(cls.t_mask),
+        }
         if config.optimize_initial_neuron_state:
-            info_dict['optimize_y0'] = config.number_neurons
+            info_dict["optimize_y0"] = config.number_neurons
 
         if config.optimize_state_boundaries == "legacy":
-            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
+            info_dict["optimize_state_boundaries"] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "per_neuron":
-            info_dict['optimize_state_boundaries'] = 2 * config.number_neurons
+            info_dict["optimize_state_boundaries"] = 2 * config.number_neurons
         elif config.optimize_state_boundaries == "global":
-            info_dict['optimize_state_boundaries'] = 2
+            info_dict["optimize_state_boundaries"] = 2
         elif config.optimize_state_boundaries == "fixed":
             pass
 
         return info_dict
 
     @classmethod
-    def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(
+        cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space
+    ):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("masks are already present in class")
         # todo: also store masks in checkpoints and hof.
-        v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
+        v_mask = cls._generate_mask(
+            config.v_mask, config.number_neurons, input_size, config.v_mask_param
+        )
         if config.use_bias:
             v_mask = np.c_[v_mask, np.ones(config.number_neurons, dtype=bool)]
 
-        w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
-                                    config.w_mask_param)
+        w_mask = cls._generate_mask(
+            config.w_mask,
+            config.number_neurons,
+            config.number_neurons,
+            config.w_mask_param,
+        )
         # TODO The mask was flipped on the diagonal for mathematical correct structure. check if no errer exist
-        t_mask = cls._generate_mask(config.t_mask, output_size, config.number_neurons, config.t_mask_param)
+        t_mask = cls._generate_mask(
+            config.t_mask, output_size, config.number_neurons, config.t_mask_param
+        )
 
         cls.set_class_state(v_mask=v_mask, w_mask=w_mask, t_mask=t_mask)
 
@@ -184,9 +225,16 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             return np.random.rand(n, m) < mask_param
         elif mask_type == "logarithmic":
             if mask_param < 1.05:
-                raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
+                raise RuntimeError(
+                    "mask_param to small: "
+                    + str(mask_param)
+                    + " must be at least +1.05"
+                )
             base = mask_param
-            indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
+            indices = [
+                math.floor(base ** y)
+                for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)
+            ]
             indices = indices
             result = np.zeros((n, m), dtype=bool)
 

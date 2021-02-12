@@ -6,16 +6,22 @@ from tools.configurations import FeedForwardCfg
 from gym.spaces import Space
 from typing import List, Callable, TypeVar
 
-FeedForwardConfigClass = TypeVar('FeedForwardConfigClass', bound=FeedForwardCfg)
+FeedForwardConfigClass = TypeVar("FeedForwardConfigClass", bound=FeedForwardCfg)
 
 
 class FeedForward(IBrain[FeedForwardConfigClass]):
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
+    def __init__(
+        self,
+        input_space: Space,
+        output_space: Space,
+        individual: np.ndarray,
+        config: FeedForwardCfg,
+    ):
         super().__init__(input_space, output_space, individual, config)
 
-        assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
-                                                           output_space=output_space)
+        assert len(individual) == self.get_individual_size(
+            config=config, input_space=input_space, output_space=output_space
+        )
 
         self.input_size: int = self._size_from_space(input_space)
         self.output_size: int = self._size_from_space(output_space)
@@ -38,7 +44,8 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         else:
             raise RuntimeError(
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(config.non_linearity))
+                "".format(config.non_linearity)
+            )
 
     def brainstep(self, ob: np.ndarray) -> np.ndarray:
         raise NotImplementedError
@@ -66,10 +73,13 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         except AssertionError:
             raise RuntimeError(
                 "Error with the chosen hidden layer list {}. It must be at least of size 1 and have elements which are "
-                "larger than 0.".format(hidden_layers))
+                "larger than 0.".format(hidden_layers)
+            )
 
     @classmethod
-    def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(
+        cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space
+    ):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -87,13 +97,18 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         if config.use_bias:
             individual_size += sum(hidden_layers) + output_size
 
-        return {'individual_size': individual_size}
+        return {"individual_size": individual_size}
 
 
 @register_brain("FeedForward_PyTorch", FeedForwardCfg)
 class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
+    def __init__(
+        self,
+        input_space: Space,
+        output_space: Space,
+        individual: np.ndarray,
+        config: FeedForwardCfg,
+    ):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
 
@@ -106,8 +121,11 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
             next_layer = nn.Linear(last_layer, hidden_layer, bias=config.use_bias)
             next_layer.weight.data = torch.from_numpy(
-                np.array(individual[current_index:current_index + current_size], dtype=np.single).reshape(
-                    (hidden_layer, last_layer)))
+                np.array(
+                    individual[current_index : current_index + current_size],
+                    dtype=np.single,
+                ).reshape((hidden_layer, last_layer))
+            )
 
             self.layers.append(next_layer)
             last_layer = hidden_layer
@@ -115,9 +133,12 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
         if config.use_bias:
             # Take extra loop for bias because we have the "convention" to add bias to the end of the individual array
-            for index, hidden_layer in enumerate(self.hidden_layers + [self.output_size]):
+            for index, hidden_layer in enumerate(
+                self.hidden_layers + [self.output_size]
+            ):
                 self.layers[index].bias.data = torch.from_numpy(
-                    np.array(individual[current_index:current_index + hidden_layer]))
+                    np.array(individual[current_index : current_index + hidden_layer])
+                )
                 current_index += hidden_layer
 
         # TODO this has to be redone if it shall be used
@@ -160,8 +181,13 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
 @register_brain("FeedForward_NumPy", FeedForwardCfg)
 class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
+    def __init__(
+        self,
+        input_space: Space,
+        output_space: Space,
+        individual: np.ndarray,
+        config: FeedForwardCfg,
+    ):
         super().__init__(input_space, output_space, individual, config)
 
         self.weights: [np.ndarray] = []
@@ -173,7 +199,10 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
         for hidden_layer in self.hidden_layers + [self.output_size]:
             current_size = last_layer * hidden_layer
 
-            current_weight = np.array(individual[current_index:current_index + current_size], dtype=np.single)
+            current_weight = np.array(
+                individual[current_index : current_index + current_size],
+                dtype=np.single,
+            )
             self.weights.append(current_weight.reshape((hidden_layer, last_layer)))
 
             last_layer = hidden_layer
@@ -181,14 +210,24 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
         if config.use_bias:
             for hidden_layer in self.hidden_layers + [self.output_size]:
-                self.bias.append(np.array(individual[current_index:current_index + hidden_layer], dtype=np.single))
+                self.bias.append(
+                    np.array(
+                        individual[current_index : current_index + hidden_layer],
+                        dtype=np.single,
+                    )
+                )
 
                 current_index += hidden_layer
         else:
-            self.bias = [np.zeros(hidden_layer) for hidden_layer in self.hidden_layers + [self.output_size]]
+            self.bias = [
+                np.zeros(hidden_layer)
+                for hidden_layer in self.hidden_layers + [self.output_size]
+            ]
 
     @staticmethod
-    def layer_step(x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray) -> np.ndarray:
+    def layer_step(
+        x: np.ndarray, layer_weights: np.ndarray, bias: np.ndarray
+    ) -> np.ndarray:
         # If bias is not used it will be zero, see constructor
         return np.dot(layer_weights, x) + bias
 

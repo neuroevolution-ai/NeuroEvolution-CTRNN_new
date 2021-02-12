@@ -11,17 +11,37 @@ from tools.configurations import OptimizerMuLambdaCfg
 from tools.helper import get_checkpoint
 
 
-def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"):
-    return tools.selBest(individuals, int(k_elitist * mu), fit_attr="fitness") + \
-           tools.selTournament(individuals, int(k_tournament * mu), tournsize=tournsize, fit_attr="fitness")
+def sel_elitist_tournament(
+    individuals, mu, k_elitist, k_tournament, tournsize, fit_attr="fitness"
+):
+    return tools.selBest(
+        individuals, int(k_elitist * mu), fit_attr="fitness"
+    ) + tools.selTournament(
+        individuals, int(k_tournament * mu), tournsize=tournsize, fit_attr="fitness"
+    )
 
 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
-
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
-                 stats, map_func=map, from_checkpoint=None, reset_hof=False):
-        super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
-                                                    from_checkpoint)
+    def __init__(
+        self,
+        eval_fitness: Callable,
+        individual_size: int,
+        random_seed: int,
+        conf: OptimizerMuLambdaCfg,
+        stats,
+        map_func=map,
+        from_checkpoint=None,
+        reset_hof=False,
+    ):
+        super(OptimizerMuPlusLambda, self).__init__(
+            eval_fitness,
+            individual_size,
+            random_seed,
+            conf,
+            stats,
+            map_func,
+            from_checkpoint,
+        )
         toolbox = self.toolbox
 
         if self.conf.strategy_parameter_per_gene:
@@ -29,10 +49,13 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             # add two genes for strategy parameters used in mutate
             individual_size += 2
-        toolbox.register("indices", np.random.uniform,
-                         -self.conf.initial_gene_range,
-                         self.conf.initial_gene_range,
-                         individual_size)
+        toolbox.register(
+            "indices",
+            np.random.uniform,
+            -self.conf.initial_gene_range,
+            self.conf.initial_gene_range,
+            individual_size,
+        )
         toolbox.register("individual", tools.initIterate, Individual, toolbox.indices)
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
@@ -71,10 +94,16 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
         else:
             toolbox.register("mutate", fct_mutation_learned)
-        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
+        toolbox.register(
+            "strip_strategy_from_population",
+            self.strip_strategy_from_population,
+            mutation_learned=True,
+            strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene,
+        )
         if self.conf.tournsize:
-            toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
+            toolbox.register(
+                "select", tools.selTournament, tournsize=self.conf.tournsize
+            )
         else:
             toolbox.register("select", tools.selBest)
 
