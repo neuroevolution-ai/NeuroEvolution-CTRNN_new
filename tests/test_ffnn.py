@@ -86,17 +86,18 @@ class TestFeedForwardNN:
         assert ffnn_pytorch_outputs.size == ffnn_numpy_outputs.size
         assert ffnn_pytorch_outputs.size == ffnn_numpy_predict_outputs.size
 
-        print("\nPyTorch Mean Prediction Time {}s | NumPy Mean Prediction Time {}s"
-              .format(np.mean(ffnn_pytorch_times), np.mean(ffnn_numpy_times)))
+        # Note: {:f} is used to suppress scientific notation (i.e. displaying 0.00001 instead of 1e-5)
+        print("\nPyTorch Mean Prediction Time {:f} ms | NumPy Mean Prediction Time {:f} ms"
+              .format(np.mean(ffnn_pytorch_times)*1000, np.mean(ffnn_numpy_times)*1000))
 
-        print("PyTorch Stddev Prediction Time {}s | NumPy Stddev Prediction Time {}s"
-              .format(np.std(ffnn_pytorch_times), np.std(ffnn_numpy_times)))
+        print("PyTorch Stddev Prediction Time {:f} ms | NumPy Stddev Prediction Time {:f} ms"
+              .format(np.std(ffnn_pytorch_times)*1000, np.std(ffnn_numpy_times)*1000))
 
-        print("PyTorch Max Prediction Time {}s | NumPy Max Prediction Time {}s"
-              .format(np.max(ffnn_pytorch_times), np.max(ffnn_numpy_times)))
+        print("PyTorch Max Prediction Time {:f} ms | NumPy Max Prediction Time {:f} ms"
+              .format(np.max(ffnn_pytorch_times)*1000, np.max(ffnn_numpy_times)*1000))
 
-        print("PyTorch Min Prediction Time {}s | NumPy Min Prediction Time {}s"
-              .format(np.min(ffnn_pytorch_times), np.min(ffnn_numpy_times)))
+        print("PyTorch Min Prediction Time {:f} ms | NumPy Min Prediction Time {:f} ms"
+              .format(np.min(ffnn_pytorch_times)*1000, np.min(ffnn_numpy_times)*1000))
 
         # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
         close_percentage = np.count_nonzero(
