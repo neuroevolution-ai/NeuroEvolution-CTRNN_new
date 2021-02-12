@@ -20,8 +20,6 @@ def register_brain(name: str, config_class: Type[IBrainCfg]):
     return _register
 
 
-from tools.configurations import IBrainCfg
-
 ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
 
 
