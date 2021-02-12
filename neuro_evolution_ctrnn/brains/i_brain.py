@@ -11,7 +11,7 @@ def register_brain(name: str, config_class: Type[IBrainCfg]):
     def _register(type_class: type):
         assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
         registered_brains[name] = type_class
-        register(name)(config_class)
+        register(name)(config_class)  # call to @register-decorator for the config class
         return type_class
 
     return _register
