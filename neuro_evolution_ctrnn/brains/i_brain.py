@@ -25,10 +25,8 @@ ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
-
     @abc.abstractmethod
-    def __init__(self, input_space: spaces.Space, output_space: spaces.Space, individual: np.ndarray,
-                 config: ConfigClass):
+    def __init__(self, input_space: spaces.Space, output_space: spaces.Space, individual: np.ndarray, config: ConfigClass):
         self.input_space = input_space
         self.output_space = output_space
         self.config = config
@@ -58,7 +56,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
-
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
@@ -75,8 +72,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space,
-                                 output_space: spaces.Space) -> dict:
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.
@@ -133,9 +129,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             return np.array(parsed_brain_input)
 
         else:
-            raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
-            )
+            raise RuntimeError("The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space)))
 
     def parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple]):
         """
@@ -169,15 +163,11 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 current_range = flatdim(sub_space)
 
                 parsed_brain_output.append(
-                    self._recursive_parse_brain_output(brain_output[index:index + current_range],
-                                                       relevant_space=sub_space)
-                )
+                    self._recursive_parse_brain_output(brain_output[index:index + current_range], relevant_space=sub_space))
                 index += current_range
             return tuple(parsed_brain_output)
         else:
-            raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
-            )
+            raise RuntimeError("The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space)))
 
     def parse_brain_output(self, brain_output: np.ndarray):
         """
@@ -224,9 +214,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         elif activation == "tanh":
             return cls.tanh
         else:
-            raise RuntimeError(
-                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(activation))
+            raise RuntimeError("The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                               "".format(activation))
 
     @staticmethod
     def relu(x: np.ndarray) -> np.ndarray:
@@ -250,6 +239,5 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         elif activation == "tanh":
             return nn.Tanh()  # type:ignore
         else:
-            raise RuntimeError(
-                "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(activation))
+            raise RuntimeError("The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
+                               "".format(activation))

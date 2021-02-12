@@ -17,9 +17,15 @@ def sel_elitist_tournament(individuals, mu, k_elitist, k_tournament, tournsize, 
 
 
 class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
-
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
-                 stats, map_func=map, from_checkpoint=None, reset_hof=False):
+    def __init__(self,
+                 eval_fitness: Callable,
+                 individual_size: int,
+                 random_seed: int,
+                 conf: OptimizerMuLambdaCfg,
+                 stats,
+                 map_func=map,
+                 from_checkpoint=None,
+                 reset_hof=False):
         super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
                                                     from_checkpoint)
         toolbox = self.toolbox
@@ -29,9 +35,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             # add two genes for strategy parameters used in mutate
             individual_size += 2
-        toolbox.register("indices", np.random.uniform,
-                         -self.conf.initial_gene_range,
-                         self.conf.initial_gene_range,
+        toolbox.register("indices", np.random.uniform, -self.conf.initial_gene_range, self.conf.initial_gene_range,
                          individual_size)
         toolbox.register("individual", tools.initIterate, Individual, toolbox.indices)
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
@@ -49,7 +53,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             ind1[half:] = np.clip(ind1[half:], -6, 0)
             strategy = []
             for s in ind1[half:]:
-                strategy.append(2 ** s)
+                strategy.append(2**s)
             # mutate genome with parameters from strategy. and mutate strategy with constant
             # sigma = np.concatenate((strategy, ([0.2] * half)), axis=None).tolist()
             sigma = np.concatenate((strategy, strategy), axis=None).tolist()
@@ -61,8 +65,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             # mutates bad strategy parameters
             ind1[-1] = np.clip(ind1[-1], -5, 3)
             ind1[-2] = np.clip(ind1[-2], -5, 3)
-            sigma = 2 ** ind1[-1]
-            indpb = 2 ** (ind1[-2] - 3)
+            sigma = 2**ind1[-1]
+            indpb = 2**(ind1[-2] - 3)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
         toolbox.register("mate", mate)
@@ -71,8 +75,10 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
         else:
             toolbox.register("mutate", fct_mutation_learned)
-        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
+        toolbox.register("strip_strategy_from_population",
+                         self.strip_strategy_from_population,
+                         mutation_learned=True,
+                         strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
         if self.conf.tournsize:
             toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
         else:

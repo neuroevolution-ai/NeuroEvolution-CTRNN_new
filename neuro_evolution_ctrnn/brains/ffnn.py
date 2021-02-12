@@ -13,12 +13,10 @@ FeedForwardConfigClass = TypeVar('FeedForwardConfigClass', bound=FeedForwardCfg)
 
 
 class FeedForward(IBrain[FeedForwardConfigClass]):
-
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
-                                                           output_space=output_space)
+        assert len(individual) == self.get_individual_size(config=config, input_space=input_space, output_space=output_space)
 
         self.input_size: int = flatdim(input_space)
         self.output_size: int = flatdim(output_space)
@@ -72,7 +70,6 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
 
 @register_brain("FeedForward_PyTorch", FeedForwardCfg)
 class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
-
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
         FeedForward.__init__(self, input_space, output_space, individual, config)
@@ -132,7 +129,6 @@ class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
 @register_brain("FeedForward_NumPy", FeedForwardCfg)
 class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
-
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
 
@@ -158,8 +154,7 @@ class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
             previous_layer_size = hidden_layer
 
         # Read out weight matrix from genome for output layer
-        self.weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size,
-                                                                        previous_layer_size)
+        self.weights_output_layer, index = self.read_matrix_from_genome(individual, index, self.output_size, previous_layer_size)
 
         # Read out bias matrix from genome for output layer
         if self.use_bias:

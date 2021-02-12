@@ -28,24 +28,21 @@ class Weights:
         return output_str
 
     @staticmethod
-    def arrow(screen: pygame.Surface, color: Tuple[int, int, int], tricolor: Tuple[int, int, int],
-              start: Tuple[int, int], end: Tuple[int, int], trirad: int, width: int) -> None:
+    def arrow(screen: pygame.Surface, color: Tuple[int, int, int], tricolor: Tuple[int, int, int], start: Tuple[int, int],
+              end: Tuple[int, int], trirad: int, width: int) -> None:
         if width >= 1:
             pygame.draw.line(screen, color, start, end, width)
             rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
-            pygame.draw.polygon(screen, tricolor, (
-                (
-                    end[0] + trirad * math.sin(math.radians(rotation)),
-                    end[1] + trirad * math.cos(math.radians(rotation))),
-                (
-                    end[0] + trirad * math.sin(math.radians(rotation - 120)),
-                    end[1] + trirad * math.cos(math.radians(rotation - 120))), (
-                    end[0] + trirad * math.sin(math.radians(rotation + 120)),
-                    end[1] + trirad * math.cos(math.radians(rotation + 120)))))
+            pygame.draw.polygon(
+                screen, tricolor,
+                ((end[0] + trirad * math.sin(math.radians(rotation)), end[1] + trirad * math.cos(math.radians(rotation))),
+                 (end[0] + trirad * math.sin(math.radians(rotation - 120)),
+                  end[1] + trirad * math.cos(math.radians(rotation - 120))),
+                 (end[0] + trirad * math.sin(math.radians(rotation + 120)),
+                  end[1] + trirad * math.cos(math.radians(rotation + 120)))))
 
     @staticmethod
-    def draw_connection(visualizer: "brain_visualizer.BrainVisualizer", start_pos, end_pos, weight,
-                        is_input: bool = False):
+    def draw_connection(visualizer: "brain_visualizer.BrainVisualizer", start_pos, end_pos, weight, is_input: bool = False):
         if is_input:
             if weight > 0.0:
                 weight_color = visualizer.color_input_connections_positive
@@ -69,12 +66,10 @@ class Weights:
             # Point, angle and length of the line for the endpoint of the arrow
             trirad = 5 + width
             arrow_length = (-1 * (visualizer.neuron_radius + trirad + 5))
-            arrow_end = (end_pos[0] + arrow_length * math.cos(rotation),
-                         end_pos[1] + arrow_length * math.sin(rotation))
+            arrow_end = (end_pos[0] + arrow_length * math.cos(rotation), end_pos[1] + arrow_length * math.sin(rotation))
 
             if rotation != 0:
-                Weights.arrow(visualizer.screen, weight_color, weight_color, start_pos, arrow_end,
-                              trirad, width)
+                Weights.arrow(visualizer.screen, weight_color, weight_color, start_pos, arrow_end, trirad, width)
         else:
             pygame.draw.line(visualizer.screen, weight_color, (int(start_pos[0]), int(start_pos[1])),
                              (int(end_pos[0]), int(end_pos[1])), width)
@@ -91,8 +86,12 @@ class Weights:
         return False
 
     @staticmethod
-    def draw_maximum_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
-                             weight_matrix, is_input: bool = False, in_values: np.ndarray = None) -> None:
+    def draw_maximum_weights(visualizer: "brain_visualizer.BrainVisualizer",
+                             start_pos_dict: dict,
+                             end_pos_dict: dict,
+                             weight_matrix,
+                             is_input: bool = False,
+                             in_values: np.ndarray = None) -> None:
         if is_input and visualizer.rgb_input:
             # If RGB input is present the weight matrix needs to be reordered a bit. In the brain the RGB values get
             # flattened, therefore three consecutive values in the weight_matrix form one pixel (red, green and blue).
@@ -125,16 +124,19 @@ class Weights:
             Weights.draw_connection(visualizer, start_pos, end_pos, weight, is_input)
 
     @staticmethod
-    def draw_weights(visualizer: "brain_visualizer.BrainVisualizer", start_pos_dict: dict, end_pos_dict: dict,
-                     weight_matrix, is_input: bool = False, in_values: np.ndarray = None) -> None:
+    def draw_weights(visualizer: "brain_visualizer.BrainVisualizer",
+                     start_pos_dict: dict,
+                     end_pos_dict: dict,
+                     weight_matrix,
+                     is_input: bool = False,
+                     in_values: np.ndarray = None) -> None:
         weight_matrix = weight_matrix.T
         if visualizer.draw_weight_mode & Weights.WEIGHT_ALL:
             for (start_neuron, end_neuron), weight in np.ndenumerate(weight_matrix):
                 Weights.check_zero_input(is_input, visualizer.draw_weight_mode, start_neuron, in_values)
 
-                if (weight != 0 and
-                        ((visualizer.positive_weights and weight > 0.0) or
-                         (visualizer.negative_weights and weight < 0.0))):
+                if (weight != 0
+                        and ((visualizer.positive_weights and weight > 0.0) or (visualizer.negative_weights and weight < 0.0))):
 
                     if visualizer.draw_threshold and abs(weight) < visualizer.draw_threshold:
                         continue

@@ -16,9 +16,7 @@ from tools.helper import transform
 cfg_path = os.path.join('configurations', 'reverse_fixed.json')
 cfg_exp = config_from_file(cfg_path)
 
-experiment = Experiment(configuration=cfg_exp,
-                        result_path="",
-                        from_checkpoint=None)
+experiment = Experiment(configuration=cfg_exp, result_path="", from_checkpoint=None)
 
 
 @s(auto_attribs=True, frozen=True, slots=True)
@@ -32,37 +30,31 @@ class BrainParam:
 
 
 def param_to_genom(param):
-    return np.concatenate(
-        [param.V.flatten(),
-         param.W.flatten(),
-         param.T.flatten(),
-         param.y0.flatten(),
-         param.clip_min.flatten(),
-         param.clip_max.flatten()])
+    return np.concatenate([
+        param.V.flatten(),
+        param.W.flatten(),
+        param.T.flatten(),
+        param.y0.flatten(),
+        param.clip_min.flatten(),
+        param.clip_max.flatten()
+    ])
 
 
-param = BrainParam(
-    V=np.array([[1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]]),
-    W=np.array([[-1, 0, 0, 0],
-                [0, -1, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, -1]]),
-    T=np.array([[0, 0, 1, 0],
-                [0, 0, -1, 1],
-                [0, 0, -1, 1],
-                [2, 2, 2, -3],
-                [1, 0, 0, 0],
-                [0, 1, 0, 0]]).flatten(order='F'),
-    y0=np.array([]), clip_min=np.array([]), clip_max=np.array([]))
+param = BrainParam(V=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]),
+                   W=np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 0, 0], [0, 0, 0, -1]]),
+                   T=np.array([[0, 0, 1, 0], [0, 0, -1, 1], [0, 0, -1, 1], [2, 2, 2, -3], [1, 0, 0, 0], [0, 1, 0,
+                                                                                                         0]]).flatten(order='F'),
+                   y0=np.array([]),
+                   clip_min=np.array([]),
+                   clip_max=np.array([]))
 
 ind = param_to_genom(param)
 
 env = experiment.env_template
 for i in range(1):
-    brain = ContinuousTimeRNN(input_space=experiment.input_space, output_space=experiment.output_space, individual=ind,
+    brain = ContinuousTimeRNN(input_space=experiment.input_space,
+                              output_space=experiment.output_space,
+                              individual=ind,
                               config=cfg_exp.brain)
     ob = env.reset()
     transformed_ob = transform(ob, coming_from_space=experiment.input_space, is_brain_input=True)
@@ -87,7 +79,5 @@ for i in range(1):
     print('score: ' + str(fitness_current))
 
 # todo: use brain_vis to visualize this
-t = threading.Thread(target=experiment.visualize,
-                     args=[[ind], BrainVisualizerHandler(), 2, False,
-                           False])
+t = threading.Thread(target=experiment.visualize, args=[[ind], BrainVisualizerHandler(), 2, False, False])
 # t.start()

@@ -3,8 +3,8 @@ from gym.envs.mujoco import ReacherEnv
 from typing import Tuple
 from mujoco_py import const
 
-class ReacherMemoryEnv(ReacherEnv):
 
+class ReacherMemoryEnv(ReacherEnv):
     def __init__(self, observation_frames: int, memory_frames: int, action_frames: int):
         assert observation_frames > 0 and memory_frames > 0 and action_frames > 0
 

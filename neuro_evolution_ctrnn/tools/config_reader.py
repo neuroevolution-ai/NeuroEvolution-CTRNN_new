@@ -9,8 +9,6 @@ from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, re
 
 class ConfigReader:
     """Reads a configuration from a JSON string and returns a valid config object."""
-
-
     @classmethod
     def _replace_dicts_with_types(cls, node, depth=0):
         for key, item in node.items():
@@ -53,9 +51,8 @@ class ConfigReader:
         if config_dict["random_seed"] < 0:
             seed = random.randint(1, 10000)
             logging.info("setting random seed to " + str(seed))
-            logging.info(
-                "if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
-                "set random_seed to a positive integer.")
+            logging.info("if you want to ignore random states, set random_seed to 0. If you want to use a specific seed, "
+                         "set random_seed to a positive integer.")
             config_dict["random_seed"] = seed
         cls._replace_dicts_with_types(config_dict)
 

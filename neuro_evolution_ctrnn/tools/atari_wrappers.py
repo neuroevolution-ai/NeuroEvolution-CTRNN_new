@@ -140,8 +140,7 @@ class WarpFrame(gym.ObservationWrapper):
 
     def _observation(self, obs):
         frame = np.dot(obs.astype('float32'), np.array([0.299, 0.587, 0.114], 'float32'))
-        frame = np.array(Image.fromarray(frame).resize((self.res, self.res),
-                                                       resample=Image.BILINEAR), dtype=np.uint8)
+        frame = np.array(Image.fromarray(frame).resize((self.res, self.res), resample=Image.BILINEAR), dtype=np.uint8)
         return frame.reshape((self.res, self.res, 1))
 
     def _render(self, mode='human', close=False):
@@ -171,7 +170,8 @@ class FrameStack(gym.Wrapper):
     def _reset(self):
         """Clear buffer and re-fill by duplicating the first observation."""
         ob = self.env.reset()
-        for _ in range(self.k): self.frames.append(ob)
+        for _ in range(self.k):
+            self.frames.append(ob)
         return self._observation()
 
     def _step(self, action):
@@ -196,7 +196,7 @@ class DiscretizeActions(gym.Wrapper):
         """Buffer observations and stack across channels (last axis)."""
         gym.Wrapper.__init__(self, env)
         self.temp_action = env.action_space
-        self.action_space = spaces.Discrete(5 ** int(np.prod(env.action_space.shape)))
+        self.action_space = spaces.Discrete(5**int(np.prod(env.action_space.shape)))
 
     def _step(self, action):
         cont_action = self.temp_action.low.copy()

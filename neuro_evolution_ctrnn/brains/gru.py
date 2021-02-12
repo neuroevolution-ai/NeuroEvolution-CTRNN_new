@@ -11,7 +11,6 @@ from brains.i_layer_based_brain import ILayerBasedBrain
 
 @register_brain("GRU", GruCfg)
 class GruNetwork(ILayerBasedBrain[GruCfg]):
-
     @staticmethod
     def get_number_hidden_values():
         return 1
@@ -22,19 +21,13 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
     @staticmethod
     def layer_step(layer_input, weight_ih, weight_hh, bias_h, hidden):
         # Reset Gate
-        r_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[0], layer_input)
-                                       + np.dot(weight_hh[0], hidden[0])
-                                       + bias_h[0])
+        r_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[0], layer_input) + np.dot(weight_hh[0], hidden[0]) + bias_h[0])
 
         # Update Gate
-        z_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[1], layer_input)
-                                       + np.dot(weight_hh[1], hidden[0])
-                                       + bias_h[1])
+        z_t = ILayerBasedBrain.sigmoid(np.dot(weight_ih[1], layer_input) + np.dot(weight_hh[1], hidden[0]) + bias_h[1])
 
         # New Gate
-        n_t = np.tanh(np.dot(weight_ih[2], layer_input)
-                      + np.dot(r_t, np.dot(weight_hh[2], hidden[0]))
-                      + bias_h[2])
+        n_t = np.tanh(np.dot(weight_ih[2], layer_input) + np.dot(r_t, np.dot(weight_hh[2], hidden[0])) + bias_h[2])
 
         result = np.multiply(1 - z_t, n_t) + np.multiply(z_t, hidden[0])
         return [[result], result]
@@ -46,20 +39,15 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
 
 @register_brain("GruTorch", GruTorchCfg)
 class GruPyTorch(IPytorchBrain[GruTorchCfg]):
-
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: GruTorchCfg):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)
 
     def get_brain(self, config: IPytorchBrainCfg, input_size):
-        return nn.GRU(
-            input_size=input_size, hidden_size=config.hidden_size,
-            num_layers=config.num_layers, bias=config.use_bias)
+        return nn.GRU(input_size=input_size, hidden_size=config.hidden_size, num_layers=config.num_layers, bias=config.use_bias)
 
     @staticmethod
     def get_hidden(config: IPytorchBrainCfg):
-        return (
-            torch.randn(config.num_layers, 1, config.hidden_size)
-        )
+        return (torch.randn(config.num_layers, 1, config.hidden_size))
 
     @staticmethod
     def get_number_gates():

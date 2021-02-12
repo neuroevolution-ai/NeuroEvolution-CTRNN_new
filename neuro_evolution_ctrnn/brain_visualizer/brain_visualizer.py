@@ -32,8 +32,12 @@ class BrainVisualizerHandler:
                                  neuron_radius: int = 30,
                                  color_clipping_range: Tuple[int, int, int] = (1, 1, 1),
                                  slow_down: int = 0):
-        self.current_visualizer = BrainVisualizer(brain=brain, brain_config=brain_config, env_id=env_id,
-                                                  initial_observation=initial_observation, width=width, height=height,
+        self.current_visualizer = BrainVisualizer(brain=brain,
+                                                  brain_config=brain_config,
+                                                  env_id=env_id,
+                                                  initial_observation=initial_observation,
+                                                  width=width,
+                                                  height=height,
                                                   display_color=display_color,
                                                   neuron_radius=neuron_radius,
                                                   color_clipping_range=color_clipping_range,
@@ -42,7 +46,6 @@ class BrainVisualizerHandler:
 
 
 class BrainVisualizer:
-
     def __init__(self,
                  brain: ContinuousTimeRNN,
                  brain_config: IBrainCfg,
@@ -121,8 +124,7 @@ class BrainVisualizer:
             self.draw_weight_mode = self.draw_weight_mode | Weights.IGNORE_ZERO_INPUT
         else:
             # Only one dimensional or three dimensional input is allowed
-            raise RuntimeError(
-                "Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
+            raise RuntimeError("Only one-dimensional or three-dimensional input is supported for the BrainVisualizer.")
 
         # Define colors used in the program
         self.display_color = display_color
@@ -171,18 +173,22 @@ class BrainVisualizer:
         self.screen.blit(self.kit_logo, self.kit_rect)
 
         info_text_columns = [[
-            "Input Neurons: {}".format(number_input_neurons),
-            "Graph Neurons: {}".format(number_neurons),
-            "Output Neurons: {}".format(number_output_neurons)], [
-            "Positive/Negative Weights [t,w]: {} / {} ".format(self.positive_weights, self.negative_weights),
-            "Input/Output Weights [q,z]: {} / {}".format(self.input_weights, self.output_weights),
-            "Direction [g]: {}".format(self.weights_direction)], [
-            "Weights: {}".format(Weights.weight_flag_to_str(self.draw_weight_mode)),
-            "Values [s]: {}".format(self.neuron_text),
-            "Simulation: {}".format(self.env_id)], [
-            "Threshold: {}".format(self.draw_threshold),
-            "Slow-Down: {} ms".format(self.slow_down),
-            "RGB-Input: {}".format(self.rgb_input)]]
+            "Input Neurons: {}".format(number_input_neurons), "Graph Neurons: {}".format(number_neurons),
+            "Output Neurons: {}".format(number_output_neurons)
+        ],
+                             [
+                                 "Positive/Negative Weights [t,w]: {} / {} ".format(self.positive_weights, self.negative_weights),
+                                 "Input/Output Weights [q,z]: {} / {}".format(self.input_weights, self.output_weights),
+                                 "Direction [g]: {}".format(self.weights_direction)
+                             ],
+                             [
+                                 "Weights: {}".format(Weights.weight_flag_to_str(self.draw_weight_mode)),
+                                 "Values [s]: {}".format(self.neuron_text), "Simulation: {}".format(self.env_id)
+                             ],
+                             [
+                                 "Threshold: {}".format(self.draw_threshold), "Slow-Down: {} ms".format(self.slow_down),
+                                 "RGB-Input: {}".format(self.rgb_input)
+                             ]]
 
         longest_text_widths = []
 
@@ -234,8 +240,7 @@ class BrainVisualizer:
         in_values = self.brain.parse_brain_input_output(in_values, is_brain_input=True)
 
         if self.rgb_input:
-            in_values = np.concatenate(
-                (in_values[:, :, 0].flatten(), in_values[:, :, 1].flatten(), in_values[:, :, 2].flatten()))
+            in_values = np.concatenate((in_values[:, :, 0].flatten(), in_values[:, :, 1].flatten(), in_values[:, :, 2].flatten()))
 
         if self.brain_config.use_bias:
             # Add 1 to the end of the input values so that the bias can be added. This is needed because the weight
@@ -259,34 +264,47 @@ class BrainVisualizer:
         # Draw Weights
         # This will draw the weights (i.e. the connections) between the input and the neurons
         if self.input_weights:
-            Weights.draw_weights(self, input_positions_dict, self.graph_positions_dict, self.brain.get_input_weight_matrix(),
-                                 is_input=True, in_values=in_values)
+            Weights.draw_weights(self,
+                                 input_positions_dict,
+                                 self.graph_positions_dict,
+                                 self.brain.get_input_weight_matrix(),
+                                 is_input=True,
+                                 in_values=in_values)
 
         # Connections between the Neurons
         # TODO CTRNN was W.toarray(), not .todense(). check for error
-        Weights.draw_weights(self, self.graph_positions_dict, self.graph_positions_dict, self.brain.get_internal_weight_matrix(),
-                             is_input=False, in_values=None)
+        Weights.draw_weights(self,
+                             self.graph_positions_dict,
+                             self.graph_positions_dict,
+                             self.brain.get_internal_weight_matrix(),
+                             is_input=False,
+                             in_values=None)
 
         # Connections between the Neurons and the Output
         if self.output_weights:
-            Weights.draw_weights(self, self.graph_positions_dict, output_positions_dict, self.brain.get_output_weight_matrix(),
-                                 is_input=False, in_values=None)
+            Weights.draw_weights(self,
+                                 self.graph_positions_dict,
+                                 output_positions_dict,
+                                 self.brain.get_output_weight_matrix(),
+                                 is_input=False,
+                                 in_values=None)
 
         # Draw neurons
 
         # Draws one circle per neuron, and connections from neurons to itself
         # Radius is increased so that the circle is bigger than the neuron itself
-        Neurons.draw_neurons(visualizer=self,
-                             positions=self.graph_positions_dict,
-                             value_dict=self.brain.get_internal_weight_matrix(),
-                             color_clipping_range=2,
-                             negative_color=self.color_negative_weight,
-                             neutral_color=self.color_neutral_weight,
-                             positive_color=self.color_positive_weight,
-                             radius=self.neuron_radius + self.weight_val,  # TODO weight_val necessary here?
-                             weight_neuron=True,
-                             is_input=False,
-                             is_neuron_to_neuron=True)
+        Neurons.draw_neurons(
+            visualizer=self,
+            positions=self.graph_positions_dict,
+            value_dict=self.brain.get_internal_weight_matrix(),
+            color_clipping_range=2,
+            negative_color=self.color_negative_weight,
+            neutral_color=self.color_neutral_weight,
+            positive_color=self.color_positive_weight,
+            radius=self.neuron_radius + self.weight_val,  # TODO weight_val necessary here?
+            weight_neuron=True,
+            is_input=False,
+            is_neuron_to_neuron=True)
 
         # Draw graph
         Neurons.draw_neurons(visualizer=self,

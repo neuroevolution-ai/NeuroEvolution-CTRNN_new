@@ -30,7 +30,8 @@ class TrainArgs(Tap):
         self.add_argument("-n", "--num_workers")
 
         # complex type and default
-        self.add_argument("--result_path", type=os.path.abspath,
+        self.add_argument("--result_path",
+                          type=os.path.abspath,
                           default=os.path.join("..", "CTRNN_Simulation_Results", "data",
                                                datetime.now().strftime("%Y-%m-%d_%H-%M-%S")))
         return self

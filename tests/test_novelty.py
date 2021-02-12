@@ -51,7 +51,4 @@ class TestNovelty:
         # test precomputed values
         assert isclose(
             normalized_compression_distance(a=a, b=b),
-            normalized_compression_distance(a=a, b=b,
-                                            a_len=len(compress(bytearray(a), 1)),
-                                            b_len=len(compress(bytearray(b), 1))
-                                            ))
+            normalized_compression_distance(a=a, b=b, a_len=len(compress(bytearray(a), 1)), b_len=len(compress(bytearray(b), 1))))

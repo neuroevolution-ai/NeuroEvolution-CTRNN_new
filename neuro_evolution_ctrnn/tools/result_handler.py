@@ -10,7 +10,6 @@ from tools.helper import walk_dict
 
 
 class ResultHandler(object):
-
     def __init__(self, result_path, neural_network_type, config_raw):
         self.result_path = result_path
         self.nn_type = neural_network_type
@@ -66,6 +65,7 @@ class ResultHandler(object):
                 pickle.dump(final_checkpoint_data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
 
         with open(os.path.join(self.result_path, "Log.txt"), "w") as write_file:
+
             def write(key, value, depth, is_leaf):
                 pad = ""
                 for x in range(depth):
@@ -86,8 +86,7 @@ class ResultHandler(object):
             write_file.write("\n")
             dash = "-" * 80
             write_file.write(dash + "\n")
-            write_file.write(
-                "{:<8s}{:<12s}{:<16s}{:<16s}{:<16s}{:<16s}\n".format("gen", "nevals", "avg", "std", "min", "max"))
+            write_file.write("{:<8s}{:<12s}{:<16s}{:<16s}{:<16s}{:<16s}\n".format("gen", "nevals", "avg", "std", "min", "max"))
             write_file.write(dash + '\n')
 
             # Write data for each episode
@@ -103,9 +102,8 @@ class ResultHandler(object):
                     min = line["min"]
                     max = line["max"]
 
-                write_file.write(
-                    "{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n".format(line["gen"], line["nevals"],
-                                                                                 avg, std, min, max))
+                write_file.write("{:<8d}{:<12d}{:<16.2f}{:<16.2f}{:<16.2f}{:<16.2f}\n".format(
+                    line["gen"], line["nevals"], avg, std, min, max))
 
             # Write elapsed time
             write_file.write("\nTime elapsed: %.4f seconds" % (time_elapsed))

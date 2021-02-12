@@ -33,9 +33,7 @@ def evaluate_candidates(candidates, toolbox):
     if toolbox.conf.novelty:
         results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
         results_copy, results = tee(results, 2)
-        novelties = toolbox.map(calc_novelty,
-                                list(results_copy),
-                                [results_recorded_orig] * len(candidates),
+        novelties = toolbox.map(calc_novelty, list(results_copy), [results_recorded_orig] * len(candidates),
                                 [toolbox.get_distance] * len(candidates),
                                 [toolbox.conf.novelty.novelty_nearest_k] * len(candidates))
     else:
@@ -66,8 +64,7 @@ def evaluate_candidates(candidates, toolbox):
 
 def record_individuals(toolbox, population):
     if toolbox.conf.novelty:
-        toolbox.recorded_individuals += random.choices(population,
-                                                       k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+        toolbox.recorded_individuals += random.choices(population, k=toolbox.conf.novelty.recorded_behaviors_per_generation)
 
 
 def validation_runs(population, toolbox):
@@ -95,8 +92,7 @@ def validation_runs(population, toolbox):
     return sum_fitness / number_validation_runs, total_steps
 
 
-def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
-                   include_parents_in_next_generation=True):
+def eaMuPlusLambda(toolbox, ngen, verbose=__debug__, include_parents_in_next_generation=True):
     population = toolbox.population
     halloffame = toolbox.hof
     gen = -1
@@ -128,16 +124,23 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
         record = toolbox.stats.compile(candidates) if toolbox.stats is not None else {}
         population[:] = toolbox.select(candidates, toolbox.conf.mu)
         validation_fitness, validation_steps = validation_runs(population, toolbox)
-        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
-                               val_fit=validation_fitness, **record)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps, val_fit=validation_fitness, **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+            toolbox.checkpoint(data=dict(generation=gen,
+                                         halloffame=halloffame,
+                                         population=population,
+                                         logbook=toolbox.logbook,
+                                         last_seed=current_seed,
+                                         strategy=None,
                                          recorded_individuals=toolbox.recorded_individuals))
-    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame, population=population,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+    toolbox.final_checkpoint_data = dict(generation=gen,
+                                         halloffame=halloffame,
+                                         population=population,
+                                         logbook=toolbox.logbook,
+                                         last_seed=current_seed,
+                                         strategy=None,
                                          recorded_individuals=toolbox.recorded_individuals)
     return toolbox.logbook
 
@@ -155,7 +158,9 @@ def calc_novelty(res, results_recorded, get_distance, k):
         recorded_behavior_compressed = rec_res[1]
         recorded_behavior_data = decompress(recorded_behavior_compressed)
         recorded_behavior = np.frombuffer(recorded_behavior_data, dtype=np.float16)
-        dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
+        dist = get_distance(a=behavior,
+                            b=recorded_behavior,
+                            a_len=len(behavior_compressed),
                             b_len=len(recorded_behavior_compressed))
         dist_list.append(dist)
 
@@ -186,15 +191,20 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
         record: dict = toolbox.stats.compile(population)
 
         validation_fitness, validation_steps = validation_runs(population, toolbox)
-        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps, val_fit=validation_fitness,
-                               **record)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps, val_fit=validation_fitness, **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
-            toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
+            toolbox.checkpoint(data=dict(generation=gen,
+                                         halloffame=halloffame,
+                                         logbook=toolbox.logbook,
+                                         last_seed=current_seed,
+                                         strategy=toolbox.strategy,
                                          recorded_individuals=toolbox.recorded_individuals))
 
-    toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame,
-                                         logbook=toolbox.logbook, last_seed=current_seed, strategy=toolbox.strategy,
+    toolbox.final_checkpoint_data = dict(generation=gen,
+                                         halloffame=halloffame,
+                                         logbook=toolbox.logbook,
+                                         last_seed=current_seed,
+                                         strategy=toolbox.strategy,
                                          recorded_individuals=toolbox.recorded_individuals)
     return toolbox.logbook

@@ -10,16 +10,13 @@ import logging
 
 
 class AEWrapper(gym.Wrapper):
-
     def __init__(self, env):
         super(AEWrapper, self).__init__(env)
         logging.debug("Setting number of torch-threads to 1")
         # see https://github.com/pytorch/pytorch/issues/13757
         torch.set_num_threads(1)
         self.fe = FeatureExtractor(use_diff=True)
-        self.observation_space = Box(low=0, high=10,
-                                     shape=(30, 1),
-                                     dtype=np.float16)
+        self.observation_space = Box(low=0, high=10, shape=(30, 1), dtype=np.float16)
         assert env.spec.id == "QbertNoFrameskip-v4", "this wrapper only works for QbertNoFrameskip-v4"
 
     def step(self, action):
@@ -32,7 +29,6 @@ class AEWrapper(gym.Wrapper):
 
 
 class AutoEncoderVAE(nn.Module):
-
     def __init__(self):
         super(AutoEncoderVAE, self).__init__()
 

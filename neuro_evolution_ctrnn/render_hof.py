@@ -12,13 +12,14 @@ from tools.configurations import OptimizerMuLambdaCfg
 from deap import base
 from deap import creator
 
+
 class RenderArgs(Tap):
     # Note: Comments in lines become helpstring when called with --help
     # for details on parsing see: https://github.com/swansonk14/typed-argument-parser
 
     dir: str  # Directory path to the simulation result
     no_render: bool = False  # disable rendering to screen?
-    render_raw_ob: bool = False # should the env be rendered from the perspective of the agent?
+    render_raw_ob: bool = False  # should the env be rendered from the perspective of the agent?
     record: bool = False  # record rendering to store it to file?
     record_force: bool = False  # force rendering even if file exists
     neuron_vis: bool = False  # show neuron visualizer?
@@ -49,7 +50,8 @@ config = ConfigReader.config_from_file(os.path.join(args.dir, "Configuration.jso
 
 experiment = Experiment(configuration=config,
                         result_path="/tmp/not-used",
-                        from_checkpoint=None, processing_framework='sequential')
+                        from_checkpoint=None,
+                        processing_framework='sequential')
 
 with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF
@@ -60,7 +62,7 @@ with open(os.path.join(args.dir, "HallOfFame.pickle"), "rb") as read_file_hof:
         # workaround to render experiments that were created before this PR was merged:
         # https://github.com/neuroevolution-ai/NeuroEvolution-CTRNN_new/pull/48
         # feel free to remove this workaround when experiments from before february 2021 are no longer relevant
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("FitnessMax", base.Fitness, weights=(1.0, ))
         creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
         hall_of_fame = pickle.load(read_file_hof)
 
@@ -79,11 +81,11 @@ else:
 if hasattr(config.optimizer, "mutation_learned"):
     # sometimes there are also optimizing strategies encoded in the genome. These parameters
     # are not part of the brain and need to be removed from the genome before initializing the brain.
-    individuals = experiment.optimizer.strip_strategy_from_population(individuals,
-                                                                      config.optimizer.mutation_learned)
+    individuals = experiment.optimizer.strip_strategy_from_population(individuals, config.optimizer.mutation_learned)
 elif isinstance(config.optimizer, OptimizerMuLambdaCfg):
     # later version of don't have the "mutation_learned" option anymore and instead always use that option
-    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True, config.optimizer.strategy_parameter_per_gene)
+    individuals = experiment.optimizer.strip_strategy_from_population(individuals, True,
+                                                                      config.optimizer.strategy_parameter_per_gene)
 
 render = not args.no_render
 
@@ -94,6 +96,15 @@ for i, individual in enumerate(individuals):
     else:
         record = None
 
-    experiment.ep_runner.eval_fitness(individual, config.random_seed, render, record, record_force,
-                                      BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds,
-                                      args.neuron_vis_width, args.neuron_vis_height, render_raw_ob=args.render_raw_ob)
+    experiment.ep_runner.eval_fitness(individual,
+                                      config.random_seed,
+                                      render,
+                                      record,
+                                      record_force,
+                                      BrainVisualizerHandler(),
+                                      args.neuron_vis,
+                                      args.slow_down,
+                                      args.rounds,
+                                      args.neuron_vis_width,
+                                      args.neuron_vis_height,
+                                      render_raw_ob=args.render_raw_ob)

@@ -9,7 +9,6 @@ from brain_visualizer import brain_visualizer
 
 
 class Neurons:
-
     @staticmethod
     def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer",
                      positions: dict,

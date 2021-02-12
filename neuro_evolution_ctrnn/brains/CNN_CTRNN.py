@@ -26,10 +26,11 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         ctrnn_size = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, cnn_output_space, output_space)
         ind_cnn = individual[0:cnn_size]
         ind_ctrnn = individual[cnn_size:cnn_size + ctrnn_size]
-        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space,
-                       config=config.cnn_conf, individual=ind_cnn)
-        self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
-                                       config=config.ctrnn_conf, individual=ind_ctrnn)
+        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space, config=config.cnn_conf, individual=ind_cnn)
+        self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space,
+                                       output_space=output_space,
+                                       config=config.ctrnn_conf,
+                                       individual=ind_ctrnn)
 
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
         return self.ctrnn.brainstep(self.cnn.brainstep(ob))
@@ -37,7 +38,8 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
     @classmethod
     def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
         cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf, input_space=input_space,
+        cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf,
+                                                          input_space=input_space,
                                                           output_space=cnn_output_space)
         ctrnn_paramter_usage = ContinuousTimeRNN.get_free_parameter_usage(config=config.ctrnn_conf,
                                                                           input_space=cnn_output_space,
@@ -108,12 +110,11 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     @classmethod
     def _make_convs(cls, config: ConvolutionalNNCfg):
         # This method exists because DRY and convs are needed before create the individuals
-        conv1 = nn.Conv2d(cls._number_input_channels, config.conv_feat1,
+        conv1 = nn.Conv2d(cls._number_input_channels,
+                          config.conv_feat1,
                           kernel_size=config.conv_size1,
                           stride=config.conv_stride1)
-        conv2 = nn.Conv2d(config.conv_feat1, config.conv_feat2,
-                          kernel_size=config.conv_size2,
-                          stride=config.conv_stride2)
+        conv2 = nn.Conv2d(config.conv_feat1, config.conv_feat2, kernel_size=config.conv_size2, stride=config.conv_stride2)
         return conv1, conv2
 
     @classmethod
@@ -135,7 +136,8 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
         return Box(-1, 1, (h, w, config.conv_feat2), np.float32)
 
     @classmethod
-    def _conv_output_shape(cls, h_w: Union[tuple, int],
+    def _conv_output_shape(cls,
+                           h_w: Union[tuple, int],
                            kernel_size: Union[tuple, int],
                            stride: Union[tuple, int],
                            pad: Union[tuple, int] = 0,

@@ -21,9 +21,14 @@ from brains import registered_brains
 
 
 class Experiment(object):
-
-    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework, write_final_checkpoint=False,
-                 number_of_workers=os.cpu_count(), from_checkpoint=None, reset_hof=False):
+    def __init__(self,
+                 configuration: ExperimentCfg,
+                 result_path,
+                 processing_framework,
+                 write_final_checkpoint=False,
+                 number_of_workers=os.cpu_count(),
+                 from_checkpoint=None,
+                 reset_hof=False):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.reset_hof = reset_hof
@@ -71,9 +76,12 @@ class Experiment(object):
                                                          output_space=self.output_space)
         logging.info("Usage of free parameters: " + str(info))
 
-        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
-                                       brain_class=self.brain_class, input_space=self.input_space,
-                                       output_space=self.output_space, env_id=self.config.environment)
+        self.ep_runner = EpisodeRunner(config=self.config.episode_runner,
+                                       brain_config=self.config.brain,
+                                       brain_class=self.brain_class,
+                                       input_space=self.input_space,
+                                       output_space=self.output_space,
+                                       env_id=self.config.environment)
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness_orig)
         if self.config.episode_runner.novelty:
@@ -94,23 +102,24 @@ class Experiment(object):
                                "".format(self.number_of_workers, system_cpu_count))
 
         if self.processing_framework == "dask":
-            self.processing_handler = DaskHandler(
-                number_of_workers=self.number_of_workers, brain_class=self.brain_class)
+            self.processing_handler = DaskHandler(number_of_workers=self.number_of_workers, brain_class=self.brain_class)
         elif self.processing_framework == "mp":
             self.processing_handler = MPHandler(number_of_workers=self.number_of_workers)
         elif self.processing_framework == "sequential":
             self.processing_handler = SequentialHandler(number_of_workers=self.number_of_workers)
         else:
-            raise RuntimeError(
-                "The processing framework '{}' is not supported.".format(self.processing_framework))
+            raise RuntimeError("The processing framework '{}' is not supported.".format(self.processing_framework))
 
         map_func = self.processing_handler.map
 
         self.optimizer = self.optimizer_class(map_func=map_func,
                                               individual_size=self.individual_size,
-                                              eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkpoint=self.from_checkpoint,
-                                              reset_hof=self.reset_hof, random_seed=self.config.random_seed)
+                                              eval_fitness=self.ep_runner.eval_fitness,
+                                              conf=self.config.optimizer,
+                                              stats=stats,
+                                              from_checkpoint=self.from_checkpoint,
+                                              reset_hof=self.reset_hof,
+                                              random_seed=self.config.random_seed)
 
         self.result_handler = ResultHandler(result_path=self.result_path,
                                             neural_network_type=self.config.brain.type,
@@ -126,13 +135,12 @@ class Experiment(object):
             final_checkpoint_data = self.optimizer.toolbox.final_checkpoint_data
         else:
             final_checkpoint_data = None
-        self.result_handler.write_result(
-            hof=self.optimizer.hof,
-            log=log,
-            time_elapsed=(time.time() - start_time),
-            output_space=self.output_space,
-            input_space=self.input_space,
-            individual_size=self.individual_size,
-            final_checkpoint_data=final_checkpoint_data)
+        self.result_handler.write_result(hof=self.optimizer.hof,
+                                         log=log,
+                                         time_elapsed=(time.time() - start_time),
+                                         output_space=self.output_space,
+                                         input_space=self.input_space,
+                                         individual_size=self.individual_size,
+                                         final_checkpoint_data=final_checkpoint_data)
         self.processing_handler.cleanup_framework()
         print("Done")

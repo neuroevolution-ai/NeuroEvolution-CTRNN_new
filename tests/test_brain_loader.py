@@ -52,7 +52,6 @@ class BrainClassDupe2(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
 
 
 class TestBrainLoader:
-
     def test_basic_init(self):
         input_space = gym.spaces.discrete.Discrete(1)
         output_space = gym.spaces.discrete.Discrete(1)
@@ -60,8 +59,7 @@ class TestBrainLoader:
 
         brain_class: typing.Type[brains.i_brain.IBrain] = brains.i_brain.registered_brains[config.type]
 
-        individual = np.zeros(
-            brain_class.get_individual_size(input_space=input_space, output_space=output_space, config=config))
+        individual = np.zeros(brain_class.get_individual_size(input_space=input_space, output_space=output_space, config=config))
         brain = brain_class(input_space=input_space, output_space=output_space, individual=individual, config=config)
 
         # Needs to be zero because the Discrete Space has n set to 1 so only zeros can be used as input

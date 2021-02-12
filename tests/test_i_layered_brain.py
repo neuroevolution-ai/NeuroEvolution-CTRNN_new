@@ -18,7 +18,6 @@ class BrainParam:
 
 
 class LayerTestCase(ILayerBasedBrain[ILayerBasedBrainCfg]):
-
     @staticmethod
     def get_number_hidden_values():
         return 1
@@ -37,41 +36,35 @@ class LayerTestCase(ILayerBasedBrain[ILayerBasedBrainCfg]):
 
 
 class TestILayeredBrain:
-
     @pytest.fixture
     def brain_param_simple(self):
-        return BrainParam(
-            weight_ih=np.array([[[[1, 2], [3, 4]]]]),
-            weight_hh=np.array([[[[5, 6], [7, 8]]]]),
-            bias_h=np.array([[[9, 10]]]),
-            hidden=np.array([[[11, 12]]]),
-            weight_ho=np.array([[13, 14], [15, 16]])
-        )
+        return BrainParam(weight_ih=np.array([[[[1, 2], [3, 4]]]]),
+                          weight_hh=np.array([[[[5, 6], [7, 8]]]]),
+                          bias_h=np.array([[[9, 10]]]),
+                          hidden=np.array([[[11, 12]]]),
+                          weight_ho=np.array([[13, 14], [15, 16]]))
 
     @pytest.fixture
     def brain_param_identity(self):
-        return BrainParam(
-            weight_ih=np.array([[[[1, 0], [0, 1]]]]),
-            weight_hh=np.array([[[[1, 0], [0, 1]]]]),
-            bias_h=np.array([[[0, 0]]]),
-            hidden=np.array([[[0, 0]]]),
-            weight_ho=np.array([[1, 0], [0, 1]])
-        )
+        return BrainParam(weight_ih=np.array([[[[1, 0], [0, 1]]]]),
+                          weight_hh=np.array([[[[1, 0], [0, 1]]]]),
+                          bias_h=np.array([[[0, 0]]]),
+                          hidden=np.array([[[0, 0]]]),
+                          weight_ho=np.array([[1, 0], [0, 1]]))
 
     @staticmethod
     def param_to_genom(param):
-        return np.concatenate(
-            [param.weight_ih.flatten(),
-             param.weight_hh.flatten(),
-             param.bias_h.flatten(),
-             param.hidden.flatten(),
-             param.weight_ho.flatten()
-             ])
+        return np.concatenate([
+            param.weight_ih.flatten(),
+            param.weight_hh.flatten(),
+            param.bias_h.flatten(),
+            param.hidden.flatten(),
+            param.weight_ho.flatten()
+        ])
 
     def test_individual(self, layer_config, brain_param_simple, box2d):
         bp = brain_param_simple
-        brain = LayerTestCase(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
-                              config=layer_config)
+        brain = LayerTestCase(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp), config=layer_config)
         assert np.array_equal(bp.weight_ih, brain.weight_ih)
         assert np.array_equal(bp.weight_hh, brain.weight_hh)
         assert np.array_equal(bp.bias_h, brain.bias_h)
@@ -80,8 +73,7 @@ class TestILayeredBrain:
 
     def test_step(self, layer_config, brain_param_identity, box2d):
         bp = brain_param_identity
-        brain = LayerTestCase(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
-                              config=layer_config)
+        brain = LayerTestCase(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp), config=layer_config)
         ob = np.array([1, 2])
         assert np.allclose(brain.hidden, np.zeros([2, 2]))
         res = brain.step(ob)
@@ -91,5 +83,5 @@ class TestILayeredBrain:
         assert np.allclose(res, ob)
         brain.step(ob)
         print(brain.hidden)
-        print(ob+ob)
+        print(ob + ob)
         assert np.allclose(brain.hidden, ob + ob)

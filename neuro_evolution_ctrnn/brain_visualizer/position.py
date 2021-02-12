@@ -7,7 +7,6 @@ from brain_visualizer import brain_visualizer
 
 
 class Positions:
-
     @staticmethod
     def get_graph_positions(visualizer: "brain_visualizer.BrainVisualizer") -> dict:
         brain_state = visualizer.brain.get_neuron_states()
@@ -130,8 +129,7 @@ class Positions:
 
             # Add another spacer, so that the input_box is centered with respect to the height
             # Take the min because for small outputs it can occur that not even one column is full
-            adjusted_height_space = round(
-                (box_height - min(neurons_per_column, values.size) * adjusted_neuron_radius * 2) / 2)
+            adjusted_height_space = round((box_height - min(neurons_per_column, values.size) * adjusted_neuron_radius * 2) / 2)
 
             default_y = current_y = visualizer.info_box_height + space + adjusted_height_space
 

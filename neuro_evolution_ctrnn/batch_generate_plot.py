@@ -44,8 +44,7 @@ for sim in simulation_folders:
 
     # instead of calling the other file, it would probably better to move the generation of the plot into a
     # separate module which is used both by plot_experiment.py and this script
-    subprocess.run(["python", "neuro_evolution_ctrnn/plot_experiment.py",
-                    sim,
-                    "--no-show",
-                    "--smooth", str(args.smooth),
-                    "--save-png", file])
+    subprocess.run([
+        "python", "neuro_evolution_ctrnn/plot_experiment.py", sim, "--no-show", "--smooth",
+        str(args.smooth), "--save-png", file
+    ])

@@ -15,10 +15,16 @@ ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
 
 class IOptimizer(abc.ABC, Generic[ConfigClass]):
-
     @abc.abstractmethod
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
-                 map_func=map, from_checkpoint=None, reset_hof=False):
+    def __init__(self,
+                 eval_fitness: Callable,
+                 individual_size: int,
+                 random_seed: int,
+                 conf: ConfigClass,
+                 stats,
+                 map_func=map,
+                 from_checkpoint=None,
+                 reset_hof=False):
         self.conf: ConfigClass = conf
         self.toolbox = toolbox = base.Toolbox()
         self.toolbox.stats = stats
@@ -68,7 +74,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         header = "gen", "nevals", "steps", "val_fit", "fitness"
         columns_len = [4, 4, 4, 8, 0]
         if conf.novelty:
-            header = header + ("novelty",)
+            header = header + ("novelty", )
             columns_len = columns_len + [0]
             logbook.chapters["novelty"].header = "min", "avg", "std", "max"
             logbook.chapters["novelty"].columns_len = [8] * 4

@@ -8,7 +8,6 @@ import time
 
 
 class TestLSTM:
-
     def test_lstm_output(self, lstm_torch_config: LstmTorchCfg, lstm_layered_config: LstmLayeredCfg):
 
         input_size = 28
@@ -16,8 +15,8 @@ class TestLSTM:
 
         number_of_inputs = 10000
 
-        input_space = gym.spaces.Box(-1, 1, (input_size,))
-        output_space = gym.spaces.Box(-1, 1, (output_size,))
+        input_space = gym.spaces.Box(-1, 1, (input_size, ))
+        output_space = gym.spaces.Box(-1, 1, (output_size, ))
 
         individual_size = LSTMPyTorch.get_individual_size(lstm_torch_config, input_space, output_space)
 
@@ -39,7 +38,7 @@ class TestLSTM:
 
         lstm_pytorch.hidden = (torch.from_numpy(hidden_pytorch), torch.from_numpy(cell_pytorch))
 
-        lstm_numpy.hidden = [[np.copy(hidden_numpy)[i], np.copy(cell_numpy)[i]]for i in range(len(np.copy(hidden_numpy)))]
+        lstm_numpy.hidden = [[np.copy(hidden_numpy)[i], np.copy(cell_numpy)[i]] for i in range(len(np.copy(hidden_numpy)))]
 
         with torch.no_grad():
             for i in range(len(lstm_layered_config.hidden_layer_structure)):
@@ -91,23 +90,21 @@ class TestLSTM:
         assert len(lstm_pytorch_outputs) == len(lstm_numpy_outputs)
         assert lstm_pytorch_outputs.size == lstm_numpy_outputs.size
 
-        print("PyTorch Mean Prediction Time {}s | NumPy Mean Prediction Time {}s"
-              .format(np.mean(lstm_pytorch_times), np.mean(lstm_numpy_times)))
+        print("PyTorch Mean Prediction Time {}s | NumPy Mean Prediction Time {}s".format(np.mean(lstm_pytorch_times),
+                                                                                         np.mean(lstm_numpy_times)))
 
-        print("PyTorch Stddev Prediction Time {}s | NumPy Stddev Prediction Time {}s"
-              .format(np.std(lstm_pytorch_times), np.std(lstm_numpy_times)))
+        print("PyTorch Stddev Prediction Time {}s | NumPy Stddev Prediction Time {}s".format(
+            np.std(lstm_pytorch_times), np.std(lstm_numpy_times)))
 
-        print("PyTorch Max Prediction Time {}s | NumPy Max Prediction Time {}s"
-              .format(np.max(lstm_pytorch_times), np.max(lstm_numpy_times)))
+        print("PyTorch Max Prediction Time {}s | NumPy Max Prediction Time {}s".format(np.max(lstm_pytorch_times),
+                                                                                       np.max(lstm_numpy_times)))
 
-        print("PyTorch Min Prediction Time {}s | NumPy Min Prediction Time {}s"
-              .format(np.min(lstm_pytorch_times), np.min(lstm_numpy_times)))
+        print("PyTorch Min Prediction Time {}s | NumPy Min Prediction Time {}s".format(np.min(lstm_pytorch_times),
+                                                                                       np.min(lstm_numpy_times)))
 
         # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
-        close_percentage = np.count_nonzero(
-            np.isclose(lstm_pytorch_outputs, lstm_numpy_outputs)) / lstm_pytorch_outputs.size
+        close_percentage = np.count_nonzero(np.isclose(lstm_pytorch_outputs, lstm_numpy_outputs)) / lstm_pytorch_outputs.size
         assert close_percentage > 0.95
 
-        print(
-            "Equal predictions between PyTorch and NumPy",
-            "Implementation of LSTM: {}% of {} predictions".format(close_percentage*100, number_of_inputs))
+        print("Equal predictions between PyTorch and NumPy",
+              "Implementation of LSTM: {}% of {} predictions".format(close_percentage * 100, number_of_inputs))

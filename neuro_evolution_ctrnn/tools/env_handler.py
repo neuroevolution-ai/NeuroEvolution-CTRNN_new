@@ -15,13 +15,11 @@ from gym.wrappers.atari_preprocessing import AtariPreprocessing
 # noinspection PyUnresolvedReferences
 import gym_memory_environments  # Needs to be imported to register our custom memory environments
 from tools.ae_wrapper import AEWrapper
-from tools.configurations import (EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg,
-                                  ProcGenEnvAttributesCfg)
+from tools.configurations import (EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg, ProcGenEnvAttributesCfg)
 
 
 class EnvHandler:
     """This class creates and modifies OpenAI-Gym environments."""
-
     def __init__(self, config: EpisodeRunnerCfg):
         self.config = config
 
@@ -31,11 +29,10 @@ class EnvHandler:
                 "For the environment 'ReacherMemory-v0' one must provide the ReacherMemoryEnvAttributesCfg" \
                 " (config.environment_attributes)"
 
-            env = gym.make(
-                env_id,
-                observation_frames=self.config.environment_attributes.observation_frames,
-                memory_frames=self.config.environment_attributes.memory_frames,
-                action_frames=self.config.environment_attributes.action_frames)
+            env = gym.make(env_id,
+                           observation_frames=self.config.environment_attributes.observation_frames,
+                           memory_frames=self.config.environment_attributes.memory_frames,
+                           action_frames=self.config.environment_attributes.action_frames)
         elif env_id.startswith("procgen"):
             logging.debug("initiating procgen with memory")
 
@@ -52,8 +49,8 @@ class EnvHandler:
             # global configuration file.
             env.env.last = 15
             env.env.min_length = 7
-            logging.debug("creating env with min_length " + str(
-                env.env.min_length) + " and also comparing results over the last " + str(env.env.last) + " runs.")
+            logging.debug("creating env with min_length " + str(env.env.min_length) +
+                          " and also comparing results over the last " + str(env.env.last) + " runs.")
 
             logging.debug("wrapping env in ReverseWrapper")
             env = ReverseWrapper(env)
@@ -92,8 +89,7 @@ class EnvHandler:
         if self.config.novelty:
             if self.config.novelty.behavior_source in ['observation', 'action', 'state']:
                 logging.debug("wrapping env in BehaviorWrapper")
-                env = BehaviorWrapper(env, self.config.novelty.behavior_source,
-                                      self.config.novelty.behavioral_interval,
+                env = BehaviorWrapper(env, self.config.novelty.behavior_source, self.config.novelty.behavioral_interval,
                                       self.config.novelty.behavioral_max_length)
 
         if self.config.max_steps_per_run:
@@ -111,7 +107,6 @@ class ProcEnvHandler(gym.Env):
     This Wrapper scales to observation to values between 0 and 1.
     Additionally it implements a seed method because for reasons unknown it not implemented upstream
     """
-
     def __init__(self, env_id: str, render: bool, conf: ProcGenEnvAttributesCfg):
         # todo: maybe add env specific configuration, but only after issue #20 has been implemented
         self.env_id = env_id
@@ -130,9 +125,7 @@ class ProcEnvHandler(gym.Env):
         assert self.input_high == self._env.observation_space.high.max(), "unexpected bounds for input space"
         assert 0 == self._env.observation_space.low.min(), "unexpected bounds for input space"
         assert 0 == self._env.observation_space.low.max(), "unexpected bounds for input space"
-        self.observation_space = Box(low=0, high=1,
-                                     shape=(self.conf.screen_size, self.conf.screen_size, 3),
-                                     dtype=self.obs_dtype)
+        self.observation_space = Box(low=0, high=1, shape=(self.conf.screen_size, self.conf.screen_size, 3), dtype=self.obs_dtype)
 
     def _make_inner_env(self, start_level):
         self.current_level = start_level
@@ -143,8 +136,7 @@ class ProcEnvHandler(gym.Env):
                        use_backgrounds=self.conf.use_backgrounds,
                        num_levels=1,
                        start_level=self.current_level,
-                       render_mode=self.render_mode
-                       )
+                       render_mode=self.render_mode)
         return env
 
     def _transform_ob(self, ob):
@@ -274,7 +266,6 @@ class BehaviorWrapper(Wrapper):
 
 class Box2DWalkerWrapper(Wrapper):
     """ simple speedup for bad agents, because some agents just stand still indefinitely and waste simulation time"""
-
     def __init__(self, *narg, **kwargs):
         super(Box2DWalkerWrapper, self).__init__(*narg, **kwargs)
         self.consecutive_non_movement = 0
@@ -300,16 +291,13 @@ class Box2DWalkerWrapper(Wrapper):
 class ReverseWrapper(Wrapper):
     """In reverse-v0 the readhead should be at a specific position when deciding which symbol to write next.
     This Wrapper adds a penalty when the head was in a wrong position, when a symbol was written"""
-
     def step(self, action):
         ob, rew, done, info = self.env.step(action)
 
         if done:
             if rew < 0:
                 inp_act, out_act, pred = action
-                dist = abs(len(self.unwrapped.target)
-                           - self.unwrapped.read_head_position
-                           - self.unwrapped.write_head_position)
+                dist = abs(len(self.unwrapped.target) - self.unwrapped.read_head_position - self.unwrapped.write_head_position)
                 if dist > 0:
                     rew -= 1. * dist
                 if self.unwrapped.MOVEMENTS[inp_act] != "left":

@@ -9,7 +9,6 @@ from tools.configurations import FeedForwardCfg
 
 
 class TestFeedForwardNN:
-
     def test_ffnn_output(self, ffnn_config: FeedForwardCfg):
 
         input_size = 28
@@ -17,8 +16,8 @@ class TestFeedForwardNN:
 
         number_of_inputs = 10000
 
-        input_space = gym.spaces.Box(-1, 1, (input_size,))
-        output_space = gym.spaces.Box(-1, 1, (output_size,))
+        input_space = gym.spaces.Box(-1, 1, (input_size, ))
+        output_space = gym.spaces.Box(-1, 1, (output_size, ))
 
         individual_size = FeedForwardPyTorch.get_individual_size(ffnn_config, input_space, output_space)
 
@@ -48,7 +47,7 @@ class TestFeedForwardNN:
                     bias_array_numpy: np.ndarray = ffnn_numpy.biases_hidden_layers[i]
 
                     assert np.array_equal(bias_array_pytorch, bias_array_numpy.flatten())
-                    assert bias_array_pytorch.shape == (hidden_layer,)
+                    assert bias_array_pytorch.shape == (hidden_layer, )
 
                 current_input = hidden_layer
 
@@ -88,34 +87,34 @@ class TestFeedForwardNN:
         assert ffnn_pytorch_outputs.size == ffnn_numpy_predict_outputs.size
 
         # Note: {:f} is used to suppress scientific notation (i.e. displaying 0.00001 instead of 1e-5)
-        print("\nPyTorch Mean Prediction Time {:f} ms | NumPy Mean Prediction Time {:f} ms"
-              .format(np.mean(ffnn_pytorch_times)*1000, np.mean(ffnn_numpy_times)*1000))
+        print("\nPyTorch Mean Prediction Time {:f} ms | NumPy Mean Prediction Time {:f} ms".format(
+            np.mean(ffnn_pytorch_times) * 1000,
+            np.mean(ffnn_numpy_times) * 1000))
 
-        print("PyTorch Stddev Prediction Time {:f} ms | NumPy Stddev Prediction Time {:f} ms"
-              .format(np.std(ffnn_pytorch_times)*1000, np.std(ffnn_numpy_times)*1000))
+        print("PyTorch Stddev Prediction Time {:f} ms | NumPy Stddev Prediction Time {:f} ms".format(
+            np.std(ffnn_pytorch_times) * 1000,
+            np.std(ffnn_numpy_times) * 1000))
 
-        print("PyTorch Max Prediction Time {:f} ms | NumPy Max Prediction Time {:f} ms"
-              .format(np.max(ffnn_pytorch_times)*1000, np.max(ffnn_numpy_times)*1000))
+        print("PyTorch Max Prediction Time {:f} ms | NumPy Max Prediction Time {:f} ms".format(
+            np.max(ffnn_pytorch_times) * 1000,
+            np.max(ffnn_numpy_times) * 1000))
 
-        print("PyTorch Min Prediction Time {:f} ms | NumPy Min Prediction Time {:f} ms"
-              .format(np.min(ffnn_pytorch_times)*1000, np.min(ffnn_numpy_times)*1000))
+        print("PyTorch Min Prediction Time {:f} ms | NumPy Min Prediction Time {:f} ms".format(
+            np.min(ffnn_pytorch_times) * 1000,
+            np.min(ffnn_numpy_times) * 1000))
 
         # Use percentage instead of np.allclose() because some results exceed the rtol value, but it is a low percentage
-        close_percentage = np.count_nonzero(
-            np.isclose(ffnn_pytorch_outputs, ffnn_numpy_outputs)) / ffnn_pytorch_outputs.size
+        close_percentage = np.count_nonzero(np.isclose(ffnn_pytorch_outputs, ffnn_numpy_outputs)) / ffnn_pytorch_outputs.size
 
         assert close_percentage > 0.98
 
-        print(
-            "Equal predictions between PyTorch and NumPy",
-            "Implementation of FFNN: {}% of {} predictions".format(close_percentage*100, number_of_inputs))
+        print("Equal predictions between PyTorch and NumPy",
+              "Implementation of FFNN: {}% of {} predictions".format(close_percentage * 100, number_of_inputs))
 
         assert ffnn_numpy_outputs.size == np.count_nonzero(
-            np.isclose(ffnn_numpy_predict_outputs.reshape(number_of_inputs, output_size),
-                       ffnn_numpy_outputs))
+            np.isclose(ffnn_numpy_predict_outputs.reshape(number_of_inputs, output_size), ffnn_numpy_outputs))
 
     def test_ffnn_predict_speedtest(self):
-
         def predict_with_maximum_speed(u, A, B, C, D, E, a, b, c, d, e):
             x = np.matmul(A, u)
             x = np.add(x, a)
@@ -143,12 +142,13 @@ class TestFeedForwardNN:
 
         number_of_inputs = 3000000
 
-        input_space = gym.spaces.Box(-1, 1, (input_size,))
-        output_space = gym.spaces.Box(-1, 1, (output_size,))
+        input_space = gym.spaces.Box(-1, 1, (input_size, ))
+        output_space = gym.spaces.Box(-1, 1, (output_size, ))
 
         ffnn_config = FeedForwardCfg(type="FeedForward_Numpy",
                                      use_bias=True,
-                                     hidden_layers=[[16, 32, 16, 8]], neuron_activation="relu",
+                                     hidden_layers=[[16, 32, 16, 8]],
+                                     neuron_activation="relu",
                                      neuron_activation_output="linear")
 
         individual_size = FeedForwardPyTorch.get_individual_size(ffnn_config, input_space, output_space)
@@ -186,5 +186,5 @@ class TestFeedForwardNN:
 
         print(relative_speed_tolerance)
 
-        print( np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed)))
-        assert number_of_inputs == np.count_nonzero( np.isclose( output_ffnn_class, output_maximum_speed))
+        print(np.count_nonzero(np.isclose(output_ffnn_class, output_maximum_speed)))
+        assert number_of_inputs == np.count_nonzero(np.isclose(output_ffnn_class, output_maximum_speed))

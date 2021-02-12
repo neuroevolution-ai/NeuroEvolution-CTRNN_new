@@ -7,7 +7,7 @@ from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
 class TestIBrain:
     low = -5.0
     high = 5.0
-    one_dimensional_shape = (20,)
+    one_dimensional_shape = (20, )
     rgb_shape = (3, 32, 32)
     multi_dimensional_shape = (30, 15)
     input_n = 50
@@ -19,10 +19,13 @@ class TestIBrain:
 
         # First test the input space
         # Not used but needed to create a Brain
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
-            ffnn_config, input_space=input_space, output_space=output_space)))
+        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(ffnn_config,
+                                                                          input_space=input_space,
+                                                                          output_space=output_space)))
 
-        brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
+        brain = FeedForwardPyTorch(input_space=input_space,
+                                   output_space=output_space,
+                                   individual=dummy_individual,
                                    config=ffnn_config)
 
         sample_input = np.ones(input_space.shape)
@@ -45,10 +48,13 @@ class TestIBrain:
 
         # First test the input space
         # Not used but needed to create a Brain
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
-            ffnn_config, input_space=input_space, output_space=output_space)))
+        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(ffnn_config,
+                                                                          input_space=input_space,
+                                                                          output_space=output_space)))
 
-        brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
+        brain = FeedForwardPyTorch(input_space=input_space,
+                                   output_space=output_space,
+                                   individual=dummy_individual,
                                    config=ffnn_config)
 
         sample_input = np.ones(input_space.shape)
@@ -58,17 +64,20 @@ class TestIBrain:
 
         # When input_space == spaces.Box the input is not transformed
         assert np.array_equal(sample_input, parsed_input)
-        assert (isinstance(parsed_input, np.ndarray) and len(
-            parsed_input.shape) == 3 and parsed_input.shape == sample_input.shape)
+        assert (isinstance(parsed_input, np.ndarray) and len(parsed_input.shape) == 3
+                and parsed_input.shape == sample_input.shape)
 
     def test_parse_discrete_space(self, ffnn_config):
         input_space = spaces.Discrete(n=self.input_n)
         output_space = spaces.Discrete(n=self.output_n)
 
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
-            ffnn_config, input_space=input_space, output_space=output_space)))
+        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(ffnn_config,
+                                                                          input_space=input_space,
+                                                                          output_space=output_space)))
 
-        brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
+        brain = FeedForwardPyTorch(input_space=input_space,
+                                   output_space=output_space,
+                                   individual=dummy_individual,
                                    config=ffnn_config)
 
         # Test input space
@@ -100,10 +109,13 @@ class TestIBrain:
         input_space = spaces.Tuple([one_dimensional_box, first_discrete, multi_dimensional_box, second_discrete])
         output_space = spaces.Tuple([second_discrete, multi_dimensional_box, one_dimensional_box, first_discrete])
 
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
-            ffnn_config, input_space=input_space, output_space=output_space)))
+        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(ffnn_config,
+                                                                          input_space=input_space,
+                                                                          output_space=output_space)))
 
-        brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
+        brain = FeedForwardPyTorch(input_space=input_space,
+                                   output_space=output_space,
+                                   individual=dummy_individual,
                                    config=ffnn_config)
 
         # Test input space

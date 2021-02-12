@@ -142,9 +142,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     @classmethod
     def get_free_parameter_usage(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        info_dict = {'V': np.count_nonzero(cls.v_mask),
-                     'W': np.count_nonzero(cls.w_mask),
-                     'T': np.count_nonzero(cls.t_mask)}
+        info_dict = {'V': np.count_nonzero(cls.v_mask), 'W': np.count_nonzero(cls.w_mask), 'T': np.count_nonzero(cls.t_mask)}
         if config.optimize_initial_neuron_state:
             info_dict['optimize_y0'] = config.number_neurons
 
@@ -171,8 +169,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if config.use_bias:
             v_mask = np.c_[v_mask, np.ones(config.number_neurons, dtype=bool)]
 
-        w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons,
-                                    config.w_mask_param)
+        w_mask = cls._generate_mask(config.w_mask, config.number_neurons, config.number_neurons, config.w_mask_param)
         # TODO The mask was flipped on the diagonal for mathematical correct structure. check if no errer exist
         t_mask = cls._generate_mask(config.t_mask, output_size, config.number_neurons, config.t_mask_param)
 
@@ -186,7 +183,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             if mask_param < 1.05:
                 raise RuntimeError("mask_param too small: {}. It must be at least +1.05.".format(mask_param))
             base = mask_param
-            indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
+            indices = [math.floor(base**y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
             indices = indices
             result = np.zeros((n, m), dtype=bool)
 
