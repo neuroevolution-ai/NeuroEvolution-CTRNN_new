@@ -40,7 +40,7 @@ def register(name: str, as_key: bool = False):
 class IBrainCfg(abc.ABC):
     type: str
     normalize_input: bool = False
-    normalize_input_target: float = 1.0
+    normalize_input_target: float = False
     use_bias: bool = False
 
 
@@ -64,14 +64,14 @@ class ILayerBasedBrainCfg(IBrainCfg):
 @register('novelty', True)
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class NoveltyCfg:
-    novelty_weight: float
-    distance: str
-    novelty_nearest_k: int
-    max_recorded_behaviors: int
-    recorded_behaviors_per_generation: int
-    behavioral_interval: int
-    behavioral_max_length: int
-    behavior_source: str  # Which value should be used for BC? 'action', 'observation' or 'state'
+    novelty_weight: float = 1.0
+    distance: str = 'euclid'  # 'euclid', 'NCD', 'equal'
+    novelty_nearest_k: int = 0
+    max_recorded_behaviors: int = 100
+    recorded_behaviors_per_generation: int = 1
+    behavioral_interval: int = -1
+    behavioral_max_length: int = 1
+    behavior_source: str = 'observation'  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
@@ -211,6 +211,8 @@ class IOptimizerCfg(abc.ABC):
     fix_seed_for_generation: bool = True
     checkpoint_frequency: int = 0
     hof_size: int = 5
+    validation_number_runs: int = 0
+    validation_initial_seed: int = 1000
 
 
 @register('MU_ES')
