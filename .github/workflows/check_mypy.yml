@@ -26,4 +26,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Type Checks with mypy
       run: |
-        mypy --follow-imports=normal . || true
+        mypy --follow-imports=normal .
