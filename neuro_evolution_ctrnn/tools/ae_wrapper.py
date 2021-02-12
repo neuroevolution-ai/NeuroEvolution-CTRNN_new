@@ -10,14 +10,14 @@ import logging
 
 
 class AEWrapper(gym.Wrapper):
-
     def __init__(self, env):
         super(AEWrapper, self).__init__(env)
         logging.debug("Setting number of torch-threads to 1")
         # see https://github.com/pytorch/pytorch/issues/13757
         torch.set_num_threads(1)
         self.fe = FeatureExtractor(use_diff=True)
-        self.observation_space = Box(low=0, high=10,
+        self.observation_space = Box(low=0,
+                                     high=10,
                                      shape=(30, 1),
                                      dtype=np.float16)
         assert env.spec.id == "QbertNoFrameskip-v4", "this wrapper only works for QbertNoFrameskip-v4"
@@ -32,15 +32,18 @@ class AEWrapper(gym.Wrapper):
 
 
 class AutoEncoderVAE(nn.Module):
-
     def __init__(self):
         super(AutoEncoderVAE, self).__init__()
 
         # encoder
         self.conv1 = nn.Conv2d(3, 20, kernel_size=5, stride=1, padding=(2, 2))
-        self.maxpool1 = nn.MaxPool2d(kernel_size=4, stride=4, return_indices=True)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=4,
+                                     stride=4,
+                                     return_indices=True)
         self.conv2 = nn.Conv2d(20, 40, kernel_size=7, stride=1, padding=(3, 3))
-        self.maxpool2 = nn.MaxPool2d(kernel_size=4, stride=4, return_indices=True)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=4,
+                                     stride=4,
+                                     return_indices=True)
 
         # Latent View
 
@@ -73,7 +76,9 @@ class AutoEncoderVAE(nn.Module):
 class FeatureExtractor:
     def __init__(self, use_diff):
         self.ae = AutoEncoderVAE()
-        self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt", map_location=torch.device("cpu")))
+        self.ae.load_state_dict(
+            torch.load("neuro_evolution_ctrnn/tools/ae.pt",
+                       map_location=torch.device("cpu")))
         # self.ae.load_state_dict(torch.load("neuro_evolution_ctrnn/tools/ae.pt"))
 
         # Sets the Model into Evaluation Mode
@@ -126,16 +131,20 @@ def feature2img(feature):
 if __name__ == "__main__":
     fe = FeatureExtractor(True)
     env = gym.make("QbertNoFrameskip-v4")
-    video_obs = cv2.VideoWriter("obs.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
-    video_pred = cv2.VideoWriter("pred.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
-    video_feat = cv2.VideoWriter("feat.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25, (160, 210), True)
+    video_obs = cv2.VideoWriter("obs.avi", cv2.VideoWriter_fourcc(*"PIM1"), 25,
+                                (160, 210), True)
+    video_pred = cv2.VideoWriter("pred.avi", cv2.VideoWriter_fourcc(*"PIM1"),
+                                 25, (160, 210), True)
+    video_feat = cv2.VideoWriter("feat.avi", cv2.VideoWriter_fourcc(*"PIM1"),
+                                 25, (160, 210), True)
     for _ in range(1):
         ob = env.reset()
         done = False
         step = 0
         while not done:
             step += 1
-            observation, reward, done, info = env.step(env.action_space.sample())  # take a random action
+            observation, reward, done, info = env.step(
+                env.action_space.sample())  # take a random action
             video_obs.write(observation.astype(np.uint8))
             video_pred.write(fe.reencode(observation))
             video_feat.write(feature2img(fe.extract(observation)))

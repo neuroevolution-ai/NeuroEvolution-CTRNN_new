@@ -15,10 +15,16 @@ ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
 
 class IOptimizer(abc.ABC, Generic[ConfigClass]):
-
     @abc.abstractmethod
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
-                 map_func=map, from_checkpoint=None, reset_hof=False):
+    def __init__(self,
+                 eval_fitness: Callable,
+                 individual_size: int,
+                 random_seed: int,
+                 conf: ConfigClass,
+                 stats,
+                 map_func=map,
+                 from_checkpoint=None,
+                 reset_hof=False):
         self.conf: ConfigClass = conf
         self.toolbox = toolbox = base.Toolbox()
         self.toolbox.stats = stats
@@ -33,7 +39,9 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
         self.reset_hof = reset_hof
         if conf.novelty and not conf.fix_seed_for_generation:
-            logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
+            logging.warning(
+                "When using novelty you should also set fix_seed_for_generation to true. "
+            )
 
     @abc.abstractmethod
     def train(self, number_generations) -> tools.Logbook:
@@ -43,8 +51,10 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
     def register_checkpoints(toolbox, checkpoint_frequency):
         cp_base_path = "checkpoints"
         Path(cp_base_path).mkdir(parents=True, exist_ok=True)
-        logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
-        toolbox.register("checkpoint", write_checkpoint, cp_base_path, checkpoint_frequency)
+        logging.info("writing checkpoints to: " +
+                     str(os.path.abspath(cp_base_path)))
+        toolbox.register("checkpoint", write_checkpoint, cp_base_path,
+                         checkpoint_frequency)
 
     def register_novelty_distance(self, toolbox):
         conf = self.conf
@@ -52,11 +62,14 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             if conf.novelty.distance == "euclid":
                 toolbox.register("get_distance", euklidian_distance)
             elif conf.novelty.distance == "NCD":
-                toolbox.register("get_distance", normalized_compression_distance)
+                toolbox.register("get_distance",
+                                 normalized_compression_distance)
             elif conf.novelty.distance == "equal":
                 toolbox.register("get_distance", equal_elements_distance)
             else:
-                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
+                raise RuntimeError(
+                    "unknown configuration value for distance: " +
+                    str(conf.novelty.distance))
         else:
             toolbox.register("get_distance", lambda *args: 0)
 
@@ -68,7 +81,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         header = "gen", "nevals", "steps", "val_fit", "fitness"
         columns_len = [4, 4, 4, 8, 0]
         if conf.novelty:
-            header = header + ("novelty",)
+            header = header + ("novelty", )
             columns_len = columns_len + [0]
             logbook.chapters["novelty"].header = "min", "avg", "std", "max"
             logbook.chapters["novelty"].columns_len = [8] * 4
@@ -79,7 +92,9 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         return logbook
 
     @staticmethod
-    def strip_strategy_from_population(population, mutation_learned, strategy_parameter_per_gene=False):
+    def strip_strategy_from_population(population,
+                                       mutation_learned,
+                                       strategy_parameter_per_gene=False):
         """Sometimes strategy parameters are learned along side brain parameters. In these caeses
         the strategy parameters need to be stripped  from the population before sending the brain genomes to
         the evaluation. """

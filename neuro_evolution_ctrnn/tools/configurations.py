@@ -26,10 +26,12 @@ def register(name: str, as_key: bool = False):
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
         if as_key:
-            assert name not in registered_keys, 'key "' + str(name) + '" was already registered'
+            assert name not in registered_keys, 'key "' + str(
+                name) + '" was already registered'
             registered_keys[name] = type_class
         else:
-            assert name not in registered_types, 'type "' + str(name) + '" was already registered'
+            assert name not in registered_types, 'type "' + str(
+                name) + '" was already registered'
             registered_types[name] = type_class
         return type_class
 

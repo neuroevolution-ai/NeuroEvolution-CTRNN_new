@@ -9,8 +9,6 @@ from tools.configurations import ExperimentCfg, registered_types, NoveltyCfg, re
 
 class ConfigReader:
     """Reads a configuration from a JSON string and returns a valid config object."""
-
-
     @classmethod
     def _replace_dicts_with_types(cls, node, depth=0):
         for key, item in node.items():
@@ -27,9 +25,10 @@ class ConfigReader:
                 try:
                     node[key] = found_type(**item)
                 except TypeError:
-                    logging.error("Couldn't turn dictionary into type. "
-                                  "See tools.configurations for a list of optional and required attributes for "
-                                  "each type.")
+                    logging.error(
+                        "Couldn't turn dictionary into type. "
+                        "See tools.configurations for a list of optional and required attributes for "
+                        "each type.")
                     raise
 
     @classmethod

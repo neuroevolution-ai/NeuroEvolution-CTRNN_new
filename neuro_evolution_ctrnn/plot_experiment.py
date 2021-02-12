@@ -38,27 +38,39 @@ args = PlotArgs(underscores_to_dashes=True).parse_args()
 
 
 # Plot results
-def my_plot(axis, *nargs, **kwargs, ):
+def my_plot(
+    axis,
+    *nargs,
+    **kwargs,
+):
     lst = list(nargs)
     if args.smooth:
         lst[1] = gaussian_filter1d(nargs[1], sigma=args.smooth)
         t = tuple(lst)
         kwargs["alpha"] = 0.8
-        axis.plot(*t, **kwargs, )
+        axis.plot(
+            *t,
+            **kwargs,
+        )
         kwargs["alpha"] = 0.2
         del kwargs["label"]
     axis.plot(*nargs, **kwargs)
 
 
 def plot_chapter(axis, chapter, gens, colors):
-    fit_min, fit_avg, fit_max, fit_std = chapter.select('min', 'avg', 'max', 'std')
+    fit_min, fit_avg, fit_max, fit_std = chapter.select(
+        'min', 'avg', 'max', 'std')
 
     std_low = list(map(add, fit_avg, np.array(fit_std) / 2))
     std_high = list(map(sub, fit_avg, np.array(fit_std) / 2))
 
     my_plot(axis, gens, fit_max, '-', color=colors[0], label="maximum")
     my_plot(axis, gens, fit_avg, '-', color=colors[1], label="average")
-    axis.fill_between(generations, std_low, std_high, facecolor=colors[2], alpha=0.15,
+    axis.fill_between(generations,
+                      std_low,
+                      std_high,
+                      facecolor=colors[2],
+                      alpha=0.15,
                       label='variance')
     my_plot(axis, gens, fit_min, '-', color=colors[3], label="minimum")
 
@@ -82,8 +94,9 @@ if conf['brain']['type'] == 'CNN_CTRNN':
 else:
     nn = conf['brain']['number_neurons']
 
-params_display = conf['environment'] + "\n" + conf['brain']['type'] + " + " + conf['optimizer'][
-    'type'].replace('_', ' ') + "\nneurons: " + str()
+params_display = conf['environment'] + "\n" + conf['brain'][
+    'type'] + " + " + conf['optimizer']['type'].replace(
+        '_', ' ') + "\nneurons: " + str()
 
 fig, ax1 = plt.subplots()
 plt.style.use('seaborn-paper')
@@ -92,16 +105,26 @@ generations = [i for i in range(len(log))]
 if "val_fit" in log[0]:
     val_fit = log.select('val_fit')
     my_plot(ax1, generations, val_fit, '-', color='orange', label="val_fit")
-plot_chapter(ax1, log.chapters["fitness"], generations, ("green", "teal", "teal", 'blue'))
+plot_chapter(ax1, log.chapters["fitness"], generations,
+             ("green", "teal", "teal", 'blue'))
 
 ax1.set_xlabel('Generations')
 ax1.set_ylabel('Fitness')
 ax1.legend(loc='upper left')
 ax1.grid()
 plt.title(os.path.basename(args.dir).replace('_', ' '))
-ax1.text(0.96, 0.05, params_display, ha='right',
-         fontsize=8, fontname='Ubuntu', transform=ax1.transAxes,
-         bbox={'facecolor': 'white', 'alpha': 0.4, 'pad': 8})
+ax1.text(0.96,
+         0.05,
+         params_display,
+         ha='right',
+         fontsize=8,
+         fontname='Ubuntu',
+         transform=ax1.transAxes,
+         bbox={
+             'facecolor': 'white',
+             'alpha': 0.4,
+             'pad': 8
+         })
 
 if args.plot_novelty:
     # quickfix because first value is bugged
@@ -112,7 +135,8 @@ if args.plot_novelty:
 
     ax2 = plt.twinx()
     ax2.set_ylabel('Novelty')
-    plot_chapter(ax2, log.chapters["novelty"], generations, ("yellow", "orange", "orange", 'pink'))
+    plot_chapter(ax2, log.chapters["novelty"], generations,
+                 ("yellow", "orange", "orange", 'pink'))
     ax2.legend(loc='lower left')
 
 if args.save_png:
@@ -121,7 +145,9 @@ if args.save_png:
 
 if args.save_tikz:
     tikzplotlib.clean_figure(target_resolution=80)
-    tikzplotlib.save(filepath=args.save_tikz, strict=True, axis_height='8cm',
+    tikzplotlib.save(filepath=args.save_tikz,
+                     strict=True,
+                     axis_height='8cm',
                      axis_width='10cm')
 if not args.no_show:
     plt.show()

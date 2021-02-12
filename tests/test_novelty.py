@@ -12,7 +12,8 @@ class TestNovelty:
     def test_euklidian_distance(self):
         assert 1 == euklidian_distance([0, 0, 0], [1, 0, 0])
         assert math.sqrt(3) == euklidian_distance([0, 0, 0], [1, 1, 1])
-        assert math.sqrt(3) == euklidian_distance([0, 0, 0], [1, 1, 1, 1, 2, 3, 4, 5, 3, 6, 7, 8])
+        assert math.sqrt(3) == euklidian_distance(
+            [0, 0, 0], [1, 1, 1, 1, 2, 3, 4, 5, 3, 6, 7, 8])
 
     def test_equal_elements_distance(self):
         assert 0 == equal_elements_distance([1, 1], [1, 1])
@@ -30,28 +31,36 @@ class TestNovelty:
     def test_normalized_compression_distance(self):
         a = [0, 1] * 1000
         b = [1, 0] * 1000
-        c = [1, 4, 6, 46, 8, 2, 5, 4, 4, 0, 4, 8, 46, 52, 4, 5, 7, 8, 8, 4] * 100
+        c = [1, 4, 6, 46, 8, 2, 5, 4, 4, 0, 4, 8, 46, 52, 4, 5, 7, 8, 8, 4
+             ] * 100
         d = [1, 0] * 10
 
         # test symmetry
-        assert isclose(normalized_compression_distance(a, c), normalized_compression_distance(c, a))
+        assert isclose(normalized_compression_distance(a, c),
+                       normalized_compression_distance(c, a))
         # assert isclose(normalized_compression_distance(a, b), normalized_compression_distance(b, a))
 
         # test plausibility
-        assert normalized_compression_distance(a, b) < normalized_compression_distance(a, c)
-        assert normalized_compression_distance(a, d) < normalized_compression_distance(a, c)
+        assert normalized_compression_distance(
+            a, b) < normalized_compression_distance(a, c)
+        assert normalized_compression_distance(
+            a, d) < normalized_compression_distance(a, c)
 
         # test uneven lengths and plausibility
         # assert normalized_compression_distance(a, d) <= normalized_compression_distance(a, b)
         # note: some of these don't work with compression-level 1.
-        assert normalized_compression_distance(b, d) < normalized_compression_distance(a, d)
-        assert normalized_compression_distance(c, c * 10) < normalized_compression_distance(a, c)
-        assert normalized_compression_distance(c, c) < normalized_compression_distance(c, c * 10)
+        assert normalized_compression_distance(
+            b, d) < normalized_compression_distance(a, d)
+        assert normalized_compression_distance(
+            c, c * 10) < normalized_compression_distance(a, c)
+        assert normalized_compression_distance(
+            c, c) < normalized_compression_distance(c, c * 10)
 
         # test precomputed values
         assert isclose(
             normalized_compression_distance(a=a, b=b),
-            normalized_compression_distance(a=a, b=b,
-                                            a_len=len(compress(bytearray(a), 1)),
-                                            b_len=len(compress(bytearray(b), 1))
-                                            ))
+            normalized_compression_distance(
+                a=a,
+                b=b,
+                a_len=len(compress(bytearray(a), 1)),
+                b_len=len(compress(bytearray(b), 1))))

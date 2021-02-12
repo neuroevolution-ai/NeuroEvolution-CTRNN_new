@@ -41,10 +41,14 @@ def write_checkpoint(base_path, frequency, data):
     if data["generation"] % frequency != 0:
         return
 
-    filename = os.path.join(base_path, "checkpoint_" + str(data["generation"]) + ".pkl")
+    filename = os.path.join(base_path,
+                            "checkpoint_" + str(data["generation"]) + ".pkl")
     logging.info("Writing checkpoint " + filename)
     with open(filename, "wb") as cp_file:
-        pickle.dump(data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
+        pickle.dump(data,
+                    cp_file,
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                    fix_imports=False)
 
 
 def get_checkpoint(checkpoint):

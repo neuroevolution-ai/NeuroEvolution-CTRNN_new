@@ -8,11 +8,13 @@ import logging
 class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
     MIN_REWARD_SHORTFALL_FOR_PROMOTION = -7.5
 
-    def __init__(self, observation_frames: int, memory_frames: int, action_frames: int):
+    def __init__(self, observation_frames: int, memory_frames: int,
+                 action_frames: int):
         self.episode_total_reward = 0.0
-        super(ReacherMemoryEnvDynamic, self).__init__(observation_frames=observation_frames,
-                                                      memory_frames=memory_frames,
-                                                      action_frames=action_frames)
+        super(ReacherMemoryEnvDynamic,
+              self).__init__(observation_frames=observation_frames,
+                             memory_frames=memory_frames,
+                             action_frames=action_frames)
         self.reward_shortfalls = []
         self.last = 600
         self.memory_frames_min = memory_frames
@@ -45,7 +47,8 @@ class ReacherMemoryEnvDynamic(ReacherMemoryEnv):
                 self.memory_frames_min < self.memory_frames_max:
             self.memory_frames_min += 1
             self.reward_shortfalls = []
-            logging.info("promotion! memory_frames_min is now " + str(self.memory_frames_min))
+            logging.info("promotion! memory_frames_min is now " +
+                         str(self.memory_frames_min))
 
     def reset(self):
         self._check_levelup()

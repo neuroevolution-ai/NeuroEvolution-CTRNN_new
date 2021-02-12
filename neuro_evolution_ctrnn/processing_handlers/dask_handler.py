@@ -9,7 +9,6 @@ from processing_handlers.i_processing_handler import IProcessingHandler
 
 class _CreatorPlugin(WorkerPlugin):
     """Initiated global states for every worker."""
-
     def __init__(self, brain_class: Union[ContinuousTimeRNN]):
         # Get Class-Variable from main thread to re-initialize them on worker
         self.brain_class = brain_class
@@ -29,8 +28,10 @@ class _CreatorPlugin(WorkerPlugin):
 
 class DaskHandler(IProcessingHandler):
     """This class wraps all Dask related functions."""
-
-    def __init__(self, number_of_workers, brain_class, worker_log_level=logging.WARNING):
+    def __init__(self,
+                 number_of_workers,
+                 brain_class,
+                 worker_log_level=logging.WARNING):
         super().__init__(number_of_workers)
         self._client: Optional[Client] = None
         self._cluster: Optional[LocalCluster] = None
@@ -44,19 +45,28 @@ class DaskHandler(IProcessingHandler):
 
         # threads_per_worker must be one, because atari-env is not thread-safe.
         # And because lower the thread-count from the default, we must increase the number of workers
-        self._cluster = LocalCluster(processes=True, asynchronous=False, threads_per_worker=1,
+        self._cluster = LocalCluster(processes=True,
+                                     asynchronous=False,
+                                     threads_per_worker=1,
                                      silence_logs=self.worker_log_level,
                                      n_workers=self.number_of_workers,
                                      memory_pause_fraction=False,
-                                     lifetime='15 minutes', lifetime_stagger='5 minutes', lifetime_restart=True,
+                                     lifetime='15 minutes',
+                                     lifetime_stagger='5 minutes',
+                                     lifetime_restart=True,
                                      interface="lo")
         self._client = Client(self._cluster)
-        self._client.register_worker_plugin(_CreatorPlugin(self.brain_class), name="creator-plugin")
-        logging.info("Dask dashboard available at port: " + str(self._client.scheduler_info()["services"]["dashboard"]))
+        self._client.register_worker_plugin(_CreatorPlugin(self.brain_class),
+                                            name="creator-plugin")
+        logging.info(
+            "Dask dashboard available at port: " +
+            str(self._client.scheduler_info()["services"]["dashboard"]))
 
     def map(self, func, *iterable):
         if not self._client:
-            raise RuntimeError("Dask client not initialized. Call \"init_framework\" before calling \"map\"")
+            raise RuntimeError(
+                "Dask client not initialized. Call \"init_framework\" before calling \"map\""
+            )
         return self._client.gather(self._client.map(func, *iterable))
 
     def cleanup_framework(self):

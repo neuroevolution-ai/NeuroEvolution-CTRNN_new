@@ -1,5 +1,3 @@
-
-
 import pickle
 import os
 from deap import base
@@ -7,7 +5,7 @@ from deap import creator
 from deap import tools
 import numpy as np
 
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("FitnessMax", base.Fitness, weights=(1.0, ))
 creator.create("Individual", list, typecode='b', fitness=creator.FitnessMax)
 with open(os.path.join("../checkpoint_4000.pkl"), "rb") as read_file_hof:
     # creator is needed to unpickle HOF

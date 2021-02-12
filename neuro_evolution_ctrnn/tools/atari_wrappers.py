@@ -134,14 +134,18 @@ class WarpFrame(gym.ObservationWrapper):
         """Warp frames to 84x84 as done in the Nature paper and later work."""
         gym.ObservationWrapper.__init__(self, env)
         self.res = 84
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.res, self.res, 1))
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(self.res, self.res, 1))
         self.viewer = None
         self.show_warped = show_warped
 
     def _observation(self, obs):
-        frame = np.dot(obs.astype('float32'), np.array([0.299, 0.587, 0.114], 'float32'))
-        frame = np.array(Image.fromarray(frame).resize((self.res, self.res),
-                                                       resample=Image.BILINEAR), dtype=np.uint8)
+        frame = np.dot(obs.astype('float32'),
+                       np.array([0.299, 0.587, 0.114], 'float32'))
+        frame = np.array(Image.fromarray(frame).resize(
+            (self.res, self.res), resample=Image.BILINEAR),
+                         dtype=np.uint8)
         return frame.reshape((self.res, self.res, 1))
 
     def _render(self, mode='human', close=False):
@@ -151,7 +155,8 @@ class WarpFrame(gym.ObservationWrapper):
             from gym.envs.classic_control import rendering
             if self.viewer is None:
                 self.viewer = rendering.SimpleImageViewer()
-            img = self._observation(self.env._render('rgb_array', close)) * np.ones([1, 1, 3], dtype=np.uint8)
+            img = self._observation(self.env._render(
+                'rgb_array', close)) * np.ones([1, 1, 3], dtype=np.uint8)
             self.viewer.imshow(img)
             return img
         else:
@@ -166,12 +171,15 @@ class FrameStack(gym.Wrapper):
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
         assert shp[2] == 1  # can only stack 1-channel frames
-        self.observation_space = spaces.Box(low=0, high=255, shape=(shp[0], shp[1], k))
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(shp[0], shp[1], k))
 
     def _reset(self):
         """Clear buffer and re-fill by duplicating the first observation."""
         ob = self.env.reset()
-        for _ in range(self.k): self.frames.append(ob)
+        for _ in range(self.k):
+            self.frames.append(ob)
         return self._observation()
 
     def _step(self, action):
@@ -196,18 +204,27 @@ class DiscretizeActions(gym.Wrapper):
         """Buffer observations and stack across channels (last axis)."""
         gym.Wrapper.__init__(self, env)
         self.temp_action = env.action_space
-        self.action_space = spaces.Discrete(5 ** int(np.prod(env.action_space.shape)))
+        self.action_space = spaces.Discrete(5**int(
+            np.prod(env.action_space.shape)))
 
     def _step(self, action):
         cont_action = self.temp_action.low.copy()
         for i in range(cont_action.size):
-            cont_action[i] += (self.temp_action.high[i] - self.temp_action.low[i]) * float(int(action) % 5) / 4.0
+            cont_action[i] += (self.temp_action.high[i] -
+                               self.temp_action.low[i]) * float(
+                                   int(action) % 5) / 4.0
             action = int(action / 5)
         return self.env.step(cont_action)
 
 
 # def wrap_deepmind(env, episode_life=True, clip_rewards=True):
-def wrap_deepmind(env, episode_life=False, skip=4, stack_frames=4, noop_max=30, noops=None, show_warped=False):
+def wrap_deepmind(env,
+                  episode_life=False,
+                  skip=4,
+                  stack_frames=4,
+                  noop_max=30,
+                  noops=None,
+                  show_warped=False):
     """Configure environment for DeepMind-style Atari.
 
     Note: this does not include frame stacking!"""

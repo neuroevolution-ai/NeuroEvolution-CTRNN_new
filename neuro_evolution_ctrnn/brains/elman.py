@@ -10,7 +10,6 @@ import torch.nn as nn
 
 @register_brain("ELMAN", ElmanCfg)
 class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
-
     @staticmethod
     def get_number_hidden_values():
         return 1
@@ -20,14 +19,15 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         return 1
 
     @staticmethod
-    def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h, hidden):
+    def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h,
+                   hidden):
         result = np.tanh(
             np.dot(weight_ih[0], layer_input) +
-            np.dot(weight_hh[0], hidden[0]) +
-            bias_h[0])
+            np.dot(weight_hh[0], hidden[0]) + bias_h[0])
         return [[result], result]
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanCfg):
+    def __init__(self, input_space: Space, output_space: Space,
+                 individual: np.ndarray, config: ElmanCfg):
         super().__init__(input_space, output_space, individual, config)
 
     def get_neuron_states(self):
@@ -38,13 +38,19 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         # Is used to draw the lines in the visualization
         result: np.array = self.weight_hh[0][0]
         for i in range(1, len(self.hidden)):
-            result = self.append_matrix_horizontally(result, self.append_matrix_vertically(
-                np.zeros((len(self.weight_ih[i][0]), len(result[0]) - len(self.weight_ih[i][0][0]))).tolist(),
-                self.weight_ih[i][0]))
+            result = self.append_matrix_horizontally(
+                result,
+                self.append_matrix_vertically(
+                    np.zeros((len(self.weight_ih[i][0]), len(result[0]) -
+                              len(self.weight_ih[i][0][0]))).tolist(),
+                    self.weight_ih[i][0]))
 
-            result = self.append_matrix_vertically(result, self.append_matrix_horizontally(
-                np.zeros((len(result) - len(self.weight_hh[i][0]), len(self.weight_hh[i][0][0]))).tolist(),
-                self.weight_hh[i][0].tolist()))
+            result = self.append_matrix_vertically(
+                result,
+                self.append_matrix_horizontally(
+                    np.zeros((len(result) - len(self.weight_hh[i][0]),
+                              len(self.weight_hh[i][0][0]))).tolist(),
+                    self.weight_hh[i][0].tolist()))
         return np.array(result)
 
     @staticmethod
@@ -59,32 +65,33 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
         # TODO visualize bias
         return self.append_matrix_horizontally(
             self.weight_ih[0][0],
-            np.zeros((len(self.get_neuron_states()) - len(self.weight_ih[0][0]), len(self.weight_ih[0][0][0])))
-        )
+            np.zeros(
+                (len(self.get_neuron_states()) - len(self.weight_ih[0][0]),
+                 len(self.weight_ih[0][0][0]))))
 
     def get_output_weight_matrix(self):
         return self.append_matrix_vertically(
-            np.zeros((len(self.weight_ho), len(self.get_neuron_states()) - len(self.weight_ho[0]))),
-            self.weight_ho
-        )
+            np.zeros((len(self.weight_ho),
+                      len(self.get_neuron_states()) - len(self.weight_ho[0]))),
+            self.weight_ho)
 
 
 @register_brain("ElmanTorch", ElmanTorchCfg)
 class ElmanPytorch(IPytorchBrain[ElmanTorchCfg]):
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanTorchCfg):
-        IPytorchBrain.__init__(self, input_space, output_space, individual, config)
+    def __init__(self, input_space: Space, output_space: Space,
+                 individual: np.ndarray, config: ElmanTorchCfg):
+        IPytorchBrain.__init__(self, input_space, output_space, individual,
+                               config)
 
     def get_brain(self, config: IPytorchBrainCfg, input_size):
-        return nn.RNN(
-            input_size=input_size, hidden_size=config.hidden_size,
-            num_layers=config.num_layers, bias=config.use_bias)
+        return nn.RNN(input_size=input_size,
+                      hidden_size=config.hidden_size,
+                      num_layers=config.num_layers,
+                      bias=config.use_bias)
 
     @staticmethod
     def get_hidden(config: IPytorchBrainCfg):
-        return (
-            torch.zeros(config.num_layers, 1, config.hidden_size)
-        )
+        return (torch.zeros(config.num_layers, 1, config.hidden_size))
 
     @staticmethod
     def get_number_gates():

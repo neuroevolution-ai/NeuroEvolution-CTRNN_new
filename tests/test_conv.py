@@ -5,9 +5,9 @@ import time
 import pytest
 
 
-@pytest.mark.skip(reason="General Testing, not a test case of the program itself")
+@pytest.mark.skip(
+    reason="General Testing, not a test case of the program itself")
 class TestConvolutionTimes:
-
     def setup_method(self):
         self.input_size = (1, 3, 64, 64)
 
@@ -50,5 +50,3 @@ class TestConvolutionTimes:
         print(result_scipy)
         print("---- TORCH:--------")
         print(result_torch)
-
-
