@@ -134,7 +134,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         elif isinstance(relevant_space, spaces.Tuple):
             # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
             # a tuple where each entry in the tuple is linked to the corresponding Space.
-            brain_input = []
+            parsed_brain_input = []
             for i, sub_input in enumerate(brain_input):
                 if isinstance(relevant_space[i], spaces.Tuple):
                     raise RuntimeError("""Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
@@ -143,8 +143,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
                 # Inputs from the sub spaces are flattened and concatenated here, otherwise some brains could not
                 # work with this
-                brain_input = np.concatenate((brain_input, parsed_sub_input.flatten()))
-            return np.array(brain_input)
+                parsed_brain_input = np.concatenate((parsed_brain_input, parsed_sub_input.flatten()))
+            return np.array(parsed_brain_input)
 
         else:
             raise RuntimeError(
