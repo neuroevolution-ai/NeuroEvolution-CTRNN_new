@@ -1,13 +1,14 @@
 from gym.spaces import Space, Box
 import numpy as np
 
-from brains.i_brain import IBrain
+from brains import IBrain, register_brain
 from brains.ffnn import FeedForwardNumPy
 from brains.lstm import LSTMLayered
 from tools.configurations import ConcatenatedBrainLSTMCfg, FeedForwardCfg, LstmLayeredCfg
 
 
-class ConcatenatedLSTM(IBrain):
+@register_brain("ConcatenatedBrain_LSTM", ConcatenatedBrainLSTMCfg)
+class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray,
                  config: ConcatenatedBrainLSTMCfg):
         super().__init__(input_space, output_space, individual, config)
@@ -34,10 +35,10 @@ class ConcatenatedLSTM(IBrain):
             current_index += ff_front_individual_size
 
         lstm_individual_size = LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
-                                                             Box(-1, 1, (lstm_output_size,)))
+                                                               Box(-1, 1, (lstm_output_size,)))
 
         self.lstm = LSTMLayered(Box(-1, 1, (lstm_input_size,)), Box(-1, 1, (lstm_output_size,)),
-                              individual[current_index:current_index + lstm_individual_size], lstm_config)
+                                individual[current_index:current_index + lstm_individual_size], lstm_config)
 
         current_index += lstm_individual_size
 
@@ -108,7 +109,7 @@ class ConcatenatedLSTM(IBrain):
                                                                     Box(-1, 1, (lstm_input_size,)))
 
         individual_size += LSTMLayered.get_individual_size(lstm_config, Box(-1, 1, (lstm_input_size,)),
-                                                         Box(-1, 1, (lstm_output_size,)))
+                                                           Box(-1, 1, (lstm_output_size,)))
 
         if config.feed_forward_back:
             individual_size += FeedForwardNumPy.get_individual_size(feed_forward_back_cfg,

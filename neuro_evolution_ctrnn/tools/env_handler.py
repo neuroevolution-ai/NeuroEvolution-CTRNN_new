@@ -1,16 +1,22 @@
-import gym
+import copy
 import logging
-from gym.wrappers.atari_preprocessing import AtariPreprocessing
-from tools.configurations import EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg, \
-    ProcGenEnvAttributesCfg
-from gym import Wrapper
 from bz2 import BZ2Compressor
 from typing import Union, Iterable
-import numpy as np
+
 import cv2
+import gym
+import numpy as np
+# noinspection PyUnresolvedReferences
+import pybullet_envs  # Needs to be imported to register PyBullet environments
+from gym import Wrapper
 from gym.spaces import Box
+from gym.wrappers.atari_preprocessing import AtariPreprocessing
+
+# noinspection PyUnresolvedReferences
+import gym_memory_environments  # Needs to be imported to register our custom memory environments
 from tools.ae_wrapper import AEWrapper
-import copy
+from tools.configurations import (EpisodeRunnerCfg, ReacherMemoryEnvAttributesCfg, AtariEnvAttributesCfg,
+                                  ProcGenEnvAttributesCfg)
 
 
 class EnvHandler:

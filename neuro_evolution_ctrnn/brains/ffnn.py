@@ -1,13 +1,15 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from brains.i_brain import IBrain
+from brains.i_brain import IBrain, register_brain
 from tools.configurations import FeedForwardCfg
 from gym.spaces import Space
-from typing import List, Callable
+from typing import List, Callable, TypeVar
+
+FeedForwardConfigClass = TypeVar('FeedForwardConfigClass', bound=FeedForwardCfg)
 
 
-class FeedForward(IBrain[FeedForwardCfg]):
+class FeedForward(IBrain[FeedForwardConfigClass]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
@@ -67,7 +69,7 @@ class FeedForward(IBrain[FeedForwardCfg]):
                 "larger than 0.".format(hidden_layers))
 
     @classmethod
-    def get_free_parameter_usage(cls, config: FeedForwardCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
         input_size = cls._size_from_space(input_space)
         output_size = cls._size_from_space(output_space)
 
@@ -88,7 +90,8 @@ class FeedForward(IBrain[FeedForwardCfg]):
         return {'individual_size': individual_size}
 
 
-class FeedForwardPyTorch(nn.Module, FeedForward):
+@register_brain("FeedForward_PyTorch", FeedForwardCfg)
+class FeedForwardPyTorch(nn.Module, FeedForward[FeedForwardCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         nn.Module.__init__(self)
@@ -155,7 +158,8 @@ class FeedForwardPyTorch(nn.Module, FeedForward):
             return x.view(self.output_size).numpy()
 
 
-class FeedForwardNumPy(FeedForward):
+@register_brain("FeedForward_NumPy", FeedForwardCfg)
+class FeedForwardNumPy(FeedForward[FeedForwardCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: FeedForwardCfg):
         super().__init__(input_space, output_space, individual, config)
