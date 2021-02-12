@@ -6,12 +6,7 @@ from typing import Type
 import numpy as np
 from deap import tools
 
-from brains.continuous_time_rnn import ContinuousTimeRNN
-from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
-from brains.i_brain import IBrain
 from optimizer.i_optimizer import IOptimizer
-from brains.lstm import LSTMPyTorch, LSTMLayered
-from brains.concatenated_brains import ConcatenatedLSTM
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -22,9 +17,7 @@ from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
 from tools.env_handler import EnvHandler
-from brains.CNN_CTRNN import CnnCtrnn
-from brains.elman import ElmanNetwork, ElmanPytorch
-from brains.gru import GruNetwork, GruPyTorch
+from brains import registered_brains
 
 
 class Experiment(object):
@@ -41,31 +34,7 @@ class Experiment(object):
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
         self.write_final_checkpoint = write_final_checkpoint
-        self.brain_class: Type[IBrain]
-        if self.config.brain.type == "CTRNN":
-            self.brain_class = ContinuousTimeRNN
-        elif self.config.brain.type == "FeedForward_NumPy":
-            self.brain_class = FeedForwardNumPy
-        elif self.config.brain.type == "FeedForward_PyTorch":
-            self.brain_class = FeedForwardPyTorch
-        elif self.config.brain.type == "LSTM_PyTorch":
-            self.brain_class = LSTMPyTorch
-        elif self.config.brain.type == "LSTMLayered":
-            self.brain_class = LSTMLayered
-        elif self.config.brain.type == "ELMAN":
-            self.brain_class = ElmanNetwork
-        elif self.config.brain.type == "ElmanTorch":
-            self.brain_class = ElmanPytorch
-        elif self.config.brain.type == "GruTorch":
-            self.brain_class = GruPyTorch
-        elif self.config.brain.type == "GRU":
-            self.brain_class = GruNetwork
-        elif self.config.brain.type == "ConcatenatedBrain_LSTM":
-            self.brain_class = ConcatenatedLSTM
-        elif self.config.brain.type == "CNN_CTRNN":
-            self.brain_class = CnnCtrnn
-        else:
-            raise RuntimeError("Unknown neural network type (config.brain.type): " + str(self.config.brain.type))
+        self.brain_class = registered_brains[self.config.brain.type]
 
         self.optimizer_class: Type[IOptimizer]
         if self.config.optimizer.type == "CMA_ES":

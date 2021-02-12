@@ -3,19 +3,20 @@ import torch
 from gym import Space
 from torch import nn
 
-from brains.i_brain import IBrain, ConfigClass
+from brains.i_brain import IBrain, register_brain
 from brains.i_pytorch_brain import IPytorchBrain
 from tools.configurations import GruCfg, IPytorchBrainCfg, GruTorchCfg
 from brains.i_layer_based_brain import ILayerBasedBrain
 
 
+@register_brain("GRU", GruCfg)
 class GruNetwork(ILayerBasedBrain[GruCfg]):
 
     @staticmethod
     def get_number_hidden_values():
         return 1
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: GruCfg):
         super().__init__(input_space, output_space, individual, config)
 
     @staticmethod
@@ -43,7 +44,8 @@ class GruNetwork(ILayerBasedBrain[GruCfg]):
         return 3
 
 
-class GruPyTorch(IPytorchBrain):
+@register_brain("GruTorch", GruTorchCfg)
+class GruPyTorch(IPytorchBrain[GruTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: GruTorchCfg):
         IPytorchBrain.__init__(self, input_space, output_space, individual, config)

@@ -1,19 +1,11 @@
 import random
 import numpy as np
-import json
-import copy
 import pickle
 import os
 import logging
 import torch
-from typing import Type
 from bz2 import compress
 import gym
-
-from tools.configurations import (ExperimentCfg, IOptimizerCfg, OptimizerCmaEsCfg, OptimizerMuLambdaCfg,
-                                  EpisodeRunnerCfg, ContinuousTimeRNNCfg, FeedForwardCfg,
-                                  IBrainCfg, NoveltyCfg, ReacherMemoryEnvAttributesCfg,
-                                  ConcatenatedBrainLSTMCfg, CnnCtrnnCfg, ConvolutionalNNCfg, AtariEnvAttributesCfg)
 
 
 def output_to_action(output, action_space):

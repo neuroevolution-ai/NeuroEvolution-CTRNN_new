@@ -1,8 +1,21 @@
 import abc
-from tools.configurations import IBrainCfg
+from tools.configurations import IBrainCfg, register
 import numpy as np
 from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, get_args, Type
+
+registered_brains = {}
+
+
+def register_brain(name: str, config_class: Type[IBrainCfg]):
+    def _register(type_class: type):
+        assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
+        registered_brains[name] = type_class
+        register(name)(config_class)  # call to @register-decorator for the config class
+        return type_class
+
+    return _register
+
 
 ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
 
@@ -33,6 +46,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
+
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
@@ -43,6 +57,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 else:
                     sum_ += item
             return sum_
+
         usage_dict = cls.get_free_parameter_usage(config, input_space, output_space)
         return sum_dict(usage_dict)
 
