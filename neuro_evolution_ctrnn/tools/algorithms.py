@@ -2,12 +2,12 @@ import random
 
 import numpy as np
 from tools.helper import set_random_seeds
-from typing import Iterable, Collection
+from typing import Collection
 from deap.algorithms import varOr
 from deap import tools
-from bz2 import compress, decompress
+from bz2 import decompress
 from itertools import tee
-import copy
+from functools import partial
 
 
 def evaluate_candidates(candidates, toolbox):
@@ -56,9 +56,10 @@ def evaluate_candidates(candidates, toolbox):
 
     if toolbox.conf.novelty:
         # drop recorded_individuals, when there are too many
-        overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
-        if overfill > 0:
-            toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
+        if toolbox.conf.novelty.max_recorded_behaviors:
+            overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
+            if overfill > 0:
+                toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
     return nevals, total_steps, seed_after_map
 
@@ -67,6 +68,31 @@ def record_individuals(toolbox, population):
     if toolbox.conf.novelty:
         toolbox.recorded_individuals += random.choices(population,
                                                        k=toolbox.conf.novelty.recorded_behaviors_per_generation)
+
+
+def validation_runs(population, toolbox):
+    intial_seed = toolbox.conf.validation_initial_seed
+    number_validation_runs = toolbox.conf.validation_number_runs
+
+    if number_validation_runs < 1:
+        return 0, 0
+    seeds_validation_runs: np.ndarray = np.array(range(intial_seed, intial_seed + number_validation_runs))
+    best_individuals = tools.selBest(population, 1, fit_attr="fitness")  # only validate the single best individual
+
+    brain_genomes = toolbox.strip_strategy_from_population(best_individuals)
+    results = []
+    for genome in brain_genomes:
+        # partial is needed because keyword argument
+        # see https://stackoverflow.com/a/13499853/5132456
+        evaluate = partial(toolbox.evaluate, rounds=1)
+        results += toolbox.map(evaluate, [genome] * number_validation_runs, seeds_validation_runs)
+    total_steps = 0
+    sum_fitness = 0.0
+    for res in results:
+        fitness, behavior_compressed, steps = res
+        total_steps += steps
+        sum_fitness += fitness
+    return sum_fitness / number_validation_runs, total_steps
 
 
 def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
@@ -101,8 +127,9 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
         record = toolbox.stats.compile(candidates) if toolbox.stats is not None else {}
         population[:] = toolbox.select(candidates, toolbox.conf.mu)
-
-        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
+        validation_fitness, validation_steps = validation_runs(population, toolbox)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
+                               val_fit=validation_fitness, **record)
         if verbose:
             print(toolbox.logbook.stream)
         if toolbox.checkpoint:
@@ -117,6 +144,8 @@ def eaMuPlusLambda(toolbox, ngen, verbose=__debug__,
 
 def calc_novelty(res, results_recorded, get_distance, k):
     """calculate the average distance to the k nearest neighbors"""
+    if k < 1:
+        k = len(results_recorded)
     behavior_compressed = res[1]
     behavior_data = decompress(behavior_compressed)
     behavior = np.frombuffer(behavior_data, dtype=np.float16)
@@ -155,7 +184,10 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             halloffame.update(population)
         toolbox.update(population)
         record: dict = toolbox.stats.compile(population)
-        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps, **record)
+
+        validation_fitness, validation_steps = validation_runs(population, toolbox)
+        toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps, val_fit=validation_fitness,
+                               **record)
         print(toolbox.logbook.stream)
         if toolbox.checkpoint:
             toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame,

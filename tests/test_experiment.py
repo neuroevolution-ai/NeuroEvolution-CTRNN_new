@@ -33,7 +33,7 @@ class TestExperiment:
             # outdated: -102.16727461334207,  # Python 3.8 + conda 4.9.2 + NumPy + MKL
             -96.44321002933644,  # Python 3.8 + Python virtualenv + standard NumPy updated after 2021-02-07
             -100.79614768185776,  # Python 3.8 in self-hosted GitHub Action Runner
-            -100.79614768185776,  # Python 3.8 in shared GitHub Action Runner
+            -110.90104247303623,  # Python 3.8 in shared GitHub Action Runner
         ]
 
         assert experiment_dask.result_handler.result_log.chapters["fitness"][-1]["max"] in accepted_results

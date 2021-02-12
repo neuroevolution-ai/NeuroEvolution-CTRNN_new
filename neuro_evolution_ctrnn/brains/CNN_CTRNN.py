@@ -96,7 +96,7 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
         self.eval()
 
     def brainstep(self, ob):
-        x: torch.Tensor = torch.tensor([ob], dtype=torch.float32).permute(0, 3, 1, 2)
+        x: torch.Tensor = torch.from_numpy(np.array([ob], dtype=np.float32)).permute(0, 3, 1, 2)
 
         with torch.no_grad():
             x = F.relu(self.conv1(x))

@@ -84,7 +84,10 @@ class EnvHandler:
 
         if str(env_id).startswith("BipedalWalker"):
             logging.debug("wrapping env in Box2DWalkerWrapper")
+            # remove spurious warning "WARN: Box bound precision lowered by casting to float32" during creation
+            gym.logger.MIN_LEVEL = gym.logger.ERROR
             env = Box2DWalkerWrapper(env)
+            # gym.logger.MIN_LEVEL = level
 
         if self.config.novelty:
             if self.config.novelty.behavior_source in ['observation', 'action', 'state']:
