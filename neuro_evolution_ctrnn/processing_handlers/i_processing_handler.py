@@ -2,7 +2,6 @@ import abc
 
 
 class IProcessingHandler(abc.ABC):
-
     def __init__(self, number_of_workers):
         self.number_of_workers = number_of_workers
 

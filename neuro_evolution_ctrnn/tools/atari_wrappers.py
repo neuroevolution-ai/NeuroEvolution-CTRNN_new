@@ -13,7 +13,7 @@ class NoopResetEnv(gym.Wrapper):
         gym.Wrapper.__init__(self, env)
         self.noop_max = noop_max
         self.override_num_noops = None
-        assert env.unwrapped.get_action_meanings()[0] == 'NOOP'
+        assert env.unwrapped.get_action_meanings()[0] == "NOOP"
 
     def _reset(self):
         """ Do no-op action for a number of steps in [1, noop_max]."""
@@ -21,7 +21,9 @@ class NoopResetEnv(gym.Wrapper):
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
-            noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)  # pylint: disable=E1101
+            noops = self.unwrapped.np_random.randint(
+                1, self.noop_max + 1
+            )  # pylint: disable=E1101
         assert noops > 0
         obs = None
         for _ in range(noops):
@@ -35,7 +37,7 @@ class FireResetEnv(gym.Wrapper):
     def __init__(self, env):
         """Take action on reset for environments that are fixed until firing."""
         gym.Wrapper.__init__(self, env)
-        assert env.unwrapped.get_action_meanings()[1] == 'FIRE'
+        assert env.unwrapped.get_action_meanings()[1] == "FIRE"
         assert len(env.unwrapped.get_action_meanings()) >= 3
 
     def _reset(self):
@@ -116,11 +118,12 @@ class MaxAndSkipEnv(gym.Wrapper):
         self._obs_buffer.append(obs)
         return obs
 
-    def _render(self, mode='human', close=False):
+    def _render(self, mode="human", close=False):
         if close:
             return
-        if mode == 'human':
+        if mode == "human":
             from gym.envs.classic_control import rendering
+
             if self.viewer is None:
                 self.viewer = rendering.SimpleImageViewer()
             self.viewer.imshow(np.max(np.stack(self._obs_buffer), axis=0))
@@ -134,24 +137,35 @@ class WarpFrame(gym.ObservationWrapper):
         """Warp frames to 84x84 as done in the Nature paper and later work."""
         gym.ObservationWrapper.__init__(self, env)
         self.res = 84
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.res, self.res, 1))
+        self.observation_space = spaces.Box(
+            low=0, high=255, shape=(self.res, self.res, 1)
+        )
         self.viewer = None
         self.show_warped = show_warped
 
     def _observation(self, obs):
-        frame = np.dot(obs.astype('float32'), np.array([0.299, 0.587, 0.114], 'float32'))
-        frame = np.array(Image.fromarray(frame).resize((self.res, self.res),
-                                                       resample=Image.BILINEAR), dtype=np.uint8)
+        frame = np.dot(
+            obs.astype("float32"), np.array([0.299, 0.587, 0.114], "float32")
+        )
+        frame = np.array(
+            Image.fromarray(frame).resize(
+                (self.res, self.res), resample=Image.BILINEAR
+            ),
+            dtype=np.uint8,
+        )
         return frame.reshape((self.res, self.res, 1))
 
-    def _render(self, mode='human', close=False):
+    def _render(self, mode="human", close=False):
         if close:
             return
-        if mode == 'human' and self.show_warped:
+        if mode == "human" and self.show_warped:
             from gym.envs.classic_control import rendering
+
             if self.viewer is None:
                 self.viewer = rendering.SimpleImageViewer()
-            img = self._observation(self.env._render('rgb_array', close)) * np.ones([1, 1, 3], dtype=np.uint8)
+            img = self._observation(self.env._render("rgb_array", close)) * np.ones(
+                [1, 1, 3], dtype=np.uint8
+            )
             self.viewer.imshow(img)
             return img
         else:
@@ -171,7 +185,8 @@ class FrameStack(gym.Wrapper):
     def _reset(self):
         """Clear buffer and re-fill by duplicating the first observation."""
         ob = self.env.reset()
-        for _ in range(self.k): self.frames.append(ob)
+        for _ in range(self.k):
+            self.frames.append(ob)
         return self._observation()
 
     def _step(self, action):
@@ -201,13 +216,25 @@ class DiscretizeActions(gym.Wrapper):
     def _step(self, action):
         cont_action = self.temp_action.low.copy()
         for i in range(cont_action.size):
-            cont_action[i] += (self.temp_action.high[i] - self.temp_action.low[i]) * float(int(action) % 5) / 4.0
+            cont_action[i] += (
+                (self.temp_action.high[i] - self.temp_action.low[i])
+                * float(int(action) % 5)
+                / 4.0
+            )
             action = int(action / 5)
         return self.env.step(cont_action)
 
 
 # def wrap_deepmind(env, episode_life=True, clip_rewards=True):
-def wrap_deepmind(env, episode_life=False, skip=4, stack_frames=4, noop_max=30, noops=None, show_warped=False):
+def wrap_deepmind(
+    env,
+    episode_life=False,
+    skip=4,
+    stack_frames=4,
+    noop_max=30,
+    noops=None,
+    show_warped=False,
+):
     """Configure environment for DeepMind-style Atari.
 
     Note: this does not include frame stacking!"""
@@ -217,9 +244,9 @@ def wrap_deepmind(env, episode_life=False, skip=4, stack_frames=4, noop_max=30, 
     if noops:
         env.override_num_noops = noops
     if skip > 1:
-        assert 'NoFrameskip' in env.spec.id  # required for DeepMind-style skip
+        assert "NoFrameskip" in env.spec.id  # required for DeepMind-style skip
         env = MaxAndSkipEnv(env, skip=4)
-    if 'FIRE' in env.unwrapped.get_action_meanings():
+    if "FIRE" in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
     env = WarpFrame(env, show_warped=show_warped)
     if stack_frames > 1:

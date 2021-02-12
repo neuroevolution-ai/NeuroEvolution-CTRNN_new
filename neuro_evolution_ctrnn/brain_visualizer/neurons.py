@@ -9,28 +9,33 @@ from brain_visualizer import brain_visualizer
 
 
 class Neurons:
-
     @staticmethod
-    def draw_neurons(visualizer: "brain_visualizer.BrainVisualizer",
-                     positions: dict,
-                     value_dict: np.ndarray,
-                     color_clipping_range: int,
-                     negative_color: Tuple[int, int, int],
-                     neutral_color: Tuple[int, int, int],
-                     positive_color: Tuple[int, int, int],
-                     radius: int,
-                     weight_neuron: bool = False,
-                     is_input: bool = False,
-                     is_neuron_to_neuron: bool = False) -> None:
+    def draw_neurons(
+        visualizer: "brain_visualizer.BrainVisualizer",
+        positions: dict,
+        value_dict: np.ndarray,
+        color_clipping_range: int,
+        negative_color: Tuple[int, int, int],
+        neutral_color: Tuple[int, int, int],
+        positive_color: Tuple[int, int, int],
+        radius: int,
+        weight_neuron: bool = False,
+        is_input: bool = False,
+        is_neuron_to_neuron: bool = False,
+    ) -> None:
         # Make sure that either both of these values are False or only one of them is True
-        assert (is_input is False and is_neuron_to_neuron is False) or is_input != is_neuron_to_neuron
+        assert (
+            is_input is False and is_neuron_to_neuron is False
+        ) or is_input != is_neuron_to_neuron
 
         number_neurons_per_color = 0
         draw_text: bool = visualizer.neuron_text
 
         if visualizer.rgb_input and is_input:
             draw_text = False
-            number_neurons_per_color = visualizer.input_shape[0] * visualizer.input_shape[1]
+            number_neurons_per_color = (
+                visualizer.input_shape[0] * visualizer.input_shape[1]
+            )
 
         counter = 0
         for neuron in range(len(positions)):
@@ -70,23 +75,35 @@ class Neurons:
                     if is_neuron_to_neuron:
                         interpolated_color = visualizer.color_negative_weight
                     else:
-                        interpolated_color = Colors.interpolate_color(neutral_color, negative_color, abs(color_val))
-                    text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.black)
+                        interpolated_color = Colors.interpolate_color(
+                            neutral_color, negative_color, abs(color_val)
+                        )
+                    text_surface = visualizer.my_font.render(
+                        ("%.5s" % val), True, Colors.black
+                    )
                 else:
                     if is_neuron_to_neuron:
                         interpolated_color = visualizer.color_positive_weight
                     else:
-                        interpolated_color = Colors.interpolate_color(neutral_color, positive_color, color_val)
-                    text_surface = visualizer.my_font.render(("%.5s" % val), True, Colors.white)
+                        interpolated_color = Colors.interpolate_color(
+                            neutral_color, positive_color, color_val
+                        )
+                    text_surface = visualizer.my_font.render(
+                        ("%.5s" % val), True, Colors.white
+                    )
 
             # Draw Circle and Text
-            pygame.draw.circle(visualizer.screen, interpolated_color, (pos_x, pos_y), radius)
+            pygame.draw.circle(
+                visualizer.screen, interpolated_color, (pos_x, pos_y), radius
+            )
 
             if draw_text:
                 visualizer.screen.blit(text_surface, ((pos_x - 16), (pos_y - 7)))
 
     @staticmethod
-    def color_logging(visualizer: "brain_visualizer.BrainVisualizer", min_max: int) -> None:
+    def color_logging(
+        visualizer: "brain_visualizer.BrainVisualizer", min_max: int
+    ) -> None:
         if min_max == visualizer.color_clipping_range[0]:
             var = "Input"
         elif min_max == visualizer.color_clipping_range[1]:

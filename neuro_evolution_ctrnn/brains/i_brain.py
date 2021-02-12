@@ -13,7 +13,9 @@ registered_brains = {}
 
 def register_brain(name: str, config_class: Type[IBrainCfg]):
     def _register(type_class: type):
-        assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
+        assert name not in registered_brains, (
+            'type "' + str(name) + '" was already registered'
+        )
         registered_brains[name] = type_class
         register(name)(config_class)  # call to @register-decorator for the config class
         return type_class
@@ -25,10 +27,14 @@ ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
-
     @abc.abstractmethod
-    def __init__(self, input_space: spaces.Space, output_space: spaces.Space, individual: np.ndarray,
-                 config: ConfigClass):
+    def __init__(
+        self,
+        input_space: spaces.Space,
+        output_space: spaces.Space,
+        individual: np.ndarray,
+        config: ConfigClass,
+    ):
         self.input_space = input_space
         self.output_space = output_space
         self.config = config
@@ -55,14 +61,16 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @classmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> int:
+    def get_individual_size(
+        cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space
+    ) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
-                an individual of this class"""
+        an individual of this class"""
 
         def sum_dict(node):
             sum_ = 0
             for key, item in node.items():
-                if str(key).startswith('_'):
+                if str(key).startswith("_"):
                     continue
                 if isinstance(item, dict):
                     sum_ += sum_dict(item)
@@ -75,8 +83,9 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space,
-                                 output_space: spaces.Space) -> dict:
+    def get_free_parameter_usage(
+        cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space
+    ) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.
@@ -87,10 +96,12 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @staticmethod
-    def read_matrix_from_genome(individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int):
+    def read_matrix_from_genome(
+        individual: np.ndarray, index: int, matrix_rows: int, matrix_columns: int
+    ):
         matrix_size = matrix_columns * matrix_rows
 
-        matrix = np.array(individual[index:index + matrix_size], dtype=np.single)
+        matrix = np.array(individual[index : index + matrix_size], dtype=np.single)
         matrix = matrix.reshape(matrix_rows, matrix_columns)
 
         index += matrix_size
@@ -106,10 +117,14 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         pass
 
     @classmethod
-    def set_masks_globally(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
+    def set_masks_globally(
+        cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space
+    ):
         pass
 
-    def _recursive_parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple], relevant_space: spaces.Space):
+    def _recursive_parse_brain_input(
+        self, brain_input: Union[np.ndarray, int, Tuple], relevant_space: spaces.Space
+    ):
         if isinstance(relevant_space, spaces.Box):
             return brain_input
         elif isinstance(relevant_space, spaces.Discrete):
@@ -123,18 +138,26 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             parsed_brain_input = []
             for i, sub_input in enumerate(brain_input):
                 if isinstance(relevant_space[i], spaces.Tuple):
-                    raise RuntimeError("""Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
-                                          another environment""")
-                parsed_sub_input = self._recursive_parse_brain_input(sub_input, relevant_space=relevant_space[i])
+                    raise RuntimeError(
+                        """Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
+                                          another environment"""
+                    )
+                parsed_sub_input = self._recursive_parse_brain_input(
+                    sub_input, relevant_space=relevant_space[i]
+                )
 
                 # Inputs from the sub spaces are flattened and concatenated here, otherwise some brains could not
                 # work with this
-                parsed_brain_input = np.concatenate((parsed_brain_input, parsed_sub_input.flatten()))
+                parsed_brain_input = np.concatenate(
+                    (parsed_brain_input, parsed_sub_input.flatten())
+                )
             return np.array(parsed_brain_input)
 
         else:
             raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+                "The gym.Space '{}' is currently not supported to be parsed.".format(
+                    type(relevant_space)
+                )
             )
 
     def parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple]):
@@ -154,9 +177,13 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         :return: Pre-processed observation, according to self.input_space
         """
         # We are coming from the input space therefore set relevant space accordingly
-        return self._recursive_parse_brain_input(brain_input, relevant_space=self.input_space)
+        return self._recursive_parse_brain_input(
+            brain_input, relevant_space=self.input_space
+        )
 
-    def _recursive_parse_brain_output(self, brain_output: np.ndarray, relevant_space: spaces.Space):
+    def _recursive_parse_brain_output(
+        self, brain_output: np.ndarray, relevant_space: spaces.Space
+    ):
         if isinstance(relevant_space, spaces.Box):
             return brain_output.reshape(relevant_space.shape)
         elif isinstance(relevant_space, spaces.Discrete):
@@ -169,14 +196,18 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
                 current_range = flatdim(sub_space)
 
                 parsed_brain_output.append(
-                    self._recursive_parse_brain_output(brain_output[index:index + current_range],
-                                                       relevant_space=sub_space)
+                    self._recursive_parse_brain_output(
+                        brain_output[index : index + current_range],
+                        relevant_space=sub_space,
+                    )
                 )
                 index += current_range
             return tuple(parsed_brain_output)
         else:
             raise RuntimeError(
-                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+                "The gym.Space '{}' is currently not supported to be parsed.".format(
+                    type(relevant_space)
+                )
             )
 
     def parse_brain_output(self, brain_output: np.ndarray):
@@ -196,26 +227,40 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         :return: Post-processed brain output, according to self.output_space
         """
         # We are going to the output space
-        return self._recursive_parse_brain_output(brain_output, relevant_space=self.output_space)
+        return self._recursive_parse_brain_output(
+            brain_output, relevant_space=self.output_space
+        )
 
     @classmethod
-    def generate_and_set_class_state(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
+    def generate_and_set_class_state(
+        cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space
+    ):
         pass
 
     def get_neuron_states(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_internal_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_input_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     def get_output_weight_matrix(self):
-        raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
+        raise NotImplementedError(
+            "Support for brain visualizer is not implemented for this brain."
+        )
 
     @classmethod
-    def get_activation_function_numpy(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+    def get_activation_function_numpy(
+        cls, activation: str
+    ) -> Callable[[np.ndarray], np.ndarray]:
 
         if activation == "relu":
             return cls.relu
@@ -226,7 +271,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         else:
             raise RuntimeError(
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(activation))
+                "".format(activation)
+            )
 
     @staticmethod
     def relu(x: np.ndarray) -> np.ndarray:
@@ -241,7 +287,9 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         return np.tanh(x)
 
     @classmethod
-    def get_activation_function_pytorch(cls, activation: str) -> Callable[[np.ndarray], np.ndarray]:
+    def get_activation_function_pytorch(
+        cls, activation: str
+    ) -> Callable[[np.ndarray], np.ndarray]:
 
         if activation == "relu":
             return nn.ReLU()  # type:ignore
@@ -252,4 +300,5 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
         else:
             raise RuntimeError(
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
-                "".format(activation))
+                "".format(activation)
+            )

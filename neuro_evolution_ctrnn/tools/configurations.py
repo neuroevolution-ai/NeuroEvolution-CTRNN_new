@@ -26,10 +26,14 @@ def register(name: str, as_key: bool = False):
     # See https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     def _register(type_class: type):
         if as_key:
-            assert name not in registered_keys, 'key "' + str(name) + '" was already registered'
+            assert name not in registered_keys, (
+                'key "' + str(name) + '" was already registered'
+            )
             registered_keys[name] = type_class
         else:
-            assert name not in registered_types, 'type "' + str(name) + '" was already registered'
+            assert name not in registered_types, (
+                'type "' + str(name) + '" was already registered'
+            )
             registered_types[name] = type_class
         return type_class
 
@@ -59,17 +63,17 @@ class ILayerBasedBrainCfg(IBrainCfg):
     diagonal_hidden_to_hidden: bool = True
 
 
-@register('novelty', True)
+@register("novelty", True)
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class NoveltyCfg:
     novelty_weight: float = 1.0
-    distance: str = 'euclid'  # 'euclid', 'NCD', 'equal'
+    distance: str = "euclid"  # 'euclid', 'NCD', 'equal'
     novelty_nearest_k: int = 0
     max_recorded_behaviors: int = 100
     recorded_behaviors_per_generation: int = 1
     behavioral_interval: int = -1
     behavioral_max_length: int = 1
-    behavior_source: str = 'observation'  # Which value should be used for BC? 'action', 'observation' or 'state'
+    behavior_source: str = "observation"  # Which value should be used for BC? 'action', 'observation' or 'state'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
@@ -77,7 +81,7 @@ class IEnvAttributesCfg(abc.ABC):
     type: str
 
 
-@register('ReacherMemoryAttr')
+@register("ReacherMemoryAttr")
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     observation_frames: int
@@ -85,7 +89,7 @@ class ReacherMemoryEnvAttributesCfg(IEnvAttributesCfg):
     action_frames: int
 
 
-@register('AtariAttr')
+@register("AtariAttr")
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class AtariEnvAttributesCfg(IEnvAttributesCfg):
     screen_size: int = 64
@@ -94,17 +98,17 @@ class AtariEnvAttributesCfg(IEnvAttributesCfg):
     grayscale_obs: bool = False
 
 
-@register('ProcGenAttr')
+@register("ProcGenAttr")
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class ProcGenEnvAttributesCfg(IEnvAttributesCfg):
     screen_size: int = 64
-    distribution_mode: str = 'memory'
+    distribution_mode: str = "memory"
     use_monochrome_assets: bool = False
     restrict_themes: bool = True
     use_backgrounds: bool = False
 
 
-@register('episode_runner', True)
+@register("episode_runner", True)
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class EpisodeRunnerCfg(abc.ABC):
     reuse_env: bool = True
@@ -141,11 +145,11 @@ class ContinuousTimeRNNCfg(IBrainCfg):
     neuron_activation: str
     set_principle_diagonal_elements_of_W_negative: bool = True
     parameter_perturbations: float = 0.0
-    v_mask: str = 'dense'
+    v_mask: str = "dense"
     v_mask_param: float = 0.0
-    w_mask: str = 'dense'
+    w_mask: str = "dense"
     w_mask_param: float = 0.0
-    t_mask: str = 'dense'
+    t_mask: str = "dense"
     t_mask_param: float = 0.0
     clipping_range_min: float = 0
     clipping_range_max: float = 0
@@ -176,7 +180,7 @@ class CnnCtrnnCfg(IBrainCfg):
 class FeedForwardCfg(IBrainCfg):
     hidden_layers: List[int]
     neuron_activation: str
-    neuron_activation_output: str = 'linear'
+    neuron_activation_output: str = "linear"
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
@@ -213,7 +217,7 @@ class IOptimizerCfg(abc.ABC):
     validation_initial_seed: int = 1000
 
 
-@register('MU_ES')
+@register("MU_ES")
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerMuLambdaCfg(IOptimizerCfg):
     initial_gene_range: int
@@ -225,7 +229,7 @@ class OptimizerMuLambdaCfg(IOptimizerCfg):
     strategy_parameter_per_gene: bool = False
 
 
-@register('CMA_ES')
+@register("CMA_ES")
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
 class OptimizerCmaEsCfg(IOptimizerCfg):
     population_size: int

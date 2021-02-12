@@ -28,47 +28,77 @@ class Events:
 
     # Get the number of the neuron over which the user hovers the mouse
     @staticmethod
-    def draw_neuron_number(visualizer: "brain_visualizer.BrainVisualizer", input_positions_dict: dict,
-                           graph_positions_dict: dict, output_positions_dict: dict, mouse_pos: Tuple[int, int]) -> None:
+    def draw_neuron_number(
+        visualizer: "brain_visualizer.BrainVisualizer",
+        input_positions_dict: dict,
+        graph_positions_dict: dict,
+        output_positions_dict: dict,
+        mouse_pos: Tuple[int, int],
+    ) -> None:
         mouse_font = pygame.font.SysFont("Helvetica", 32)
 
-        hovered_input_neuron = Events.get_neuron_when_hover(visualizer, input_positions_dict, mouse_pos)
+        hovered_input_neuron = Events.get_neuron_when_hover(
+            visualizer, input_positions_dict, mouse_pos
+        )
         if hovered_input_neuron is not None:
-            mouse_label = mouse_font.render("Input:" + str(hovered_input_neuron), 1, Colors.bright_grey)
+            mouse_label = mouse_font.render(
+                "Input:" + str(hovered_input_neuron), 1, Colors.bright_grey
+            )
             visualizer.screen.blit(mouse_label, (mouse_pos[0] + 20, mouse_pos[1] - 32))
 
-        hovered_graph_neuron = Events.get_neuron_when_hover(visualizer, graph_positions_dict, mouse_pos)
+        hovered_graph_neuron = Events.get_neuron_when_hover(
+            visualizer, graph_positions_dict, mouse_pos
+        )
         if hovered_graph_neuron is not None:
-            mouse_label = mouse_font.render("Neuron:" + str(hovered_graph_neuron), 1, Colors.bright_grey)
+            mouse_label = mouse_font.render(
+                "Neuron:" + str(hovered_graph_neuron), 1, Colors.bright_grey
+            )
             visualizer.screen.blit(mouse_label, (mouse_pos[0] + 20, mouse_pos[1] - 32))
 
-        hovered_output_neuron = Events.get_neuron_when_hover(visualizer, output_positions_dict, mouse_pos)
+        hovered_output_neuron = Events.get_neuron_when_hover(
+            visualizer, output_positions_dict, mouse_pos
+        )
         if hovered_output_neuron is not None:
-            mouse_label = mouse_font.render("Output:" + str(hovered_output_neuron), 1, Colors.bright_grey)
+            mouse_label = mouse_font.render(
+                "Output:" + str(hovered_output_neuron), 1, Colors.bright_grey
+            )
             visualizer.screen.blit(mouse_label, (mouse_pos[0] - 250, mouse_pos[1] - 32))
 
     @staticmethod
-    def get_neuron_when_hover(visualizer: "brain_visualizer.BrainVisualizer", positions_dict: dict,
-                              mouse_pos: Tuple[int, int]) -> int:
+    def get_neuron_when_hover(
+        visualizer: "brain_visualizer.BrainVisualizer",
+        positions_dict: dict,
+        mouse_pos: Tuple[int, int],
+    ) -> int:
         max_distance = visualizer.neuron_radius
         for i in range(len(positions_dict)):
             neuron_pos = positions_dict[i]
-            distance = math.sqrt(((mouse_pos[0] - neuron_pos[0]) ** 2) + ((mouse_pos[1] - neuron_pos[1]) ** 2))
+            distance = math.sqrt(
+                ((mouse_pos[0] - neuron_pos[0]) ** 2)
+                + ((mouse_pos[1] - neuron_pos[1]) ** 2)
+            )
 
             if distance < max_distance:
                 return i
 
     # Get the number of the neuron on which the user clicked with the mouse
     @staticmethod
-    def get_neuron_on_click(mouse_pos: Tuple[int, int], graph_positions_dict: dict) -> int:
+    def get_neuron_on_click(
+        mouse_pos: Tuple[int, int], graph_positions_dict: dict
+    ) -> int:
         for i in range(len(graph_positions_dict)):
             neuron_pos = graph_positions_dict[i]
-            distance = math.sqrt(((mouse_pos[0] - neuron_pos[0]) ** 2) + ((mouse_pos[1] - neuron_pos[1]) ** 2))
+            distance = math.sqrt(
+                ((mouse_pos[0] - neuron_pos[0]) ** 2)
+                + ((mouse_pos[1] - neuron_pos[1]) ** 2)
+            )
             if distance < 30:
                 return i
 
     @staticmethod
-    def change_neuron_pos(neuron: int, mouse_pos: Tuple[int, int], graph_positions_dict: dict) -> None:
+    def change_neuron_pos(
+        neuron: int, mouse_pos: Tuple[int, int], graph_positions_dict: dict
+    ) -> None:
         graph_positions_dict[neuron] = (mouse_pos[0], mouse_pos[1])
 
     @staticmethod
@@ -110,20 +140,50 @@ class Events:
 
     @staticmethod
     def draw_keymap(visualizer: "brain_visualizer.BrainVisualizer"):
-        pygame.draw.rect(visualizer.screen, Colors.dark_grey,
-                         (0, visualizer.info_box_height, visualizer.w, visualizer.h - visualizer.info_box_height))
+        pygame.draw.rect(
+            visualizer.screen,
+            Colors.dark_grey,
+            (
+                0,
+                visualizer.info_box_height,
+                visualizer.w,
+                visualizer.h - visualizer.info_box_height,
+            ),
+        )
 
-        all_keys = {key_name: key for key_name, key in vars(Events).items() if
-                    key_name.startswith("KEY") and not callable(key) and not type(key) is staticmethod}
+        all_keys = {
+            key_name: key
+            for key_name, key in vars(Events).items()
+            if key_name.startswith("KEY")
+            and not callable(key)
+            and not type(key) is staticmethod
+        }
 
         key_description_text_surfaces = [
-            visualizer.my_font.render(Events.key_shortcut_to_str(key), True, visualizer.color_numbers) for key in
-            all_keys.values()]
-        key_text_surfaces = [visualizer.my_font.render(pygame.key.name(key), True, visualizer.color_numbers) for key in
-                             all_keys.values()]
+            visualizer.my_font.render(
+                Events.key_shortcut_to_str(key), True, visualizer.color_numbers
+            )
+            for key in all_keys.values()
+        ]
+        key_text_surfaces = [
+            visualizer.my_font.render(
+                pygame.key.name(key), True, visualizer.color_numbers
+            )
+            for key in all_keys.values()
+        ]
 
-        maximum_text_width = max([text_surface.get_size()[0] for text_surface in key_description_text_surfaces])
-        maximum_text_height = max([text_surface.get_size()[1] for text_surface in key_description_text_surfaces])
+        maximum_text_width = max(
+            [
+                text_surface.get_size()[0]
+                for text_surface in key_description_text_surfaces
+            ]
+        )
+        maximum_text_height = max(
+            [
+                text_surface.get_size()[1]
+                for text_surface in key_description_text_surfaces
+            ]
+        )
 
         space = 30
         x_pos_key_description = space
@@ -131,8 +191,12 @@ class Events:
         y_pos = visualizer.info_box_height + space
         space_between_texts = maximum_text_height + 10
 
-        for key_description_text_surface, key_text_surface in zip(key_description_text_surfaces, key_text_surfaces):
-            visualizer.screen.blit(key_description_text_surface, (x_pos_key_description, y_pos))
+        for key_description_text_surface, key_text_surface in zip(
+            key_description_text_surfaces, key_text_surfaces
+        ):
+            visualizer.screen.blit(
+                key_description_text_surface, (x_pos_key_description, y_pos)
+            )
             visualizer.screen.blit(key_text_surface, (x_pos_key, y_pos))
             y_pos += space_between_texts
 
@@ -144,22 +208,36 @@ class Events:
         sys.exit()
 
     @staticmethod
-    def handle_events(visualizer: "brain_visualizer.BrainVisualizer", event: pygame.event.EventType,
-                      input_positions_dict: dict, output_positions_dict: dict) -> None:
+    def handle_events(
+        visualizer: "brain_visualizer.BrainVisualizer",
+        event: pygame.event.EventType,
+        input_positions_dict: dict,
+        output_positions_dict: dict,
+    ) -> None:
         try:
             # TODO maybe instead of if-if-... make it to if-elif-elif-... so only one action is processed
             if event.type == pygame.QUIT:
                 Events.quit_game()
             elif event.type == pygame.MOUSEMOTION:
-                Events.draw_neuron_number(visualizer, input_positions_dict, visualizer.graph_positions_dict,
-                                          output_positions_dict,
-                                          pygame.mouse.get_pos())
+                Events.draw_neuron_number(
+                    visualizer,
+                    input_positions_dict,
+                    visualizer.graph_positions_dict,
+                    output_positions_dict,
+                    pygame.mouse.get_pos(),
+                )
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                visualizer.clicked_neuron = Events.get_neuron_on_click(pygame.mouse.get_pos(),
-                                                                       visualizer.graph_positions_dict)
-            elif event.type == pygame.MOUSEBUTTONUP and isinstance(visualizer.clicked_neuron, int):
-                Events.change_neuron_pos(visualizer.clicked_neuron, pygame.mouse.get_pos(),
-                                         visualizer.graph_positions_dict)
+                visualizer.clicked_neuron = Events.get_neuron_on_click(
+                    pygame.mouse.get_pos(), visualizer.graph_positions_dict
+                )
+            elif event.type == pygame.MOUSEBUTTONUP and isinstance(
+                visualizer.clicked_neuron, int
+            ):
+                Events.change_neuron_pos(
+                    visualizer.clicked_neuron,
+                    pygame.mouse.get_pos(),
+                    visualizer.graph_positions_dict,
+                )
             elif event.type == pygame.KEYDOWN:
                 if event.key == Events.KEY_QUIT:
                     Events.quit_game()
@@ -186,16 +264,23 @@ class Events:
                 elif event.key == Events.KEY_TOGGLE_OUTPUTS:
                     visualizer.output_weights = not visualizer.output_weights
                 elif event.key == Events.KEY_INCREASE_THRESHOLD:
-                    visualizer.draw_threshold = round(visualizer.draw_threshold + 0.05, 2)
+                    visualizer.draw_threshold = round(
+                        visualizer.draw_threshold + 0.05, 2
+                    )
                 elif event.key == Events.KEY_DECREASE_THRESHOLD:
-                    visualizer.draw_threshold = round(visualizer.draw_threshold - 0.05, 2)
+                    visualizer.draw_threshold = round(
+                        visualizer.draw_threshold - 0.05, 2
+                    )
                 elif event.key == Events.KEY_PAUSE_VISUALIZATION:
                     # TODO refine this so that this is not spinning forever
                     pause = True
                     pygame.event.clear(pygame.KEYDOWN)
                     while pause:
                         for event in pygame.event.get():
-                            if event.type == pygame.KEYDOWN and event.key == Events.KEY_CONTINUE_VISUALIZATION:
+                            if (
+                                event.type == pygame.KEYDOWN
+                                and event.key == Events.KEY_CONTINUE_VISUALIZATION
+                            ):
                                 pause = False
                 elif event.key == Events.KEY_DISPLAY_KEYMAP:
                     pygame.event.clear(pygame.KEYDOWN)
@@ -205,10 +290,15 @@ class Events:
                     pygame.event.clear(pygame.KEYDOWN)
                     while pause:
                         for event in pygame.event.get():
-                            if event.type == pygame.KEYDOWN and event.key == Events.KEY_DISPLAY_KEYMAP:
+                            if (
+                                event.type == pygame.KEYDOWN
+                                and event.key == Events.KEY_DISPLAY_KEYMAP
+                            ):
                                 pause = False
-                            elif ((event.type == pygame.KEYDOWN and event.key == Events.KEY_QUIT)
-                                  or event.type == pygame.QUIT):
+                            elif (
+                                event.type == pygame.KEYDOWN
+                                and event.key == Events.KEY_QUIT
+                            ) or event.type == pygame.QUIT:
                                 Events.quit_game()
 
         except AttributeError:

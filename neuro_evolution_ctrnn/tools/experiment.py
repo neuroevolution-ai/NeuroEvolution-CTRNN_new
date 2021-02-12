@@ -21,15 +21,24 @@ from brains import registered_brains
 
 
 class Experiment(object):
-
-    def __init__(self, configuration: ExperimentCfg, result_path, processing_framework, write_final_checkpoint=False,
-                 number_of_workers=os.cpu_count(), from_checkpoint=None, reset_hof=False):
+    def __init__(
+        self,
+        configuration: ExperimentCfg,
+        result_path,
+        processing_framework,
+        write_final_checkpoint=False,
+        number_of_workers=os.cpu_count(),
+        from_checkpoint=None,
+        reset_hof=False,
+    ):
         self.result_path = result_path
         self.from_checkpoint = from_checkpoint
         self.reset_hof = reset_hof
         if reset_hof:
             if not from_checkpoint:
-                raise RuntimeError("reset_hof is only possible when starting from a checkpoint.")
+                raise RuntimeError(
+                    "reset_hof is only possible when starting from a checkpoint."
+                )
         self.config = configuration
         self.processing_framework = processing_framework
         self.number_of_workers: int = number_of_workers
@@ -42,7 +51,10 @@ class Experiment(object):
         elif self.config.optimizer.type == "MU_ES":
             self.optimizer_class = OptimizerMuPlusLambda
         else:
-            raise RuntimeError("Unknown optimizer (config.optimizer.type): " + str(self.config.optimizer.type))
+            raise RuntimeError(
+                "Unknown optimizer (config.optimizer.type): "
+                + str(self.config.optimizer.type)
+            )
 
         self._setup()
 
@@ -58,22 +70,35 @@ class Experiment(object):
         self.output_space = env.action_space
         logging.info("Input space: " + str(self.input_space))
         logging.info("Output space: " + str(self.output_space))
-        self.brain_class.generate_and_set_class_state(config=self.config.brain,
-                                                      input_space=self.input_space,
-                                                      output_space=self.output_space)
+        self.brain_class.generate_and_set_class_state(
+            config=self.config.brain,
+            input_space=self.input_space,
+            output_space=self.output_space,
+        )
 
-        self.individual_size = self.brain_class.get_individual_size(self.config.brain,
-                                                                    input_space=self.input_space,
-                                                                    output_space=self.output_space)
-        logging.info("Individual size for this experiment: " + str(self.individual_size))
-        info = self.brain_class.get_free_parameter_usage(self.config.brain,
-                                                         input_space=self.input_space,
-                                                         output_space=self.output_space)
+        self.individual_size = self.brain_class.get_individual_size(
+            self.config.brain,
+            input_space=self.input_space,
+            output_space=self.output_space,
+        )
+        logging.info(
+            "Individual size for this experiment: " + str(self.individual_size)
+        )
+        info = self.brain_class.get_free_parameter_usage(
+            self.config.brain,
+            input_space=self.input_space,
+            output_space=self.output_space,
+        )
         logging.info("Usage of free parameters: " + str(info))
 
-        self.ep_runner = EpisodeRunner(config=self.config.episode_runner, brain_config=self.config.brain,
-                                       brain_class=self.brain_class, input_space=self.input_space,
-                                       output_space=self.output_space, env_id=self.config.environment)
+        self.ep_runner = EpisodeRunner(
+            config=self.config.episode_runner,
+            brain_config=self.config.brain,
+            brain_class=self.brain_class,
+            input_space=self.input_space,
+            output_space=self.output_space,
+            env_id=self.config.environment,
+        )
 
         stats_fit = tools.Statistics(key=lambda ind: ind.fitness_orig)
         if self.config.episode_runner.novelty:
@@ -89,32 +114,49 @@ class Experiment(object):
 
         system_cpu_count = os.cpu_count()
         if self.number_of_workers <= 0 or self.number_of_workers > system_cpu_count:
-            raise RuntimeError("{} is an incorrect number of workers for your system, because your CPU only supports "
-                               "running between 1 and {} processes in parallel."
-                               "".format(self.number_of_workers, system_cpu_count))
+            raise RuntimeError(
+                "{} is an incorrect number of workers for your system, because your CPU only supports "
+                "running between 1 and {} processes in parallel."
+                "".format(self.number_of_workers, system_cpu_count)
+            )
 
         if self.processing_framework == "dask":
             self.processing_handler = DaskHandler(
-                number_of_workers=self.number_of_workers, brain_class=self.brain_class)
+                number_of_workers=self.number_of_workers, brain_class=self.brain_class
+            )
         elif self.processing_framework == "mp":
-            self.processing_handler = MPHandler(number_of_workers=self.number_of_workers)
+            self.processing_handler = MPHandler(
+                number_of_workers=self.number_of_workers
+            )
         elif self.processing_framework == "sequential":
-            self.processing_handler = SequentialHandler(number_of_workers=self.number_of_workers)
+            self.processing_handler = SequentialHandler(
+                number_of_workers=self.number_of_workers
+            )
         else:
             raise RuntimeError(
-                "The processing framework '{}' is not supported.".format(self.processing_framework))
+                "The processing framework '{}' is not supported.".format(
+                    self.processing_framework
+                )
+            )
 
         map_func = self.processing_handler.map
 
-        self.optimizer = self.optimizer_class(map_func=map_func,
-                                              individual_size=self.individual_size,
-                                              eval_fitness=self.ep_runner.eval_fitness, conf=self.config.optimizer,
-                                              stats=stats, from_checkpoint=self.from_checkpoint,
-                                              reset_hof=self.reset_hof, random_seed=self.config.random_seed)
+        self.optimizer = self.optimizer_class(
+            map_func=map_func,
+            individual_size=self.individual_size,
+            eval_fitness=self.ep_runner.eval_fitness,
+            conf=self.config.optimizer,
+            stats=stats,
+            from_checkpoint=self.from_checkpoint,
+            reset_hof=self.reset_hof,
+            random_seed=self.config.random_seed,
+        )
 
-        self.result_handler = ResultHandler(result_path=self.result_path,
-                                            neural_network_type=self.config.brain.type,
-                                            config_raw=self.config.raw_dict)
+        self.result_handler = ResultHandler(
+            result_path=self.result_path,
+            neural_network_type=self.config.brain.type,
+            config_raw=self.config.raw_dict,
+        )
 
     def run(self):
         self.result_handler.check_path()
@@ -133,6 +175,7 @@ class Experiment(object):
             output_space=self.output_space,
             input_space=self.input_space,
             individual_size=self.individual_size,
-            final_checkpoint_data=final_checkpoint_data)
+            final_checkpoint_data=final_checkpoint_data,
+        )
         self.processing_handler.cleanup_framework()
         print("Done")
