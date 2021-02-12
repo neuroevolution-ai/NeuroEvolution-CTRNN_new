@@ -36,7 +36,8 @@ class TestIBrain:
         brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
                                    config=ffnn_config)
 
-        sample_input = input_space.sample()
+        sample_input = np.ones(one_dimensional_shape) 
+        assert  input_space.contains(sample_input)
         parsed_input = brain.parse_brain_input_output(sample_input, is_brain_input=True)
 
         # When input_space == spaces.Box the input is not transformed
@@ -45,7 +46,8 @@ class TestIBrain:
         # Environments with RGB observations usually use spaces.Box as their observation space, which means it is
         # the input space for the brains
         # Assume now we have RGB input
-        sample_input = input_space.sample().reshape((1, 1, -1))
+        sample_input = np.ones(one_dimensional_shape) .reshape((1, 1, -1))
+        assert  input_space.contains(sample_input)
         parsed_input = brain.parse_brain_input_output(sample_input, is_brain_input=True)
 
         # When input_space == spaces.Box the input is not transformed
@@ -55,9 +57,9 @@ class TestIBrain:
         # Now test the output space
 
         # Reference shape, this is what the output of the brain should look like
-        sample_output_shape = output_space.sample().shape
+        sample_output_shape = output_space.shape
 
-        brain_output = brain.step(input_space.sample())
+        brain_output = brain.step(sample_input)
 
         assert brain_output.shape == sample_output_shape
 
@@ -73,7 +75,8 @@ class TestIBrain:
 
         # Test input space
 
-        sample_input = input_space.sample()
+        sample_input = 1
+        assert  input_space.contains(sample_input)
         parsed_input = brain.parse_brain_input_output(sample_input, is_brain_input=True)
 
         # Parsed Input should be one-hot encoded
@@ -85,7 +88,7 @@ class TestIBrain:
 
         # Test output space
 
-        brain_output = brain.step(input_space.sample())
+        brain_output = brain.step(sample_input)
 
         # This should be an Integer in [0, output_space.n - 1]
         assert isinstance(brain_output, np.integer)
@@ -108,13 +111,14 @@ class TestIBrain:
                                    config=ffnn_config)
 
         # Test input space
-        sample_input = input_space.sample()
+        sample_input = (np.ones(self.one_dimensional_shape), 1, np,ones(self.multi_dimensional_shape)*2, 2)
+        assert input_space.contains(sample_input)
         parsed_input = brain.parse_brain_input_output(sample_input, is_brain_input=True)
         assert len(parsed_input.shape) == 1
         assert FeedForwardNumPy._size_from_space(input_space) == len(parsed_input)
 
         # Test output space
-        brain_output = brain.step(input_space.sample())
+        brain_output = brain.step(sample_input)
 
         # 4 nested spaces inside the input space
         assert len(brain_output) == 4
