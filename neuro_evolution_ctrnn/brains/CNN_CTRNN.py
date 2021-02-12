@@ -1,26 +1,25 @@
-from abc import ABC
+from typing import Union
 
 import numpy as np
-from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
-from typing import Union
-from gym.spaces import Space, Box
-from brains import IBrain, register_brain
-from brains.continuous_time_rnn import ContinuousTimeRNN
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from gym.spaces import Space, Box
+
+from brains import IBrain, register_brain
+from brains.continuous_time_rnn import ContinuousTimeRNN
+from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
 
 
 # noinspection PyPep8Naming
 @register_brain("CNN_CTRNN", CnnCtrnnCfg)
 class CnnCtrnn(IBrain[CnnCtrnnCfg]):
-    _usage_key_cnn_output = '_cnn_output_space'
+    _usage_key_cnn_output = "_cnn_output_space"
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CnnCtrnnCfg):
         super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
-        self.config = config
         paramter_usage_dict = self.get_free_parameter_usage(config, input_space, output_space)
         cnn_output_space = paramter_usage_dict[self._usage_key_cnn_output]
         cnn_size = Cnn.get_individual_size(config.cnn_conf, input_space, cnn_output_space)
@@ -32,8 +31,8 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        return self.ctrnn.step(self.cnn.step(ob))
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+        return self.ctrnn.brainstep(self.cnn.brainstep(ob))
 
     @classmethod
     def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
@@ -73,8 +72,6 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     _number_input_channels = 3
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):
-
-        # super().__init__()
         nn.Module.__init__(self)
         IBrain.__init__(self, input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)

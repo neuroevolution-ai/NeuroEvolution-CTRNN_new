@@ -11,7 +11,7 @@ import threading
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from attr import s
 import numpy as np
-from tools.helper import output_to_action
+from tools.helper import transform
 
 cfg_path = os.path.join('configurations', 'reverse_fixed.json')
 cfg_exp = config_from_file(cfg_path)
@@ -65,6 +65,7 @@ for i in range(1):
     brain = ContinuousTimeRNN(input_space=experiment.input_space, output_space=experiment.output_space, individual=ind,
                               config=cfg_exp.brain)
     ob = env.reset()
+    transformed_ob = transform(ob, coming_from_space=experiment.input_space, is_brain_input=True)
     env.unwrapped.input_data = [0, 1, 0, 1, 1]
     env.unwrapped.target = env.unwrapped.target_from_input_data(env.unwrapped.input_data)
 
@@ -72,10 +73,11 @@ for i in range(1):
     done = False
     fitness_current = 0
     while not done:
-        brain_output = brain.step(ob)
-        action = output_to_action(brain_output, experiment.output_space)
+        brain_output = brain.step(transformed_ob)
+        action = transform(brain_output, coming_from_space=experiment.output_space, is_brain_input=False)
         print("act: " + str(action))
         ob, rew, done, info = env.step(action)
+        transformed_ob = transform(ob, coming_from_space=experiment.input_space, is_brain_input=True)
         fitness_current += rew
         if rew < 0:
             print("error")

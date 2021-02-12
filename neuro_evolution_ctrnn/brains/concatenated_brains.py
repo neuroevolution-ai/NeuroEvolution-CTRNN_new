@@ -1,8 +1,9 @@
-from gym.spaces import Space, Box
 import numpy as np
+from gym.spaces import Space, Box, flatdim
 
-from brains import IBrain, register_brain
+from brains import register_brain
 from brains.ffnn import FeedForwardNumPy
+from brains.i_brain import IBrain
 from brains.lstm import LSTMLayered
 from tools.configurations import ConcatenatedBrainLSTMCfg, FeedForwardCfg, LstmLayeredCfg
 
@@ -13,9 +14,6 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
                  config: ConcatenatedBrainLSTMCfg):
         super().__init__(input_space, output_space, individual, config)
 
-        self.config = config
-        self.input_space = input_space
-        self.output_space = output_space
         self.feed_forward_front = None
         self.feed_forward_back = None
 
@@ -70,8 +68,8 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
 
     @classmethod
     def get_configs_and_output_sizes(cls, config: ConcatenatedBrainLSTMCfg, input_space: Space, output_space: Space):
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
 
         lstm_input_size = input_size
         lstm_output_size = output_size
@@ -115,4 +113,4 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
             individual_size += FeedForwardNumPy.get_individual_size(feed_forward_back_cfg,
                                                                     Box(-1, 1, (lstm_output_size,)), output_space)
 
-        return {'individual_size': individual_size}
+        return {"individual_size": individual_size}

@@ -1,9 +1,12 @@
 import abc
-import torch.nn as nn
-from tools.configurations import IBrainCfg, register
+from typing import Tuple, Union, TypeVar, Generic, Type, Callable
+
 import numpy as np
-from gym.spaces import Space, Discrete, Box, tuple
-from typing import TypeVar, Generic, Type, Callable
+import torch.nn as nn
+from gym import spaces
+from gym.spaces import flatdim
+
+from tools.configurations import IBrainCfg, register
 
 registered_brains = {}
 
@@ -18,33 +21,41 @@ def register_brain(name: str, config_class: Type[IBrainCfg]):
     return _register
 
 
-ConfigClass = TypeVar('ConfigClass', bound=IBrainCfg)
+ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
 
 
 class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
-        # todo: remove these default assignments from derived classes
+    def __init__(self, input_space: spaces.Space, output_space: spaces.Space, individual: np.ndarray,
+                 config: ConfigClass):
         self.input_space = input_space
         self.output_space = output_space
         self.config = config
 
-    def step(self, ob: np.ndarray):
-        return self.brainstep(self.prepare_input(ob))
+    def step(self, ob: Union[np.ndarray, int, Tuple]):
+        """
+        Takes an observation from a gym.Environment object and calculates a step of the brain.
 
-    def prepare_input(self, ob: np.ndarray):
-        if self.config.normalize_input:
-            return self._normalize_input(ob, self.input_space, self.config.normalize_input_target)
-        else:
-            return ob
+        The observation will be transformed according to the input space to a suitable form for the brain, for example
+        an observation coming from a Discrete Space will be transformed into a one-hot encoded vector.
+
+        :param ob: Observation from a gym.Environment object
+        :return: The output of the step of the Brain, the format of the output corresponds to the output Space of the
+                 Brain
+        """
+        ob = self.parse_brain_input(ob)
+
+        brain_output = self.brainstep(ob)
+
+        return self.parse_brain_output(brain_output)
 
     @abc.abstractmethod
     def brainstep(self, ob: np.ndarray):
         pass
 
     @classmethod
-    def get_individual_size(cls, config: ConfigClass, input_space: Space, output_space: Space) -> int:
+    def get_individual_size(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space) -> int:
         """uses context information to calculate the required number of free parameter needed to construct
                 an individual of this class"""
 
@@ -64,7 +75,8 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
 
     @classmethod
     @abc.abstractmethod
-    def get_free_parameter_usage(cls, config: ConfigClass, input_space: Space, output_space: Space) -> dict:
+    def get_free_parameter_usage(cls, config: ConfigClass, input_space: spaces.Space,
+                                 output_space: spaces.Space) -> dict:
         """returns a dict for the mapping from free parameters to parts of the brain. For functional purposes
         only the sum of the individual leaves is relevant at the time of writing this docstring.
         Items (and their respective subtrees) are ignored if their key starts with '_'.
@@ -93,69 +105,102 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def set_class_state(cls, *nargs, **kwargs):
         pass
 
-    @staticmethod
-    def _normalize_input(ob, input_space, normalize_input_target):
-        # todo: remove this
-        for idx, item in enumerate(ob):
-            if isinstance(input_space, Box):
-                if input_space.bounded_below[idx] and input_space.bounded_above[idx]:
-                    ob[idx] = IBrain._normalize(ob[idx], input_space.low[idx],
-                                                input_space.high[idx]) * normalize_input_target
-            else:
-                raise NotImplementedError("normalize_input is only defined for input-type Box")
-
-        return ob
-
-    @staticmethod
-    def _normalize(x, low, high):
-        """scales a value x from interval [low,high] to interval [0,1]"""
-        return (x - low) / (high - low)
-
-    @staticmethod
-    def _scale_observation(ob, input_space: Space, target: float):
-        # todo: remove this
-        if isinstance(input_space, Box):
-            # note: some spaces from some envs don't define input_space.bounded_below properly so we treat
-            # very high bounds as unbounded, too
-            mask = input_space.bounded_below & input_space.bounded_above \
-                   & (input_space.bounded_below > -1e5) \
-                   & (input_space.bounded_above < 1e5)
-
-            # scaled is now between 0 and 1
-            scaled = IBrain._normalize(ob[mask], input_space.low[mask],
-                                       input_space.high[mask])
-
-            # ob[mask] is now between -target and +target
-            ob[mask] = (scaled - 0.5) * (2 * target)
-        else:
-            raise NotImplementedError("normalize_input is only defined for input-type Box")
-        return ob
-
-    @staticmethod
-    def _size_from_space(space: Space) -> int:
-        if isinstance(space, Discrete):
-            return space.n  # type: ignore
-        elif isinstance(space, Box):
-            return np.prod(space.shape)  # type: ignore
-        elif isinstance(space, tuple.Tuple):
-            sum_ = 0
-            for x in space:
-                sum_ += IBrain._size_from_space(x)
-            return sum_
-        else:
-            raise NotImplementedError("not implemented input/output space: " + str(type(space)))
-
     @classmethod
-    def generate_and_set_class_state(cls, config: ConfigClass, input_space: Space, output_space: Space):
+    def set_masks_globally(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
         pass
 
-    def discrete_to_vector(self, ob):
-        # todo: use this function in all derived classes
-        #  and maybe find a even cleaner way to do this without violating DRY
-        ob_new = np.zeros(self.input_space.n)
-        ob_new[ob] = 1
-        return ob_new
+    def _recursive_parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple], relevant_space: spaces.Space):
+        if isinstance(relevant_space, spaces.Box):
+            return brain_input
+        elif isinstance(relevant_space, spaces.Discrete):
+            # We encode Discrete Spaces as one-hot vectors
+            one_hot_vector = np.zeros(relevant_space.n)
+            one_hot_vector[brain_input] = 1
+            return one_hot_vector
+        elif isinstance(relevant_space, spaces.Tuple):
+            # Tuple Spaces have a tuple of "nested" Spaces. Environment observations (inputs for the brain) is therefore
+            # a tuple where each entry in the tuple is linked to the corresponding Space.
+            parsed_brain_input = []
+            for i, sub_input in enumerate(brain_input):
+                if isinstance(relevant_space[i], spaces.Tuple):
+                    raise RuntimeError("""Gym Tuple Spaces inside a gym Tuple space are not supported, maybe choose
+                                          another environment""")
+                parsed_sub_input = self._recursive_parse_brain_input(sub_input, relevant_space=relevant_space[i])
 
+                # Inputs from the sub spaces are flattened and concatenated here, otherwise some brains could not
+                # work with this
+                parsed_brain_input = np.concatenate((parsed_brain_input, parsed_sub_input.flatten()))
+            return np.array(parsed_brain_input)
+
+        else:
+            raise RuntimeError(
+                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+            )
+
+    def parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple]):
+        """
+        Pre-processes the input for the brain according to the gym.Space it comes from.
+
+        If the input space is a:
+            - spaces.Box then nothing is done to brain_input
+            - spaces.Discrete then brain_input is encoded as a one-hot vector
+            - spaces.Tuple then the brain_input is a tuple of inputs where each entry corresponds to a sub-space inside
+                the Tuple Space. These entries get recursively pre-processed and concatenated into a one-dimensional
+                NumPy array.
+
+        Other Spaces or Tuple Spaces inside Tuple Spaces are currently not supported.
+
+        :param brain_input: An observation from an environment
+        :return: Pre-processed observation, according to self.input_space
+        """
+        # We are coming from the input space therefore set relevant space accordingly
+        return self._recursive_parse_brain_input(brain_input, relevant_space=self.input_space)
+
+    def _recursive_parse_brain_output(self, brain_output: np.ndarray, relevant_space: spaces.Space):
+        if isinstance(relevant_space, spaces.Box):
+            return brain_output.reshape(relevant_space.shape)
+        elif isinstance(relevant_space, spaces.Discrete):
+            return np.argmax(brain_output)
+        elif isinstance(relevant_space, spaces.Tuple):
+            # Transform the brain output into a tuple which match the corresponding "nested" Spaces
+            parsed_brain_output = []
+            index = 0
+            for sub_space in relevant_space:
+                current_range = flatdim(sub_space)
+
+                parsed_brain_output.append(
+                    self._recursive_parse_brain_output(brain_output[index:index + current_range],
+                                                       relevant_space=sub_space)
+                )
+                index += current_range
+            return tuple(parsed_brain_output)
+        else:
+            raise RuntimeError(
+                "The gym.Space '{}' is currently not supported to be parsed.".format(type(relevant_space))
+            )
+
+    def parse_brain_output(self, brain_output: np.ndarray):
+        """
+        Post-processes the output of the brain so that it can be applied in the output space (i.e. the action space of
+        the environment).
+
+        If the output space is a:
+            - spaces.Box then brain_output is reshaped to the shape of self.output_space
+            - spaces.Discrete then the argmax is taken from brain_output
+            - spaces.Tuple then brain_output is reshaped into a tuple where each entry of the tuple is recursively
+                created to match its sub-space.
+
+        Other Spaces are currently not supported.
+
+        :param brain_output: The output that is coming from the brain
+        :return: Post-processed brain output, according to self.output_space
+        """
+        # We are going to the output space
+        return self._recursive_parse_brain_output(brain_output, relevant_space=self.output_space)
+
+    @classmethod
+    def generate_and_set_class_state(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
+        pass
 
     def get_neuron_states(self):
         raise NotImplementedError("Support for brain visualizer is not implemented for this brain.")
@@ -208,4 +253,3 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             raise RuntimeError(
                 "The chosen non linearity '{}' is not implemented, choose either 'relu' or 'tanh'"
                 "".format(activation))
-

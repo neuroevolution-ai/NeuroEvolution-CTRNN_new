@@ -1,11 +1,14 @@
-import numpy as np
-from tools.configurations import ContinuousTimeRNNCfg
-from typing import List, Union
-from gym.spaces import Space, Discrete
 import logging
 import math
-from brains import IBrain, register_brain
+from typing import List, Union
+
+import numpy as np
+from gym.spaces import Space, flatdim
 from scipy import sparse
+
+from brains import register_brain
+from brains.i_brain import IBrain
+from tools.configurations import ContinuousTimeRNNCfg
 
 
 # noinspection PyPep8Naming
@@ -27,7 +30,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def learned_sparse(self, mat, percentile):
         M = np.abs(mat.toarray())
-        p = np.percentile(a=M, q=percentile, interpolation='higher')
+        p = np.percentile(a=M, q=percentile, interpolation="higher")
         mat[M < p] = 0
         return sparse.csr_matrix(mat, dtype=float)
 
@@ -55,13 +58,13 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
         self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
 
-        if self.config.v_mask == 'learned':
+        if self.config.v_mask == "learned":
             self.V = self.learned_sparse(self.V, self.config.v_mask_param)
 
-        if self.config.w_mask == 'learned':
+        if self.config.w_mask == "learned":
             self.W = self.learned_sparse(self.W, self.config.w_mask_param)
 
-        if self.config.t_mask == 'learned':
+        if self.config.t_mask == "learned":
             self.T = self.learned_sparse(self.T, self.config.t_mask_param)
 
         index: int = V_size + W_size + T_size
@@ -91,7 +94,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             self.clipping_range_min = np.asarray([config.clipping_range_min] * N_n)
             self.clipping_range_max = np.asarray([config.clipping_range_max] * N_n)
         else:
-            raise RuntimeError("unknown parameter for optimize_state_boundaries")
+            raise RuntimeError("Unknown parameter for optimize_state_boundaries: {}."
+                               "".format(self.config.optimize_state_boundaries))
 
         # Set elements of main diagonal to less than 0
         if config.set_principle_diagonal_elements_of_W_negative:
@@ -101,12 +105,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         assert self.config.substeps > 0
 
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        if isinstance(self.input_space, Discrete):
-            # todo: do this observation-transformation in a cleaner way
-            ob = self.discrete_to_vector(ob)
-        else:
-            # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
-            ob = ob.flatten()
+        # RGB-Data usually comes in 210x160x3 shape, but V is always 1D-Vector
+        ob = ob.flatten()
 
         if self.config.use_bias:
             ob = np.append(ob, 1)
@@ -119,9 +119,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
                 y_ = np.tanh(self.y)
             elif self.config.neuron_activation == "learned":
                 # value = alpha * np.tanh(self.y) + (1-alpha) * np.relu(self.y)
-                raise NotImplementedError("learned activations are not yet implemented")
+                raise NotImplementedError("Learned activations are not yet implemented.")
             else:
-                raise RuntimeError("unknown aktivation function: " + str(self.config.neuron_activation))
+                raise RuntimeError("Unknown activation function: {}.".format(self.config.neuron_activation))
 
             dydt: np.ndarray = self.W.dot(y_) + self.V.dot(ob)
 
@@ -161,11 +161,11 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     @classmethod
     def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
-            logging.warning("masks are already present in class")
+            logging.warning("Masks are already present in class")
         # todo: also store masks in checkpoints and hof.
         v_mask = cls._generate_mask(config.v_mask, config.number_neurons, input_size, config.v_mask_param)
         if config.use_bias:
@@ -184,7 +184,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
             return np.random.rand(n, m) < mask_param
         elif mask_type == "logarithmic":
             if mask_param < 1.05:
-                raise RuntimeError("mask_param to small: " + str(mask_param) + " must be at least +1.05")
+                raise RuntimeError("mask_param too small: {}. It must be at least +1.05.".format(mask_param))
             base = mask_param
             indices = [math.floor(base ** y) for y in np.arange(0, math.floor(math.log(max(m, n), base)) + 1, 1)]
             indices = indices
@@ -212,7 +212,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         elif mask_type == "learned":
             return np.ones((n, m), dtype=bool)
         else:
-            raise RuntimeError("unknown mask_type: " + str(mask_type))
+            raise RuntimeError("Unknown mask_type: " + str(mask_type))
 
     def get_neuron_states(self):
         return self.y

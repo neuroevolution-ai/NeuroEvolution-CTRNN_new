@@ -1,9 +1,12 @@
 import abc
+from typing import TypeVar
+
+import numpy as np
 import torch
 from gym import Space
+from gym.spaces import flatdim
 from torch import nn
-import numpy as np
-from typing import TypeVar
+
 from brains.i_brain import IBrain
 from tools.configurations import IPytorchBrainCfg
 
@@ -15,7 +18,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IPytorchBrainCfg):
         nn.Module.__init__(self)
         IBrain.__init__(self, input_space, output_space, individual, config)
-        self.output_size = IBrain._size_from_space(self.output_space)
+        self.output_size = flatdim(self.output_space)
         assert len(individual) == self.get_individual_size(
             config=config, input_space=input_space, output_space=output_space)
 
@@ -24,7 +27,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
 
         # Disable tracking of the gradients since backpropagation is not used
         with torch.no_grad():
-            self.brain = self.get_brain(config, IBrain._size_from_space(input_space))
+            self.brain = self.get_brain(config, flatdim(input_space))
 
             # Iterate through all layers and assign the weights from the individual
             current_index = 0
@@ -80,7 +83,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
         index = 0
         # size of the learnable input-hidden weights
 
-        index += hidden_size * IBrain._size_from_space(input_space) * number_gates
+        index += hidden_size * flatdim(input_space) * number_gates
         if num_layers > 1:
             index += hidden_size * hidden_size * (num_layers - 1) * number_gates
 
@@ -89,7 +92,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
 
         if config.use_bias:
             index += 2 * hidden_size * num_layers * number_gates
-        index += IBrain._size_from_space(output_space) * hidden_size
+        index += flatdim(output_space) * hidden_size
         # TODO better usage of the dict
         return {"all": index}
 

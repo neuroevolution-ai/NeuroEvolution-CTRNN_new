@@ -57,7 +57,7 @@ class TestExperiment:
                 experiment_sequential.result_handler.result_log.chapters["fitness"][-1]["max"])
 
     def test_run_atari_setup(self, tmpdir, config):
-        config = evolve(config, environment='Qbert-ram-v0')
+        config = evolve(config, environment="Qbert-ram-v0")
         Experiment(configuration=config,
                    result_path=tmpdir,
                    from_checkpoint=None,
@@ -65,16 +65,16 @@ class TestExperiment:
 
     def test_run_procgen(self, tmpdir, config, mu_lambda_es_config):
         brainCfg = evolve(config.brain,
-                          v_mask='logarithmic', v_mask_param=128,
-                          w_mask='logarithmic', w_mask_param=128,
-                          t_mask='logarithmic', t_mask_param=128)
+                          v_mask="logarithmic", v_mask_param=128,
+                          w_mask="logarithmic", w_mask_param=128,
+                          t_mask="logarithmic", t_mask_param=128)
 
         # need custom eprunner-config, because procgen experiments need explicit config
         episode_runner_cfg = evolve(config.episode_runner,
                                     environment_attributes=ProcGenEnvAttributesCfg(type="ProcGenAttr"))
 
         # need to use mu_lambda_es_config, because genome is too large for CMA_ES
-        config = evolve(config, environment='procgen:procgen-heist-v0', brain=brainCfg, optimizer=mu_lambda_es_config,
+        config = evolve(config, environment="procgen:procgen-heist-v0", brain=brainCfg, optimizer=mu_lambda_es_config,
                         episode_runner=episode_runner_cfg)
 
         exp = Experiment(configuration=config,
@@ -87,13 +87,13 @@ class TestExperiment:
         current_directory = os.path.dirname(os.path.realpath(__file__))
         example_conf_path = os.path.join(current_directory, "..", "configurations")
         for conf_name in os.listdir(example_conf_path):
-            print("next conf: " + conf_name)
+            print("Next configuration: " + conf_name)
             path = os.path.join(example_conf_path, conf_name)
             if os.path.isdir(path):
-                print("skipping, because directory")
+                print("Skipping, because its a directory")
                 continue
-            if conf_name == 'temp.json':
-                print("skipping, because temp file")
+            if conf_name == "temp.json":
+                print("Skipping, because its a temp file")
                 continue
 
             if "design" in conf_name:
@@ -103,8 +103,8 @@ class TestExperiment:
             else:
                 c = ConfigReader.config_from_file(path)
 
-            if c.environment in ['ReacherMemory-v0']:
-                print("skipping, because Mujoco")
+            if c.environment in ["ReacherMemory-v0"]:
+                print("Skipping, because its a Mujoco environment")
                 continue
 
             Experiment(configuration=c,

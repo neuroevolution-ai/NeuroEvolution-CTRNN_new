@@ -63,7 +63,9 @@ class TestBrainLoader:
         individual = np.zeros(
             brain_class.get_individual_size(input_space=input_space, output_space=output_space, config=config))
         brain = brain_class(input_space=input_space, output_space=output_space, individual=individual, config=config)
-        assert 1 == brain.step(input_space.sample())
+
+        # Needs to be zero because the Discrete Space has n set to 1 so only zeros can be used as input
+        assert 0 == brain.step(input_space.sample())
 
     def test_two_brains_for_one_config(self):
         brains.i_brain.register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe1)

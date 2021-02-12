@@ -16,8 +16,6 @@
     "type": "CTRNN",
     "number_neurons": 2,
     "use_bias": false,
-    "normalize_input": false,
-    "normalize_input_target": 0,
     "neuron_activation": "tanh",
     "delta_t": 0.05,
     "optimize_state_boundaries": "legacy",

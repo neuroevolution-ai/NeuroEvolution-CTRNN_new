@@ -1,14 +1,14 @@
-from bz2 import BZ2Compressor
-import gym
 import logging
-import numpy as np
 import time
 from typing import Optional
 
-from tools.helper import set_random_seeds, output_to_action
+import cv2
+import gym
+import numpy as np
+
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.env_handler import EnvHandler
-import cv2
+from tools.helper import set_random_seeds
 
 
 class EpisodeRunner:
@@ -74,14 +74,12 @@ class EpisodeRunner:
                 brain_vis = None
 
             while not done:
-                brain_output = brain.step(ob)
-                action = output_to_action(brain_output, self.output_space)
+                action = brain.step(ob)
                 ob, rew, done, info = env.step(action)
                 t += 1
                 fitness_current += rew
-
                 if brain_vis:
-                    brain_vis.process_update(in_values=ob, out_values=brain_output)
+                    brain_vis.process_update(in_values=ob, out_values=action)
                 if slow_down:
                     time.sleep(slow_down / 1000.0)
                 if render:
@@ -93,7 +91,7 @@ class EpisodeRunner:
             steps_total += t
 
         compressed_behavior = None
-        if hasattr(env, 'get_compressed_behavior'):
+        if hasattr(env, "get_compressed_behavior"):
             # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
             assert callable(env.get_compressed_behavior)
             compressed_behavior = env.get_compressed_behavior()
