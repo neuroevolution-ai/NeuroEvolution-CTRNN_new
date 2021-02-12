@@ -1,5 +1,5 @@
 import numpy as np
-from gym.spaces import Space, Box
+from gym.spaces import Space, Box, flatdim
 
 from brains import register_brain
 from brains.ffnn import FeedForwardNumPy
@@ -68,8 +68,8 @@ class ConcatenatedLSTM(IBrain[ConcatenatedBrainLSTMCfg]):
 
     @classmethod
     def get_configs_and_output_sizes(cls, config: ConcatenatedBrainLSTMCfg, input_space: Space, output_space: Space):
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
 
         lstm_input_size = input_size
         lstm_output_size = output_size

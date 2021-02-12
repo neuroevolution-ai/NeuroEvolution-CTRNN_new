@@ -4,6 +4,7 @@ from typing import Tuple, Union, TypeVar, Generic, Type, Callable
 import numpy as np
 import torch.nn as nn
 from gym import spaces
+from gym.spaces import flatdim
 
 from tools.configurations import IBrainCfg, register
 
@@ -108,21 +109,6 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
     def set_masks_globally(cls, config: ConfigClass, input_space: spaces.Space, output_space: spaces.Space):
         pass
 
-    @staticmethod
-    def _size_from_space(space: spaces.Space) -> int:
-        if isinstance(space, spaces.Discrete):
-            return space.n  # type: ignore
-        elif isinstance(space, spaces.Box):
-            return np.prod(space.shape)  # type: ignore
-        elif isinstance(space, spaces.Tuple):
-            size = 0
-            for x in space:
-                size += IBrain._size_from_space(x)
-            return size
-        else:
-            raise NotImplementedError("Calculating the size is not implemented for Spaces of type '{}'"
-                                      "".format(type(space)))
-
     def _recursive_parse_brain_input(self, brain_input: Union[np.ndarray, int, Tuple], relevant_space: spaces.Space):
         if isinstance(relevant_space, spaces.Box):
             return brain_input
@@ -180,7 +166,7 @@ class IBrain(abc.ABC, Generic[ConfigClass]):
             parsed_brain_output = []
             index = 0
             for sub_space in relevant_space:
-                current_range = self._size_from_space(sub_space)
+                current_range = flatdim(sub_space)
 
                 parsed_brain_output.append(
                     self._recursive_parse_brain_output(brain_output[index:index + current_range],

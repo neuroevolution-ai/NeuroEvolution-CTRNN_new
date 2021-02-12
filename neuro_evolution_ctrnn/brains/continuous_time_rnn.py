@@ -3,7 +3,7 @@ import math
 from typing import List, Union
 
 import numpy as np
-from gym.spaces import Space
+from gym.spaces import Space, flatdim
 from scipy import sparse
 
 from brains import register_brain
@@ -161,8 +161,8 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     @classmethod
     def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
 
         if hasattr(cls, "v_mask") or hasattr(cls, "w_mask") or hasattr(cls, "t_mask"):
             logging.warning("Masks are already present in class")

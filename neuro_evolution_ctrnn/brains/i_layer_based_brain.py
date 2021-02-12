@@ -3,6 +3,7 @@ from typing import List, TypeVar, Generic
 
 import numpy as np
 from gym import Space
+from gym.spaces import flatdim
 
 from brains.i_brain import IBrain
 from tools.configurations import ILayerBasedBrainCfg
@@ -15,8 +16,8 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
         super().__init__(input_space, output_space, individual, config)
-        input_size = self._size_from_space(input_space)
-        output_size = self._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
         hidden_layer_structure: List[int] = config.hidden_layer_structure
 
         # initialize weights out of individual
@@ -126,8 +127,8 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
     def get_free_parameter_usage(cls, config: ILayerBasedBrainCfg, input_space: Space, output_space: Space):
 
         number_gates = cls.get_number_gates()
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
         hidden_size = cls.get_number_hidden_values()
         hidden_structure = config.hidden_layer_structure
 

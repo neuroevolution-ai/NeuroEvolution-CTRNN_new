@@ -4,7 +4,7 @@ from typing import List, TypeVar
 import numpy as np
 import torch
 import torch.nn as nn
-from gym.spaces import Space
+from gym.spaces import Space, flatdim
 
 from brains.i_brain import IBrain, register_brain
 from tools.configurations import FeedForwardCfg
@@ -20,8 +20,8 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
         assert len(individual) == self.get_individual_size(config=config, input_space=input_space,
                                                            output_space=output_space)
 
-        self.input_size: int = self._size_from_space(input_space)
-        self.output_size: int = self._size_from_space(output_space)
+        self.input_size: int = flatdim(input_space)
+        self.output_size: int = flatdim(output_space)
         self.config = config
         self.use_bias = config.use_bias
 
@@ -50,8 +50,8 @@ class FeedForward(IBrain[FeedForwardConfigClass]):
 
     @classmethod
     def get_free_parameter_usage(cls, config: FeedForwardConfigClass, input_space: Space, output_space: Space):
-        input_size = cls._size_from_space(input_space)
-        output_size = cls._size_from_space(output_space)
+        input_size = flatdim(input_space)
+        output_size = flatdim(output_space)
 
         hidden_layers = cls.check_hidden_layers(config.hidden_layers)
 

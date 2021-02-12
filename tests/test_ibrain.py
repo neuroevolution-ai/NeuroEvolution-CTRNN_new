@@ -13,17 +13,6 @@ class TestIBrain:
     input_n = 50
     output_n = 10
 
-    def test_size_from_space(self):
-        test_discrete = spaces.Discrete(self.input_n)
-        assert FeedForwardNumPy._size_from_space(test_discrete) == self.input_n
-
-        test_box = spaces.Box(self.low, self.high, shape=self.multi_dimensional_shape)
-        assert FeedForwardNumPy._size_from_space(test_box) == np.prod(self.multi_dimensional_shape)
-
-        test_tuple = spaces.Tuple([test_discrete, test_box])
-        assert FeedForwardNumPy._size_from_space(test_tuple) == (self.input_n + np.prod(self.multi_dimensional_shape))
-
-    # @pytest.mark.skip(reason="Not yet implemented")
     def test_parse_box_space(self, ffnn_config):
         input_space = spaces.Box(low=self.low, high=self.high, shape=self.one_dimensional_shape)
         output_space = spaces.Box(low=self.low, high=self.high, shape=self.multi_dimensional_shape)
