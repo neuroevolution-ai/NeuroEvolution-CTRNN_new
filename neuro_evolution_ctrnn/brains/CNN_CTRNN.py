@@ -31,8 +31,8 @@ class CnnCtrnn(IBrain[CnnCtrnnCfg]):
         self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
                                        config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        return self.ctrnn.step(self.cnn.step(ob))
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+        return self.ctrnn.brainstep(self.cnn.brainstep(ob))
 
     @classmethod
     def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
@@ -72,8 +72,6 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
     _number_input_channels = 3
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):
-
-        # super().__init__()
         nn.Module.__init__(self)
         IBrain.__init__(self, input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
@@ -98,7 +96,7 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
         self.eval()
 
     def brainstep(self, ob):
-        x: torch.Tensor = torch.tensor([ob], dtype=np.float32).permute(0, 3, 1, 2)
+        x: torch.Tensor = torch.tensor([ob], dtype=torch.float32).permute(0, 3, 1, 2)
 
         with torch.no_grad():
             x = F.relu(self.conv1(x))
