@@ -179,6 +179,12 @@ class FeedForwardCfg(IBrainCfg):
     neuron_activation_output: str = 'linear'
 
 
+@attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
+class IndirectEncodedCtrnnCfg(IBrainCfg):
+    ffnn_conf: FeedForwardCfg
+    ctrnn_conf: ContinuousTimeRNNCfg
+
+
 @attr.s(slots=True, auto_attribs=True, frozen=True)
 class ElmanTorchCfg(IPytorchBrainCfg):
     pass

@@ -1,46 +1,53 @@
-from abc import ABC
-
 import numpy as np
 from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
 from typing import List, Union
-from gym.spaces import Space, Box
-from brains.i_brain import IBrain
+from gym.spaces import Space, Box, flatdim
+from brains import IBrain, register_brain
 from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains.ffnn import FeedForward
+from tools.configurations import IndirectEncodedCtrnnCfg
 import logging
 
 
 # noinspection PyPep8Naming
+@register_brain("Indirect_CTRNN", IndirectEncodedCtrnnCfg)
 class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CnnCtrnnCfg):
+
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IndirectEncodedCtrnnCfg):
         super().__init__(input_space, output_space, individual, config)
 
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
         self.config = config
-        cnn_size, ctrnn_size, cnn_output_space = self._get_sub_individual_size(config, input_space, output_space)
-        ind_cnn = individual[0:cnn_size]
-        ind_ctrnn = individual[cnn_size:cnn_size + ctrnn_size]
-        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space, config=config.cnn_conf,
-                       individual=ind_cnn)
-        self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
-                                       config=config.ctrnn_conf, individual=ind_ctrnn)
 
-    def step(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        return self.ctrnn.step(ob=ob)
+        cppn_input_space = Box(-1, 1, (6,))
+        cppn_output_space = Box(-1, 1, (1,))
 
-    @classmethod
-    def get_individual_size(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        a, b, _ = cls._get_sub_individual_size(config, input_space, output_space)
-        return a + b
+        self.cppn = FeedForward(input_space=cppn_input_space, output_space=cppn_output_space, config=config.ffnn_conf, individual=individual)
 
-    @classmethod
-    def generate_and_set_class_state(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        ContinuousTimeRNN.generate_and_set_class_state(config.ctrnn_conf, cnn_output_space, output_space)
+        individual_size_ctrnn = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, input_space, output_space)
+        individual_ctrnn = np.zeros(individual_size_ctrnn)
 
-    @classmethod
-    def get_class_state(cls):
-        return ContinuousTimeRNN.get_class_state()
+        self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf, individual=individual_ctrnn)
+
+        ## Set CTRNN matrizes
+
+    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
+
+        ## Preprocess input
+
+        return self.ctrnn.brainstep(ob=ob)
+
 
     @classmethod
-    def set_class_state(cls, v_mask, w_mask, t_mask):
-        return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
+    def get_free_parameter_usage(cls, config: IndirectEncodedCtrnnCfg, input_space: Space, output_space: Space):
+
+        cppn_input_space = Box(-1, 1, (6,))
+        cppn_output_space = Box(-1, 1, (1,))
+
+        individual_size = FeedForward.get_individual_size(config.ffnn_conf, cppn_input_space, cppn_output_space)
+
+        return {'individual_size': individual_size}
+
+    @classmethod
+    def generate_and_set_class_state(cls, config: IndirectEncodedCtrnnCfg, input_space: Space, output_space: Space):
+        ContinuousTimeRNN.generate_and_set_class_state(config=config.ctrnn_conf, input_space=input_space, output_space=output_space)
