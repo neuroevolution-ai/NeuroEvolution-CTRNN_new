@@ -1,0 +1,48 @@
+{
+  "environment": "procgen:procgen-heist-v0",
+  "random_seed": -1,
+  "number_generations": 2500,
+  "optimizer": {
+      "type": "CMA_ES",
+      "population_size": 112,
+      "sigma": 1.0,
+      "checkpoint_frequency": 10,
+      "hof_size": 10,
+      "mu": 56,
+      "efficiency_weight": 0.0,
+      "fix_seed_for_generation": true
+  },
+      "brain": {
+          "type": "Indirect_CTRNN",
+          "ffnn_conf": {
+              "type": "FeedForward_NumPy",
+              "use_bias": true,
+              "hidden_layers": [[16, 32, 16, 8]],
+              "neuron_activation": "relu"
+          },
+          "ctrnn_conf": {
+              "type": "CTRNN",
+              "number_neurons": 200,
+              "neuron_activation": "tanh",
+              "use_bias": false,
+              "delta_t": 0.05,
+              "optimize_state_boundaries": "fixed",
+              "clipping_range_max": 1.0,
+              "clipping_range_min": -1.0,
+              "optimize_initial_neuron_state": false,
+              "set_principle_diagonal_elements_of_W_negative": false,
+              "v_mask": "dense",
+              "w_mask": "dense",
+              "t_mask": "dense"
+        }
+  },
+  "episode_runner": {
+      "number_fitness_runs": 5,
+      "reuse_env": true,
+      "max_steps_per_run": 1000,
+      "keep_env_seed_fixed_during_generation": true,
+      "environment_attributes": {
+          "type": "ProcGenAttr"
+      }
+  }
+}
