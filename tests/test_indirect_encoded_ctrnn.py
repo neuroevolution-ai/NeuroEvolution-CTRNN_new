@@ -1,13 +1,14 @@
 import gym
 import numpy as np
 from gym.spaces import flatdim
+import time
 
 from brains.indirect_encoded_ctrnn import IndirectEncodedCtrnn
 from tools.configurations import FeedForwardCfg, ContinuousTimeRNNCfg, IndirectEncodedCtrnnCfg
 
 class TestIndirectEncodedCTRNN:
 
-    def test_hyperbrain(self, ffnn_config: FeedForwardCfg):
+    def test_hyperbrain(self):
 
         env = gym.make('procgen:procgen-heist-v0')
 
@@ -27,14 +28,17 @@ class TestIndirectEncodedCTRNN:
                                                                                     neuron_activation="tanh",
                                                                                     set_principle_diagonal_elements_of_W_negative=True))
 
-        IndirectEncodedCtrnn.generate_and_set_class_state(config=hyperbrain_config, input_space=input_space, output_space=output_space)
+        IndirectEncodedCtrnn.generate_and_set_class_state(config=hyperbrain_config, input_space=input_space,
+                                                          output_space=output_space)
 
         individual_size = IndirectEncodedCtrnn.get_individual_size(hyperbrain_config, input_space, output_space)
         assert individual_size == 1329
 
         individual = np.random.rand(individual_size).astype(np.float32)
 
+        t_start = time.time()
         hyperbrain = IndirectEncodedCtrnn(input_space, output_space, individual, hyperbrain_config)
+        print("Initializing indirect encoded CTRNN took {}s".format(time.time() - t_start))
 
         input_image_width = input_space.shape[0]
         input_image_height = input_space.shape[1]
