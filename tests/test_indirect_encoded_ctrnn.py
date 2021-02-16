@@ -26,7 +26,7 @@ class TestIndirectEncodedCTRNN:
                                                                                     optimize_state_boundaries="fixed",
                                                                                     number_neurons=200,
                                                                                     neuron_activation="tanh",
-                                                                                    set_principle_diagonal_elements_of_W_negative=True))
+                                                                                    set_principle_diagonal_elements_of_W_negative=False))
 
         IndirectEncodedCtrnn.generate_and_set_class_state(config=hyperbrain_config, input_space=input_space,
                                                           output_space=output_space)
@@ -96,3 +96,12 @@ class TestIndirectEncodedCTRNN:
                 T_test[i, j] = hyperbrain.cppn.step(cppn_input)
 
         assert np.array_equal(T_test, hyperbrain.ctrnn.T)
+
+        obs = env.reset()
+
+        while True:
+            action = hyperbrain.step(obs)
+            obs, rew, done, info = env.step(action)
+
+            if done:
+                break

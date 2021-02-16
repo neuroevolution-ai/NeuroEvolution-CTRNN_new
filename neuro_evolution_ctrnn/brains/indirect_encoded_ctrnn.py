@@ -12,21 +12,16 @@ from tools.configurations import IndirectEncodedCtrnnCfg
 class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
 
     # Parameters TODO: Put them to anywhere else
-    red_z: float = 1.3
-    green_z: float = 1.6
-    blue_z: float = 1.9
-    outputs_radius: float = 0.45
-    outputs_z: float = -0.5
+    red_z: float
+    green_z: float
+    blue_z: float
+    outputs_radius: float
+    outputs_z: float
 
     input_positions: np.ndarray
     neuron_positions: np.ndarray
     output_positions: np.ndarray
-
-    @classmethod
-    def set_class_state(cls, input_positions, neuron_positions, output_positions):
-        cls.input_positions = input_positions
-        cls.neuron_positions = neuron_positions
-        cls.output_positions = output_positions
+    cppn_inputs: np.ndarray
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IndirectEncodedCtrnnCfg):
         super().__init__(input_space, output_space, individual, config)
@@ -40,12 +35,7 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space,
                                      config=config.ffnn_conf, individual=individual)
 
-        individual_size_ctrnn = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, input_space, output_space)
-        individual_ctrnn = np.zeros(individual_size_ctrnn)
-
-        assert individual_size_ctrnn == len(self.input_positions) * len(self.neuron_positions) + \
-               len(self.neuron_positions) * len(self.neuron_positions) + \
-               len(self.neuron_positions) * len(self.output_positions)
+        individual_ctrnn = self.cppn.predict(self.cppn_inputs)
 
         self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf,
                                        individual=individual_ctrnn)
@@ -55,27 +45,14 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         self.ctrnn.W = self.ctrnn.W.toarray()
         self.ctrnn.T = self.ctrnn.T.toarray()
 
-        # Decode V using cppn
-        for i in range(len(self.neuron_positions)):
-            for j in range(len(self.input_positions)):
-                cppn_input = np.concatenate((self.input_positions[j], self.neuron_positions[i]))
-                self.ctrnn.V[i, j] = self.cppn.step(cppn_input)
-
-        # Decode W using cppn
-        for i in range(len(self.neuron_positions)):
-            for j in range(len(self.neuron_positions)):
-                cppn_input = np.concatenate((self.neuron_positions[j], self.neuron_positions[i]))
-                self.ctrnn.W[i, j] = self.cppn.step(cppn_input)
-
-        # Decode T using cppn
-        for i in range(len(self.output_positions)):
-            for j in range(len(self.neuron_positions)):
-                cppn_input = np.concatenate((self.neuron_positions[j], self.output_positions[i]))
-                self.ctrnn.T[i, j] = self.cppn.step(cppn_input)
-
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 
+        assert ob.ndim == 3
+        assert ob.shape == self.ctrnn.input_space.shape
+
         ob = self.get_input_vector_from_observation(ob)
+
+        assert ob.ndim == 1
 
         return self.ctrnn.brainstep(ob=ob)
 
@@ -98,11 +75,46 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         input_image_height = input_space.shape[1]
         output_size = flatdim(output_space)
 
-        input_positions = cls.get_rgb_positions(input_image_width, input_image_height, cls.red_z, cls.green_z, cls.blue_z)
-        neuron_positions = np.random.random((config.ctrnn_conf.number_neurons, 3))
-        output_positions = cls.get_circle_positions(output_size, cls.outputs_radius, cls.outputs_z)
+        # TODO: Put them to anywhere else
+        cls.red_z = 1.3
+        cls.green_z = 1.6
+        cls.blue_z = 1.9
+        cls.outputs_radius = 0.45
+        cls.outputs_z = -0.5
 
-        cls.set_class_state(input_positions=input_positions, neuron_positions=neuron_positions, output_positions=output_positions)
+        cls.input_positions = cls.get_rgb_positions(input_image_width, input_image_height, cls.red_z, cls.green_z, cls.blue_z)
+        cls.neuron_positions = np.random.random((config.ctrnn_conf.number_neurons, 3))
+        cls.output_positions = cls.get_circle_positions(output_size, cls.outputs_radius, cls.outputs_z)
+
+        individual_size_ctrnn = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, input_space, output_space)
+
+        assert individual_size_ctrnn == len(cls.input_positions) * len(cls.neuron_positions) + len(
+            cls.neuron_positions) * len(cls.neuron_positions) + len(cls.neuron_positions) * len(cls.output_positions)
+
+        cls.cppn_inputs = np.zeros((individual_size_ctrnn, 6))
+        index = 0
+
+        # Decode V using cppn
+        for i in range(len(cls.neuron_positions)):
+            for j in range(len(cls.input_positions)):
+                cls.cppn_inputs[index] = np.concatenate((cls.input_positions[j], cls.neuron_positions[i]))
+                index += 1
+
+        # Decode W using cppn
+        for i in range(len(cls.neuron_positions)):
+            for j in range(len(cls.neuron_positions)):
+                cls.cppn_inputs[index] = np.concatenate((cls.neuron_positions[j], cls.neuron_positions[i]))
+                index += 1
+
+        # Decode T using cppn
+        for i in range(len(cls.output_positions)):
+            for j in range(len(cls.neuron_positions)):
+                cls.cppn_inputs[index] = np.concatenate((cls.neuron_positions[j], cls.output_positions[i]))
+                index += 1
+
+        assert index == individual_size_ctrnn
+
+        cls.cppn_inputs = cls.cppn_inputs.reshape(individual_size_ctrnn, 6, 1)
 
     @staticmethod
     def get_rgb_positions(width: int, height: int,
