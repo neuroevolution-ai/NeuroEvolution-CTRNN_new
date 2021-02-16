@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+from gym.spaces import flatdim
 
 from brains.indirect_encoded_ctrnn import IndirectEncodedCtrnn
 from tools.configurations import FeedForwardCfg, ContinuousTimeRNNCfg, IndirectEncodedCtrnnCfg
@@ -8,11 +9,10 @@ class TestIndirectEncodedCTRNN:
 
     def test_hyperbrain(self, ffnn_config: FeedForwardCfg):
 
-        input_size = 20
-        output_size = 10
+        env = gym.make('procgen:procgen-heist-v0')
 
-        input_space = gym.spaces.Box(-1, 1, (input_size,))
-        output_space = gym.spaces.Box(-1, 1, (output_size,))
+        input_space = env.observation_space
+        output_space = env.action_space
 
         hyperbrain_config = IndirectEncodedCtrnnCfg(type="Indirect_CTRNN",
                                                     ffnn_conf=FeedForwardCfg(type="FeedForward_Numpy", use_bias=True,
@@ -36,4 +36,59 @@ class TestIndirectEncodedCTRNN:
 
         hyperbrain = IndirectEncodedCtrnn(input_space, output_space, individual, hyperbrain_config)
 
+        input_image_width = input_space.shape[0]
+        input_image_height = input_space.shape[1]
+        input_size = input_image_width*input_image_height*3
+        number_neurons = hyperbrain.config.ctrnn_conf.number_neurons
+        output_size = flatdim(output_space)
 
+        assert hyperbrain.input_positions.ndim == 2
+        assert hyperbrain.input_positions.shape[0] == input_size
+        assert hyperbrain.input_positions.shape[1] == 3
+
+        assert hyperbrain.neuron_positions.ndim == 2
+        assert hyperbrain.neuron_positions.shape[0] == number_neurons
+        assert hyperbrain.neuron_positions.shape[1] == 3
+
+        assert hyperbrain.output_positions.ndim == 2
+        assert hyperbrain.output_positions.shape[0] == output_size
+        assert hyperbrain.output_positions.shape[1] == 3
+
+        # Decode V using cppn and compare
+        V_test = np.zeros((number_neurons, input_size))
+        for i in range(len(hyperbrain.neuron_positions)):
+            for j in range(len(hyperbrain.input_positions)):
+
+                cppn_input = np.concatenate((hyperbrain.input_positions[j], hyperbrain.neuron_positions[i]))
+                assert cppn_input.ndim == 1
+                assert cppn_input.size == 6
+
+                V_test[i, j] = hyperbrain.cppn.step(cppn_input)
+
+        assert np.array_equal(V_test, hyperbrain.ctrnn.V)
+
+        # Decode W using cppn and compare
+        W_test = np.zeros((number_neurons, number_neurons))
+        for i in range(len(hyperbrain.neuron_positions)):
+            for j in range(len(hyperbrain.neuron_positions)):
+
+                cppn_input = np.concatenate((hyperbrain.neuron_positions[j], hyperbrain.neuron_positions[i]))
+                assert cppn_input.ndim == 1
+                assert cppn_input.size == 6
+
+                W_test[i, j] = hyperbrain.cppn.step(cppn_input)
+
+        assert np.array_equal(W_test, hyperbrain.ctrnn.W)
+
+        # Decode T using cppn and compare
+        T_test = np.zeros((output_size, number_neurons))
+        for i in range(len(hyperbrain.output_positions)):
+            for j in range(len(hyperbrain.neuron_positions)):
+
+                cppn_input = np.concatenate((hyperbrain.neuron_positions[j], hyperbrain.output_positions[i]))
+                assert cppn_input.ndim == 1
+                assert cppn_input.size == 6
+
+                T_test[i, j] = hyperbrain.cppn.step(cppn_input)
+
+        assert np.array_equal(T_test, hyperbrain.ctrnn.T)
