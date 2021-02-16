@@ -1,12 +1,10 @@
 import numpy as np
-from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
-from typing import List, Union
+from typing import Union
 from gym.spaces import Space, Box, flatdim
 from brains import IBrain, register_brain
 from brains.continuous_time_rnn import ContinuousTimeRNN
 from brains.ffnn import FeedForwardNumPy
 from tools.configurations import IndirectEncodedCtrnnCfg
-import logging
 
 
 # noinspection PyPep8Naming
@@ -39,12 +37,18 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         cppn_input_space = Box(-1, 1, (6,))
         cppn_output_space = Box(-1, 1, (1,))
 
-        self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space, config=config.ffnn_conf, individual=individual)
+        self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space,
+                                     config=config.ffnn_conf, individual=individual)
 
         individual_size_ctrnn = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, input_space, output_space)
         individual_ctrnn = np.zeros(individual_size_ctrnn)
 
-        self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf, individual=individual_ctrnn)
+        assert individual_size_ctrnn == len(self.input_positions) * len(self.neuron_positions) + \
+               len(self.neuron_positions) * len(self.neuron_positions) + \
+               len(self.neuron_positions) * len(self.output_positions)
+
+        self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf,
+                                       individual=individual_ctrnn)
 
         # Convert scipy matrizes to numpy arrays (very hacky to do this here)
         self.ctrnn.V = self.ctrnn.V.toarray()
