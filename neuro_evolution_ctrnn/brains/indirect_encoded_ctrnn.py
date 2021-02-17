@@ -35,15 +35,18 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space,
                                      config=config.ffnn_conf, individual=individual)
 
-        individual_ctrnn = self.cppn.predict(self.cppn_inputs)
+        input_positions = 64*64*3
+        neuron_positions = 200
+        output_positions = 15
+
+        individual_size_ctrnn = input_positions * neuron_positions + neuron_positions * neuron_positions + neuron_positions * output_positions
+
+        individual_ctrnn = self.cppn.predict(np.random.random((individual_size_ctrnn, 6,1)))
+
 
         self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf,
                                        individual=individual_ctrnn)
 
-        # Convert scipy matrizes to numpy arrays (very hacky to do this here)
-        self.ctrnn.V = self.ctrnn.V.toarray()
-        self.ctrnn.W = self.ctrnn.W.toarray()
-        self.ctrnn.T = self.ctrnn.T.toarray()
 
     def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
 

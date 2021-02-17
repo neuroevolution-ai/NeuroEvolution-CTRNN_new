@@ -3,6 +3,8 @@ import copy
 import logging
 import os
 
+from scoop import futures
+
 from deap import base, tools
 import numpy as np
 from pathlib import Path
@@ -23,7 +25,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         self.toolbox = toolbox = base.Toolbox()
         self.toolbox.stats = stats
         toolbox.conf = conf
-        toolbox.register("map", map_func)
+        toolbox.register("map", futures.map)
         toolbox.register("evaluate", eval_fitness)
         # toolbox.register("shape_fitness", lambda *args: None)
         toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)

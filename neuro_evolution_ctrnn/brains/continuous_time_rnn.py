@@ -36,7 +36,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
         super().__init__(input_space, output_space, individual, config)
-        assert len(individual) == self.get_individual_size(config, input_space, output_space)
+        # assert len(individual) == self.get_individual_size(config, input_space, output_space)
         optimize_y0 = config.optimize_initial_neuron_state
         delta_t = config.delta_t
         self.config = config
@@ -48,15 +48,9 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
 
         # insert weights-values into weight-masks to receive weight-matrices
         # explanation here: https://stackoverflow.com/a/61968524/5132456
-        V_size: int = np.count_nonzero(self.v_mask)  # type: ignore
-        W_size: int = np.count_nonzero(self.w_mask)  # type: ignore
-        T_size: int = np.count_nonzero(self.t_mask)  # type: ignore
-        self.V = sparse.csr_matrix(self.v_mask, dtype=float)
-        self.W = sparse.csr_matrix(self.w_mask, dtype=float)
-        self.T = sparse.csr_matrix(self.t_mask, dtype=float)
-        self.V.data[:] = [element for element in individual[0:V_size]]
-        self.W.data[:] = [element for element in individual[V_size:V_size + W_size]]
-        self.T.data[:] = [element for element in individual[V_size + W_size:V_size + W_size + T_size]]
+        self.V = np.random.random((N_n, flatdim(input_space)))
+        self.W = np.random.random((N_n, N_n))
+        self.T = np.random.random((flatdim(output_space), N_n))
 
         if self.config.v_mask == "learned":
             self.V = self.learned_sparse(self.V, self.config.v_mask_param)
@@ -67,7 +61,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         if self.config.t_mask == "learned":
             self.T = self.learned_sparse(self.T, self.config.t_mask_param)
 
-        index: int = V_size + W_size + T_size
+        #index: int = V_size + W_size + T_size
 
         # Initial state values y0
         if optimize_y0:
