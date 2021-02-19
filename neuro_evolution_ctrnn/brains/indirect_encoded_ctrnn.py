@@ -41,15 +41,15 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         individual_ctrnn_W = self.cppn.predict(self.cppn_inputs_W)
         individual_ctrnn_T = self.cppn.predict(self.cppn_inputs_T)
 
+        #individual_ctrnn_V = np.random.random(flatdim(input_space) * config.ctrnn_conf.number_neurons)
+        #individual_ctrnn_W = np.random.random(config.ctrnn_conf.number_neurons* config.ctrnn_conf.number_neurons)
+        #individual_ctrnn_T = np.random.random(flatdim(output_space) * config.ctrnn_conf.number_neurons)
+
         individual_ctrnn_V = individual_ctrnn_V.flatten()# * (np.random.rand(len(individual_ctrnn_V)) < 0.05)
         individual_ctrnn_W = individual_ctrnn_W.flatten()
         individual_ctrnn_T = individual_ctrnn_T.flatten()
 
         individual_ctrnn = np.concatenate((individual_ctrnn_V, individual_ctrnn_W, individual_ctrnn_T))
-
-        # individual_size_ctrnn = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, input_space, output_space)
-
-        # individual_ctrnn = np.random.random(individual_size_ctrnn)
 
         self.ctrnn = ContinuousTimeRNN(input_space=input_space, output_space=output_space, config=config.ctrnn_conf,
                                        individual=individual_ctrnn)
