@@ -69,7 +69,7 @@ class TestIndirectEncodedCTRNN:
 
                 V_test[i, j] = hyperbrain.cppn.step(cppn_input)
 
-        assert np.array_equal(V_test, hyperbrain.ctrnn.V)
+        assert np.array_equal(V_test, hyperbrain.ctrnn.V.toarray())
 
         # Decode W using cppn and compare
         W_test = np.zeros((number_neurons, number_neurons))
@@ -82,7 +82,7 @@ class TestIndirectEncodedCTRNN:
 
                 W_test[i, j] = hyperbrain.cppn.step(cppn_input)
 
-        assert np.array_equal(W_test, hyperbrain.ctrnn.W)
+        assert np.array_equal(W_test, hyperbrain.ctrnn.W.toarray())
 
         # Decode T using cppn and compare
         T_test = np.zeros((output_size, number_neurons))
@@ -95,7 +95,7 @@ class TestIndirectEncodedCTRNN:
 
                 T_test[i, j] = hyperbrain.cppn.step(cppn_input)
 
-        assert np.array_equal(T_test, hyperbrain.ctrnn.T)
+        assert np.array_equal(T_test, hyperbrain.ctrnn.T.toarray())
 
         obs = env.reset()
 
