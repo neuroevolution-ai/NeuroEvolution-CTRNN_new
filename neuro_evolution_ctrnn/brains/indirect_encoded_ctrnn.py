@@ -37,17 +37,15 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
 
         self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space, config=config.ffnn_conf, individual=individual)
 
-        individual_ctrnn_V = self.cppn.predict(self.cppn_inputs_V)
-        individual_ctrnn_W = self.cppn.predict(self.cppn_inputs_W)
-        individual_ctrnn_T = self.cppn.predict(self.cppn_inputs_T)
+        individual_ctrnn_V = self.cppn.predict(self.cppn_inputs_V).flatten() # * (np.random.rand(len(individual_ctrnn_V)) < 0.05)
+        individual_ctrnn_W = self.cppn.predict(self.cppn_inputs_W).flatten()
+        individual_ctrnn_T = self.cppn.predict(self.cppn_inputs_T).flatten()
 
         #individual_ctrnn_V = np.random.random(flatdim(input_space) * config.ctrnn_conf.number_neurons)
         #individual_ctrnn_W = np.random.random(config.ctrnn_conf.number_neurons* config.ctrnn_conf.number_neurons)
         #individual_ctrnn_T = np.random.random(flatdim(output_space) * config.ctrnn_conf.number_neurons)
 
-        individual_ctrnn_V = individual_ctrnn_V.flatten()# * (np.random.rand(len(individual_ctrnn_V)) < 0.05)
-        individual_ctrnn_W = individual_ctrnn_W.flatten()
-        individual_ctrnn_T = individual_ctrnn_T.flatten()
+        #self.keep_highest_absolute_values_inplace(individual_ctrnn_V, 0.05)
 
         individual_ctrnn = np.concatenate((individual_ctrnn_V, individual_ctrnn_W, individual_ctrnn_T))
 
@@ -179,3 +177,19 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         observation_blue = observation_scaled[:, :, 2].flatten()
 
         return np.concatenate((observation_red, observation_green, observation_blue))
+
+    @staticmethod
+    def keep_highest_absolute_values_inplace(array: np.ndarray, percentage: float) -> np.ndarray:
+
+        assert array.ndim == 1
+
+        number_of_lowest_values = round((1-percentage)*len(array))
+
+        # Find the lowest absolute elements
+        # https://stackoverflow.com/questions/34226400/find-the-index-of-the-k-smallest-values-of-a-numpy-array
+        indizes = np.argpartition(abs(array), number_of_lowest_values)[:number_of_lowest_values]
+
+        # Set these elements to zero
+        array[indizes] = 0
+
+        return
