@@ -35,7 +35,18 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         cppn_input_space = Box(-1, 1, (6,))
         cppn_output_space = Box(-1, 1, (1,))
 
+        #cppn_size = FeedForwardNumPy.get_individual_size(config.ffnn_conf, cppn_input_space, cppn_output_space)
+
+        #index = 0
+        #individual_V, index = self.read_matrix_from_genome(individual, index, np.count_nonzero(ContinuousTimeRNN.v_mask), 1)
+        #individual_W, index = self.read_matrix_from_genome(individual, index, cppn_size, 1)
+        #individual_T, index = self.read_matrix_from_genome(individual, index, np.count_nonzero(ContinuousTimeRNN.t_mask), 1)
+
         self.cppn = FeedForwardNumPy(input_space=cppn_input_space, output_space=cppn_output_space, config=config.ffnn_conf, individual=individual)
+
+        #individual_ctrnn_V = individual_V.flatten()
+        #individual_ctrnn_W = self.cppn.predict(self.cppn_inputs_W).flatten()
+        #individual_ctrnn_T = individual_T.flatten()
 
         individual_ctrnn_V = self.cppn.predict(self.cppn_inputs_V).flatten() # * (np.random.rand(len(individual_ctrnn_V)) < 0.05)
         individual_ctrnn_W = self.cppn.predict(self.cppn_inputs_W).flatten()
@@ -76,6 +87,9 @@ class IndirectEncodedCtrnn(IBrain[IndirectEncodedCtrnnCfg]):
         cppn_output_space = Box(-1, 1, (1,))
 
         individual_size = FeedForwardNumPy.get_individual_size(config.ffnn_conf, cppn_input_space, cppn_output_space)
+
+        #individual_size += np.count_nonzero(ContinuousTimeRNN.v_mask)
+        #individual_size += np.count_nonzero(ContinuousTimeRNN.t_mask)
 
         return {'individual_size': individual_size}
 
