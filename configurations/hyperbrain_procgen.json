@@ -18,7 +18,7 @@
               "type": "FeedForward_NumPy",
               "use_bias": true,
               "hidden_layers": [[16, 32, 16, 8]],
-              "neuron_activation": "relu"
+              "neuron_activation": "tanh"
           },
           "ctrnn_conf": {
               "type": "CTRNN",
