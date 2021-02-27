@@ -1,21 +1,19 @@
 import abc
 from typing import List, TypeVar, Generic
-
 import numpy as np
 from gym import Space
 from gym.spaces import flatdim
-
 from brains.i_brain import IBrain
 from tools.configurations import ILayerBasedBrainCfg
 
 LayerdConfigClass = TypeVar("LayerdConfigClass", bound=ILayerBasedBrainCfg)
 
 
-class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
+class ILayerBasedBrain( IBrain, abc.ABC, Generic[LayerdConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
-        super().__init__(input_space, output_space, individual, config)
+        IBrain.__init__(self, input_space, output_space, individual, config)
         input_size = flatdim(input_space)
         output_size = flatdim(output_space)
         hidden_layer_structure: List[int] = config.hidden_layer_structure
@@ -131,38 +129,33 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         output_size = flatdim(output_space)
         hidden_size = cls.get_number_hidden_values()
         hidden_structure = config.hidden_layer_structure
-
-        individual_size = 0
+        individuals = {}
 
         for layer in range(len(hidden_structure)):
-            # Matrices for weighted input values
-            if layer == 0:  # The first Layer don't has an output from the previous layer, but the input values
-                individual_size += number_gates * input_size * hidden_structure[0]
-            else:
-                individual_size += number_gates * hidden_structure[layer] * hidden_structure[layer - 1]
-
-            # Matrices for weighted state values
-            if config.diagonal_hidden_to_hidden:
-                individual_size += number_gates * hidden_structure[layer]
-            else:
-                individual_size += number_gates * hidden_structure[layer] * hidden_structure[layer]
-
+            layer_dict = {
+                # Matrices for weighted input values
+                # The first Layer don't has an output from the previous layer, but the input values
+                'input_weight_matrix': number_gates * hidden_structure[layer] * (
+                    input_size if layer == 0 else hidden_structure[layer - 1]),
+                # Matrices for weighted state values
+                'hidden_weight_matrix': number_gates * hidden_structure[layer] * (
+                    1 if config.diagonal_hidden_to_hidden else hidden_structure[layer])
+            }
             # initialize biases
             if config.use_bias:
-                individual_size += hidden_structure[layer] * number_gates
+                layer_dict['bias'] = hidden_structure[layer] * number_gates
 
             # Hidden values
             if config.optimize_initial_neuron_state:
-                individual_size += hidden_structure[layer] * hidden_size
+                layer_dict['initial_values'] = hidden_structure[layer] * hidden_size
+            individuals['layer ' + str(layer)] = layer_dict
         # for end
 
         # Matrix for transforming output of last layer into output neurons
-        individual_size += hidden_structure[len(hidden_structure) - 1] * output_size
-        # TODO better usage of the dict
-        return {"all": individual_size}
+        individuals['output_weight_matrix'] = hidden_structure[len(hidden_structure) - 1] * output_size
+        return individuals
 
     def brainstep(self, ob: np.ndarray):
-
         layer_input = ob
         # iterate for all given layers
         for layer in range(len(self.hidden)):
@@ -179,10 +172,12 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
             self.layer_output[layer] = layer_result[1]
         return np.dot(self.weight_ho, self.layer_output[len(self.layer_output) - 1])
 
+
     @staticmethod
     @abc.abstractmethod
     def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h, hidden):
         pass
+
 
     @staticmethod
     def sigmoid(x):

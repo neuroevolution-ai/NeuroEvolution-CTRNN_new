@@ -40,7 +40,7 @@ class LSTMLayered(ILayerBasedBrain[LstmLayeredCfg]):
         return 2
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
-        super().__init__(input_space, output_space, individual, config)
+        ILayerBasedBrain().__init__(input_space, output_space, individual, config)
 
     @staticmethod
     def get_number_gates():
