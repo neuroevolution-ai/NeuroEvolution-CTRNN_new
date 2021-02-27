@@ -1,6 +1,8 @@
 import random
 
 import numpy as np
+
+from optimizer.i_optimizer import IOptimizer
 from tools.helper import set_random_seeds
 from typing import Collection
 from deap.algorithms import varOr
@@ -12,16 +14,22 @@ from functools import partial
 
 def evaluate_candidates(candidates, toolbox):
     if toolbox.initial_seed:
-        seed_after_map: int = np.random.randint(1, 10000)
-        if toolbox.conf.fix_seed_for_generation:
+        seed_for_generation = None
+        if toolbox.conf.fix_seed == IOptimizer.FIX_SEED_FALSE:
+            seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+            seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+        elif toolbox.conf.fix_seed == IOptimizer.FIX_SEED_PER_GENERATION:
             seed_for_generation = np.random.randint(1, 10000)
             seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
             seeds_for_recorded = seed_for_generation * np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
+        elif toolbox.conf.fix_seed == IOptimizer.FIX_SEED_GLOBAL:
+            seed_for_generation = toolbox.initial_seed
+            seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
+            seeds_for_recorded = seed_for_generation * np.ones(len(toolbox.recorded_individuals), dtype=np.int64)
         else:
-            seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
-            seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+            raise NotImplementedError()
     else:
-        seed_after_map = 0
+        seed_for_generation = 0
         seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
         seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
 
@@ -50,7 +58,7 @@ def evaluate_candidates(candidates, toolbox):
         total_steps += steps
     # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
     # is possiblethat some evaluations are still running when the first results get processes
-    set_random_seeds(seed_after_map, env=None)
+    set_random_seeds(seed_for_generation, env=None)
 
     toolbox.shape_fitness(candidates)
 
@@ -61,7 +69,7 @@ def evaluate_candidates(candidates, toolbox):
             if overfill > 0:
                 toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
 
-    return nevals, total_steps, seed_after_map
+    return nevals, total_steps, seed_for_generation
 
 
 def record_individuals(toolbox, population):
@@ -169,8 +177,8 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
     if toolbox.initial_seed:
         # set_random_seeds(toolbox.initial_seed, env=None)
         pass
-    gen = -1
-    current_seed = -1
+    gen = None
+    current_seed = None
 
     for gen in range(toolbox.initial_generation, ngen):
         population: Collection = toolbox.generate()
@@ -180,6 +188,7 @@ def eaGenerateUpdate(toolbox, ngen: int, halloffame=None):
             ind.generation = gen
         record_individuals(toolbox, population)
         nevals, total_steps, current_seed = evaluate_candidates(population, toolbox)
+        print(current_seed)
         if halloffame is not None:
             halloffame.update(population)
         toolbox.update(population)

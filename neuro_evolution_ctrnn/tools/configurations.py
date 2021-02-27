@@ -206,7 +206,7 @@ class IOptimizerCfg(abc.ABC):
     type: str
     novelty: Optional[NoveltyCfg] = None
     efficiency_weight: float = 0.0
-    fix_seed_for_generation: bool = True
+    fix_seed: str = "per_generation"
     checkpoint_frequency: int = 0
     hof_size: int = 5
     validation_number_runs: int = 0

@@ -15,6 +15,9 @@ ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
 
 class IOptimizer(abc.ABC, Generic[ConfigClass]):
+    FIX_SEED_PER_GENERATION = "per_generation"
+    FIX_SEED_GLOBAL = "global"
+    FIX_SEED_FALSE = "false"
 
     @abc.abstractmethod
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,

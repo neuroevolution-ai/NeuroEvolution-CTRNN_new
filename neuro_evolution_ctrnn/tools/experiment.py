@@ -52,7 +52,7 @@ class Experiment(object):
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
-        self.env_template = env
+        EpisodeRunner._env = self.env_template = env
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
