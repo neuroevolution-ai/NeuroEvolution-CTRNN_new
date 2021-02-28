@@ -2,14 +2,19 @@ import abc
 import copy
 import logging
 import os
-
 from deap import base, tools
-import numpy as np
 from pathlib import Path
 from typing import TypeVar, Generic, Callable
-
-from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance
+from tools.helper import write_checkpoint, normalized_compression_distance, euklidian_distance, equal_elements_distance, \
+    get_checkpoint
 from tools.configurations import IOptimizerCfg
+import random
+import numpy as np
+from tools.helper import set_random_seeds
+from bz2 import decompress
+from itertools import tee
+from functools import partial
+import time
 
 ConfigClass = TypeVar("ConfigClass", bound=IOptimizerCfg)
 
@@ -20,66 +25,75 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
     FIX_SEED_FALSE = "false"
 
     @abc.abstractmethod
-    def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: ConfigClass, stats,
+    def __init__(self, eval_fitness: Callable, random_seed: int, conf: ConfigClass, stats,
                  map_func=map, from_checkpoint=None, reset_hof=False):
         self.conf: ConfigClass = conf
-        self.toolbox = toolbox = base.Toolbox()
+        self.toolbox = base.Toolbox()
         self.toolbox.stats = stats
-        toolbox.conf = conf
-        toolbox.register("map", map_func)
-        toolbox.register("evaluate", eval_fitness)
-        # toolbox.register("shape_fitness", lambda *args: None)
-        toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
-        self.register_checkpoints(toolbox, conf.checkpoint_frequency)
-        self.register_novelty_distance(toolbox)
+        self.toolbox.conf = conf
+        self.toolbox.register("map", map_func)
+        self.toolbox.register("evaluate", eval_fitness)
+        self.toolbox.register("shape_fitness", self.shape_fitness_weighted_ranks)
+        self.toolbox.register("helper3", self.helper4)
 
-        toolbox.hof = self.hof = tools.HallOfFame(self.conf.hof_size)
+        # register checkpoints
+        cp_base_path = "checkpoints"
+        Path(cp_base_path).mkdir(parents=True, exist_ok=True)
+        logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
+        self.toolbox.register("checkpoint", write_checkpoint, cp_base_path, conf.checkpoint_frequency)
+
+        # register novelty distance
+        if conf.novelty:
+            if conf.novelty.distance == "euclid":
+                self.toolbox.register("get_distance", euklidian_distance)
+            elif conf.novelty.distance == "NCD":
+                self.toolbox.register("get_distance", normalized_compression_distance)
+            elif conf.novelty.distance == "equal":
+                self.toolbox.register("get_distance", equal_elements_distance)
+            else:
+                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
+        else:
+            self.toolbox.register("get_distance", lambda *args: 0)
+
         self.reset_hof = reset_hof
         if conf.novelty and not conf.fix_seed_for_generation:
             logging.warning("When using novelty you should also set fix_seed_for_generation to true. ")
+
+        self.toolbox.initial_seed = None
+        if from_checkpoint:
+            cp = get_checkpoint(from_checkpoint)
+            self.toolbox.initial_generation = cp["generation"] + 1
+            self.toolbox.initial_seed = cp["last_seed"]
+            self.toolbox.logbook = cp["logbook"]
+            self.toolbox.recorded_individuals = cp["recorded_individuals"]
+            if not reset_hof:
+                self.toolbox.hof = cp["halloffame"]
+        else:
+            self.toolbox.hof = tools.HallOfFame(self.conf.hof_size)
+            self.toolbox.recorded_individuals = []
+            self.toolbox.initial_generation = 0
+            self.toolbox.initial_seed = random_seed
+
+            # create logbook
+            self.toolbox.logbook = tools.Logbook()
+            self.toolbox.logbook.chapters["fitness"].header = "min", "avg", "std", "max"
+            self.toolbox.logbook.chapters["fitness"].columns_len = [8] * 4
+            header = "gen", "nevals", "steps", "val_fit", "fitness"
+            columns_len = [4, 4, 4, 8, 0]
+            if conf.novelty:
+                header = header + ("novelty",)
+                columns_len = columns_len + [0]
+                self.toolbox.logbook.chapters["novelty"].header = "min", "avg", "std", "max"
+                self.toolbox.logbook.chapters["novelty"].columns_len = [8] * 4
+            self.toolbox.logbook.columns_len = columns_len
+            self.toolbox.logbook.header = header
 
     @abc.abstractmethod
     def train(self, number_generations) -> tools.Logbook:
         pass
 
-    @staticmethod
-    def register_checkpoints(toolbox, checkpoint_frequency):
-        cp_base_path = "checkpoints"
-        Path(cp_base_path).mkdir(parents=True, exist_ok=True)
-        logging.info("writing checkpoints to: " + str(os.path.abspath(cp_base_path)))
-        toolbox.register("checkpoint", write_checkpoint, cp_base_path, checkpoint_frequency)
-
-    def register_novelty_distance(self, toolbox):
-        conf = self.conf
-        if conf.novelty:
-            if conf.novelty.distance == "euclid":
-                toolbox.register("get_distance", euklidian_distance)
-            elif conf.novelty.distance == "NCD":
-                toolbox.register("get_distance", normalized_compression_distance)
-            elif conf.novelty.distance == "equal":
-                toolbox.register("get_distance", equal_elements_distance)
-            else:
-                raise RuntimeError("unknown configuration value for distance: " + str(conf.novelty.distance))
-        else:
-            toolbox.register("get_distance", lambda *args: 0)
-
-    @staticmethod
-    def create_logbook(conf: IOptimizerCfg):
-        logbook = tools.Logbook()
-        logbook.chapters["fitness"].header = "min", "avg", "std", "max"
-        logbook.chapters["fitness"].columns_len = [8] * 4
-        header = "gen", "nevals", "steps", "val_fit", "fitness"
-        columns_len = [4, 4, 4, 8, 0]
-        if conf.novelty:
-            header = header + ("novelty",)
-            columns_len = columns_len + [0]
-            logbook.chapters["novelty"].header = "min", "avg", "std", "max"
-            logbook.chapters["novelty"].columns_len = [8] * 4
-
-        logbook.columns_len = columns_len
-        logbook.header = header
-
-        return logbook
+    def get_toolbox(self):
+        return self.toolbox
 
     @staticmethod
     def strip_strategy_from_population(population, mutation_learned, strategy_parameter_per_gene=False):
@@ -143,3 +157,122 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             if self.conf.efficiency_weight:
                 shaped_fitness += self.conf.efficiency_weight * ind.efficiency_rank
             ind.fitness.values = tuple([shaped_fitness])
+
+    def evaluate_candidates(self, candidates):
+        toolbox = self.toolbox
+        if self.toolbox.initial_seed:
+            seed_for_generation = None
+            if self.toolbox.conf.fix_seed == IOptimizer.FIX_SEED_FALSE:
+                seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+                seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+            elif self.toolbox.conf.fix_seed == IOptimizer.FIX_SEED_PER_GENERATION:
+                seed_for_generation = np.random.randint(1, 10000)
+                seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
+                seeds_for_recorded = seed_for_generation * np.ones(len(self.toolbox.recorded_individuals), dtype=np.int64)
+            elif self.toolbox.conf.fix_seed == IOptimizer.FIX_SEED_GLOBAL:
+                seed_for_generation = self.toolbox.initial_seed
+                seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
+                seeds_for_recorded = seed_for_generation * np.ones(len(self.toolbox.recorded_individuals), dtype=np.int64)
+            else:
+                raise NotImplementedError()
+        else:
+            seed_for_generation = 0
+            seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
+            seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
+
+        brain_genomes = toolbox.strip_strategy_from_population(candidates)
+        brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
+        nevals = len(brain_genomes) + len(brain_genomes_recorded)
+        results = toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation)
+
+        if toolbox.conf.novelty:
+            results_recorded_orig = list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded))
+            results_copy, results = tee(results, 2)
+            novelties = toolbox.map(candidates.calc_novelty,
+                                    list(results_copy),
+                                    [results_recorded_orig] * len(candidates),
+                                    [toolbox.get_distance] * len(candidates),
+                                    [toolbox.conf.novelty.novelty_nearest_k] * len(candidates))
+        else:
+            novelties = [0] * len(candidates)
+
+        # TODO seems dirty
+        results = list(zip(*list(toolbox.map(toolbox.helper3, candidates, list(results), list(novelties)))))
+        candidates = list(results[0])
+        total_steps = sum(results[1])
+
+        # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
+        # is possiblethat some evaluations are still running when the first results get processes
+        set_random_seeds(seed_for_generation, env=None)
+
+        toolbox.shape_fitness(candidates)
+
+        if toolbox.conf.novelty:
+            # drop recorded_individuals, when there are too many
+            if toolbox.conf.novelty.max_recorded_behaviors:
+                overfill = len(toolbox.recorded_individuals) - toolbox.conf.novelty.max_recorded_behaviors
+                if overfill > 0:
+                    toolbox.recorded_individuals = toolbox.recorded_individuals[overfill:]
+
+        return nevals, total_steps, seed_for_generation, candidates
+
+    @staticmethod
+    def helper4(ind, res, nov):
+        fitness, behavior_compressed, steps = res
+        ind.fitness_orig = fitness
+        ind.novelty = nov
+        ind.steps = steps
+        return ind, steps
+
+    def record_individuals(self, population):
+        if self.toolbox.conf.novelty:
+            self.toolbox.recorded_individuals += random.choices(
+                population, k=self.toolbox.conf.novelty.recorded_behaviors_per_generation)
+
+    def validation_runs(self, population):
+        toolbox = self.toolbox
+        intial_seed = toolbox.conf.validation_initial_seed
+        number_validation_runs = toolbox.conf.validation_number_runs
+
+        if number_validation_runs < 1:
+            return 0, 0
+        seeds_validation_runs: np.ndarray = np.array(range(intial_seed, intial_seed + number_validation_runs))
+        best_individuals = tools.selBest(population, 1, fit_attr="fitness")  # only validate the single best individual
+
+        brain_genomes = toolbox.strip_strategy_from_population(best_individuals)
+        results = []
+        for genome in brain_genomes:
+            # partial is needed because keyword argument
+            # see https://stackoverflow.com/a/13499853/5132456
+            evaluate = partial(toolbox.evaluate, rounds=1)
+            results += toolbox.map(evaluate, [genome] * number_validation_runs, seeds_validation_runs)
+        total_steps = 0
+        sum_fitness = 0.0
+        for res in results:
+            fitness, behavior_compressed, steps = res
+            total_steps += steps
+            sum_fitness += fitness
+        return sum_fitness / number_validation_runs, total_steps
+
+    @staticmethod
+    def calc_novelty(res, results_recorded, get_distance, k):
+        """calculate the average distance to the k nearest neighbors"""
+        if k < 1:
+            k = len(results_recorded)
+        behavior_compressed = res[1]
+        behavior_data = decompress(behavior_compressed)
+        behavior = np.frombuffer(behavior_data, dtype=np.float16)
+        dist_list = []
+        k = min(k, len(results_recorded))
+        for rec_res in results_recorded:
+            recorded_behavior_compressed = rec_res[1]
+            recorded_behavior_data = decompress(recorded_behavior_compressed)
+            recorded_behavior = np.frombuffer(recorded_behavior_data, dtype=np.float16)
+            dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
+                                b_len=len(recorded_behavior_compressed))
+            dist_list.append(dist)
+
+        dist_sum = 0
+        for nearest_neighbor in sorted(dist_list, reverse=False)[0:k]:
+            dist_sum += nearest_neighbor
+        return dist_sum / k

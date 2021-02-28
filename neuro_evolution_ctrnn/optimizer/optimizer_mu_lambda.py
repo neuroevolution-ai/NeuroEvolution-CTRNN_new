@@ -1,12 +1,10 @@
 import random
 from typing import Callable
-
 from deap import tools
 import numpy as np
-
+from deap.algorithms import varOr
 from optimizer.creator_classes import Individual
 from optimizer.i_optimizer import IOptimizer
-from tools import algorithms
 from tools.configurations import OptimizerMuLambdaCfg
 from tools.helper import get_checkpoint
 
@@ -20,8 +18,8 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
                  stats, map_func=map, from_checkpoint=None, reset_hof=False):
-        super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
-                                                    from_checkpoint)
+        super(OptimizerMuPlusLambda, self).__init__(eval_fitness, random_seed, conf, stats, map_func,
+                                                    from_checkpoint, reset_hof)
         toolbox = self.toolbox
 
         if self.conf.strategy_parameter_per_gene:
@@ -29,6 +27,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         else:
             # add two genes for strategy parameters used in mutate
             individual_size += 2
+
         toolbox.register("indices", np.random.uniform,
                          -self.conf.initial_gene_range,
                          self.conf.initial_gene_range,
@@ -79,21 +78,54 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             toolbox.register("select", tools.selBest)
 
         if from_checkpoint:
-            cp = get_checkpoint(from_checkpoint)
-            toolbox.initial_generation = cp["generation"] + 1
-            toolbox.initial_seed = cp["last_seed"]
-            toolbox.population = cp["population"]
-            toolbox.logbook = cp["logbook"]
-            toolbox.recorded_individuals = cp["recorded_individuals"]
-
-            if not reset_hof:
-                toolbox.hof = self.hof = cp["halloffame"]
+            # TODO get_checkpoint(from_checkpoint) is already called in super()
+            toolbox.population = get_checkpoint(from_checkpoint)["population"]
         else:
-            toolbox.initial_generation = 0
-            toolbox.initial_seed = random_seed
             toolbox.population = self.toolbox.population(n=self.conf.mu)
-            toolbox.logbook = self.create_logbook(conf)
-            toolbox.recorded_individuals = []
 
     def train(self, number_generations) -> tools.Logbook:
-        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)
+        toolbox = super().get_toolbox()
+        verbose = __debug__
+        include_parents_in_next_generation = True
+        population = toolbox.population
+        halloffame = toolbox.hof
+        gen = None
+        current_seed = None
+
+        for gen in range(toolbox.initial_generation, number_generations):
+            super().record_individuals(population)
+            extra = []
+            if halloffame.items:
+                extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
+            offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
+
+            for ind in offspring:
+                # just a little extra for when we later want to analyze the hof manually
+                ind.generation = gen
+
+            if include_parents_in_next_generation:
+                for ind in population:
+                    del ind.fitness.values
+                candidates = population + offspring
+            else:
+                candidates = offspring
+
+            nevals, total_steps, current_seed, candidates = super().evaluate_candidates(candidates)
+            if halloffame is not None:
+                halloffame.update(offspring)
+
+            record = toolbox.stats.compile(candidates) if toolbox.stats is not None else {}
+            population[:] = toolbox.select(candidates, toolbox.conf.mu)
+            validation_fitness, validation_steps = super().validation_runs(population)
+            toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
+                                   val_fit=validation_fitness, **record)
+            if verbose:
+                print(toolbox.logbook.stream)
+            if toolbox.checkpoint:
+                toolbox.checkpoint(data=dict(generation=gen, halloffame=halloffame, population=population,
+                                             logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+                                             recorded_individuals=toolbox.recorded_individuals))
+        toolbox.final_checkpoint_data = dict(generation=gen, halloffame=halloffame, population=population,
+                                             logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
+                                             recorded_individuals=toolbox.recorded_individuals)
+        return toolbox.logbook
