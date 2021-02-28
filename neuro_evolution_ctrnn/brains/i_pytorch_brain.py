@@ -80,7 +80,6 @@ class IPytorchBrain(nn.Module, IBrain, abc.ABC, Generic[PytorchBrainConfigClass]
         num_layers = config.num_layers
         number_gates = cls.get_number_gates()
         hidden_size = config.hidden_size
-        index = 0
         # size of the learnable input-hidden weights
         individuals = {
             'input_weight_matrix': hidden_size * flatdim(input_space) * number_gates + (
@@ -90,7 +89,7 @@ class IPytorchBrain(nn.Module, IBrain, abc.ABC, Generic[PytorchBrainConfigClass]
         }
         if config.use_bias:
             individuals['bias'] = 2 * hidden_size * num_layers * number_gates
-        return {"all": index}
+        return individuals
 
     @staticmethod
     @abc.abstractmethod

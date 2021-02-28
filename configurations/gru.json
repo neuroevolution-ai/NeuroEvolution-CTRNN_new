@@ -13,7 +13,7 @@
     "lambda_": 600,
     "mutpb": 0.8,
     "efficiency_weight": 0.0,
-    "fix_seed_for_generation": true,
+    "fix_seed": "per_generation",
     "strategy_parameter_per_gene": false
   },
   "brain": {

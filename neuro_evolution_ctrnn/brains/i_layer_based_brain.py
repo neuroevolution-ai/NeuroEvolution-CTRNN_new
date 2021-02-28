@@ -9,7 +9,7 @@ from tools.configurations import ILayerBasedBrainCfg
 LayerdConfigClass = TypeVar("LayerdConfigClass", bound=ILayerBasedBrainCfg)
 
 
-class ILayerBasedBrain( IBrain, abc.ABC, Generic[LayerdConfigClass]):
+class ILayerBasedBrain(IBrain, abc.ABC, Generic[LayerdConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
@@ -172,12 +172,10 @@ class ILayerBasedBrain( IBrain, abc.ABC, Generic[LayerdConfigClass]):
             self.layer_output[layer] = layer_result[1]
         return np.dot(self.weight_ho, self.layer_output[len(self.layer_output) - 1])
 
-
     @staticmethod
     @abc.abstractmethod
     def layer_step(layer_input: np.ndarray, weight_ih, weight_hh, bias_h, hidden):
         pass
-
 
     @staticmethod
     def sigmoid(x):

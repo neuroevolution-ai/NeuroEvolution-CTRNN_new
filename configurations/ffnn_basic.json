@@ -7,7 +7,7 @@
     "population_size": 5,
     "sigma": 1.0,
     "mu": 5,
-    "fix_seed_for_generation": false
+    "fix_seed": "false"
   },
   "brain": {
     "type": "FeedForward_NumPy",
