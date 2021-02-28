@@ -197,10 +197,9 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             novelties = [0] * len(candidates)
 
         # TODO seems dirty
-        results = list(zip(*list(toolbox.map(toolbox.helper3, candidates, list(results), list(novelties)))))
-        candidates = list(results[0])
-        total_steps = sum(results[1])
-
+        candidates, total_steps = zip(*toolbox.map(toolbox.helper3, candidates, list(results), list(novelties)))
+        candidates = list(candidates)
+        total_steps = sum(total_steps)
         # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
         # is possiblethat some evaluations are still running when the first results get processes
         set_random_seeds(seed_for_generation, env=None)

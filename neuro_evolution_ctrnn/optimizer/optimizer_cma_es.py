@@ -43,8 +43,7 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
                 # just a little extra for when we later want to analyze the hof manually
                 ind.generation = gen
             super().record_individuals(population)
-            nevals, total_steps, current_seed, canndidates = super().evaluate_candidates(population)
-            population = canndidates
+            nevals, total_steps, current_seed, population = super().evaluate_candidates(population)
             if halloffame is not None:
                 halloffame.update(population)
             toolbox.update(population)
