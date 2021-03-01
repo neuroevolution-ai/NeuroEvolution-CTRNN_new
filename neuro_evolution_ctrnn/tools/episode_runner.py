@@ -47,7 +47,7 @@ class EpisodeRunner:
         else:
             env.render()
 
-    def eval_fitness(self, individual, seed, novelity_data, render: bool = False, record: str = None, record_force: bool = False,
+    def eval_fitness(self, individual, seed, novelty_data, render: bool = False, record: str = None, record_force: bool = False,
                      brain_vis_handler=None, neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None,
                      neuron_vis_height=None, render_raw_ob=False):
         env = self._get_env(record, record_force, render)
@@ -98,7 +98,7 @@ class EpisodeRunner:
         #     assert callable(env.get_compressed_behavior)
         #     compressed_behavior = env.get_compressed_behavior()
 
-        individual.novelty = self.calc_novelty(*novelity_data) if novelity_data else 0
+        individual.novelty = self.calc_novelty(*novelty_data) if novelty_data else 0
 
         individual.fitness_orig = fitness_total / number_of_rounds
         individual.steps = steps_total

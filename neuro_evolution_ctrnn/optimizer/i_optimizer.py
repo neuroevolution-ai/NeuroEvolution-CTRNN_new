@@ -183,15 +183,14 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
         nevals = len(brain_genomes) + len(brain_genomes_recorded)
 
-        novelity_data = (
+        novelty_data = (
                             [(list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)),
                               toolbox.get_distance,
                               toolbox.conf.novelty.novelty_nearest_k)] if toolbox.conf.novelty else [None]
                         ) * len(candidates)
 
-        # TODO seems dirty
         candidates, total_steps = zip(
-            *toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation, novelity_data))
+            *toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation, novelty_data))
         candidates = list(candidates)
         total_steps = sum(total_steps)
         # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
