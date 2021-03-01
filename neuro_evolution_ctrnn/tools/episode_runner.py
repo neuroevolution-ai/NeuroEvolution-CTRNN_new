@@ -9,6 +9,7 @@ import numpy as np
 from tools.configurations import EpisodeRunnerCfg, IBrainCfg
 from tools.env_handler import EnvHandler
 from tools.helper import set_random_seeds
+from bz2 import decompress
 
 
 class EpisodeRunner:
@@ -46,7 +47,7 @@ class EpisodeRunner:
         else:
             env.render()
 
-    def eval_fitness(self, individual, seed, render: bool = False, record: str = None, record_force: bool = False,
+    def eval_fitness(self, individual, seed, novelity_data, render: bool = False, record: str = None, record_force: bool = False,
                      brain_vis_handler=None, neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None,
                      neuron_vis_height=None, render_raw_ob=False):
         env = self._get_env(record, record_force, render)
@@ -90,10 +91,38 @@ class EpisodeRunner:
             fitness_total += fitness_current
             steps_total += t
 
-        compressed_behavior = None
-        if hasattr(env, "get_compressed_behavior"):
-            # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
-            assert callable(env.get_compressed_behavior)
-            compressed_behavior = env.get_compressed_behavior()
+        # TODO does this gets used anywhere?
+        # compressed_behavior = None
+        # if hasattr(env, "get_compressed_behavior"):
+        #     # 'get_compressed_behavior' exists if any wrapper is a BehaviorWrapper
+        #     assert callable(env.get_compressed_behavior)
+        #     compressed_behavior = env.get_compressed_behavior()
 
-        return fitness_total / number_of_rounds, compressed_behavior, steps_total
+        individual.novelty = self.calc_novelty(*novelity_data) if novelity_data else 0
+
+        individual.fitness_orig = fitness_total / number_of_rounds
+        individual.steps = steps_total
+        return individual, steps_total
+
+    @staticmethod
+    def calc_novelty(res, results_recorded, get_distance, k):
+        """calculate the average distance to the k nearest neighbors"""
+        if k < 1:
+            k = len(results_recorded)
+        behavior_compressed = res[1]
+        behavior_data = decompress(behavior_compressed)
+        behavior = np.frombuffer(behavior_data, dtype=np.float16)
+        dist_list = []
+        k = min(k, len(results_recorded))
+        for rec_res in results_recorded:
+            recorded_behavior_compressed = rec_res[1]
+            recorded_behavior_data = decompress(recorded_behavior_compressed)
+            recorded_behavior = np.frombuffer(recorded_behavior_data, dtype=np.float16)
+            dist = get_distance(a=behavior, b=recorded_behavior, a_len=len(behavior_compressed),
+                                b_len=len(recorded_behavior_compressed))
+            dist_list.append(dist)
+
+        dist_sum = 0
+        for nearest_neighbor in sorted(dist_list, reverse=False)[0:k]:
+            dist_sum += nearest_neighbor
+        return dist_sum / k

@@ -13,3 +13,6 @@ class MPHandler(IProcessingHandler):
 
     def init_framework(self):
         self.pool = Pool(self.number_of_workers)
+
+    def cleanup_framework(self):
+        self.pool.close()
