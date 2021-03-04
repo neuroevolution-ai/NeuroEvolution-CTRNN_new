@@ -92,21 +92,6 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
     def get_toolbox(self):
         return self.toolbox
 
-    @staticmethod
-    def strip_strategy_from_population(population, mutation_learned, strategy_parameter_per_gene=False):
-        """Sometimes strategy parameters are learned along side brain parameters. In these caeses
-        the strategy parameters need to be stripped  from the population before sending the brain genomes to
-        the evaluation. """
-        if len(population) == 0:
-            return population
-        if mutation_learned:
-            if strategy_parameter_per_gene:
-                half = len(np.array(population)[0]) // 2
-                return list(np.array(population)[:, :-half])
-            else:
-                return list(np.array(population)[:, :-2])
-        return population
-
     def shape_fitness_multi_objective(self, population):
         for ind in population:
             ind.fitness_orig = copy.deepcopy(ind.fitness)
@@ -161,7 +146,8 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             seed_for_generation = None
             if self.toolbox.conf.fix_seed == IOptimizer.FIX_SEED_FALSE:
                 seeds_for_evaluation: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
-                seeds_for_recorded: np.ndarray = np.random.randint(1, 10000, size=len(candidates))
+                seeds_for_recorded: np.ndarray = np.random.randint(1, 10000,
+                                                                   size=len(self.toolbox.recorded_individuals))
             elif self.toolbox.conf.fix_seed == IOptimizer.FIX_SEED_PER_GENERATION:
                 seed_for_generation = np.random.randint(1, 10000)
                 seeds_for_evaluation: np.ndarray = seed_for_generation * np.ones(len(candidates), dtype=np.int64)
@@ -179,18 +165,24 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             seeds_for_evaluation = np.zeros(len(candidates), dtype=np.int64)
             seeds_for_recorded = np.zeros(len(toolbox.recorded_individuals), dtype=np.int64)
 
-        brain_genomes = toolbox.strip_strategy_from_population(candidates)
-        brain_genomes_recorded = toolbox.strip_strategy_from_population(toolbox.recorded_individuals)
-        nevals = len(brain_genomes) + len(brain_genomes_recorded)
+        brain_genomes_recorded = self.strip_strategy_from_population(toolbox.recorded_individuals)
+        nevals = len(candidates) + len(brain_genomes_recorded)
 
         novelty_data = (
-                            [(list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)),
-                              toolbox.get_distance,
-                              toolbox.conf.novelty.novelty_nearest_k)] if toolbox.conf.novelty else [None]
-                        ) * len(candidates)
+                           [(list(toolbox.map(toolbox.evaluate, brain_genomes_recorded, seeds_for_recorded)),
+                             toolbox.get_distance,
+                             toolbox.conf.novelty.novelty_nearest_k)] if toolbox.conf.novelty else [None]
+                       ) * len(candidates)
 
         candidates, total_steps = zip(
-            *toolbox.map(toolbox.evaluate, brain_genomes, seeds_for_evaluation, novelty_data))
+            *toolbox.map(
+                toolbox.evaluate,
+                candidates,
+                seeds_for_evaluation,
+                novelty_data,
+                [self.get_number_genes_for_strategy(len(candidates[0]))] * len(candidates)
+            )
+        )
         candidates = list(candidates)
         total_steps = sum(total_steps)
         # setting seeds must happen after reading all fitnesses from results, because of the async nature of map, it
@@ -231,7 +223,7 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
         seeds_validation_runs: np.ndarray = np.array(range(intial_seed, intial_seed + number_validation_runs))
         best_individuals = tools.selBest(population, 1, fit_attr="fitness")  # only validate the single best individual
 
-        brain_genomes = toolbox.strip_strategy_from_population(best_individuals)
+        brain_genomes = self.strip_strategy_from_population(best_individuals)
         results = []
         for genome in brain_genomes:
             # partial is needed because keyword argument
@@ -245,3 +237,17 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             total_steps += steps
             sum_fitness += fitness
         return sum_fitness / number_validation_runs, total_steps
+
+    @classmethod
+    def strip_strategy_from_population(cls, population, strategy_parameter_per_gene=False):
+        """Sometimes strategy parameters are learned along side brain parameters. In these caeses
+        the strategy parameters need to be stripped  from the population before sending the brain genomes to
+        the evaluation. """
+        return population
+
+    def get_number_genes_for_strategy(self, individual_size):
+        return 0
+
+    @classmethod
+    def strip_strategy_from_individual(cls, individual, strategy_parameter_per_gene=False):
+        return individual

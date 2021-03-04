@@ -47,7 +47,8 @@ class EpisodeRunner:
         else:
             env.render()
 
-    def eval_fitness(self, individual, seed, novelty_data, render: bool = False, record: str = None, record_force: bool = False,
+    def eval_fitness(self, individual, seed, novelty_data, size_mutation_genes: int, render: bool = False,
+                     record: str = None, record_force: bool = False,
                      brain_vis_handler=None, neuron_vis=False, slow_down=0, rounds=None, neuron_vis_width=None,
                      neuron_vis_height=None, render_raw_ob=False):
         env = self._get_env(record, record_force, render)
@@ -57,7 +58,9 @@ class EpisodeRunner:
         number_of_rounds = self.config.number_fitness_runs if rounds is None else rounds
         for i in range(number_of_rounds):
             fitness_current = 0
-            brain = self.brain_class(self.input_space, self.output_space, individual, self.brain_config)
+            brain = self.brain_class(self.input_space, self.output_space,
+                                     individual[:-size_mutation_genes] if size_mutation_genes else individual,
+                                     self.brain_config)
             ob = env.reset()
             done = False
             t = 0

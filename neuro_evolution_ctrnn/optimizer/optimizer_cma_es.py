@@ -42,14 +42,14 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             for ind in population:
                 # just a little extra for when we later want to analyze the hof manually
                 ind.generation = gen
-            super().record_individuals(population)
-            nevals, total_steps, current_seed, population = super().evaluate_candidates(population)
+            self.record_individuals(population)
+            nevals, total_steps, current_seed, population = self.evaluate_candidates(population)
             if halloffame is not None:
                 halloffame.update(population)
             toolbox.update(population)
             record: dict = toolbox.stats.compile(population)
 
-            validation_fitness, validation_steps = super().validation_runs(population)
+            validation_fitness, validation_steps = self.validation_runs(population)
             toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
                                    val_fit=validation_fitness, **record)
             if verbose:

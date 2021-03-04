@@ -93,11 +93,12 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
         current_seed = None
 
         for gen in range(toolbox.initial_generation, number_generations):
-            super().record_individuals(population)
+            self.record_individuals(population)
             extra = []
             if halloffame.items:
                 extra = list(map(toolbox.clone, random.sample(population, toolbox.conf.extra_from_hof)))
-            offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb, toolbox.conf.mutpb)
+            offspring = varOr(population + extra, toolbox, toolbox.conf.lambda_, 1 - toolbox.conf.mutpb,
+                              toolbox.conf.mutpb)
 
             for ind in offspring:
                 # just a little extra for when we later want to analyze the hof manually
@@ -110,13 +111,13 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             else:
                 candidates = offspring
 
-            nevals, total_steps, current_seed, candidates = super().evaluate_candidates(candidates)
+            nevals, total_steps, current_seed, candidates = self.evaluate_candidates(candidates)
             if halloffame is not None:
                 halloffame.update(offspring)
 
             record = toolbox.stats.compile(candidates) if toolbox.stats is not None else {}
             population[:] = toolbox.select(candidates, toolbox.conf.mu)
-            validation_fitness, validation_steps = super().validation_runs(population)
+            validation_fitness, validation_steps = self.validation_runs(population)
             toolbox.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
                                    val_fit=validation_fitness, **record)
             if verbose:
@@ -129,3 +130,17 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                                              logbook=toolbox.logbook, last_seed=current_seed, strategy=None,
                                              recorded_individuals=toolbox.recorded_individuals)
         return toolbox.logbook
+
+    @classmethod
+    def strip_strategy_from_population(cls, population, strategy_parameter_per_gene=False):
+        if len(population) == 0:
+            return population
+        return list(np.array(population)[:, :-(cls.get_number_genes_for_strategy(len(population[0]), strategy_parameter_per_gene))])
+
+    def get_number_genes_for_strategy(self, individual_size):
+        return individual_size // 2 if self.conf.strategy_parameter_per_gene else 2
+
+    @classmethod
+    def strip_strategy_from_individual(cls, individual, strategy_parameter_per_gene=False):
+        return list(
+            np.array(individual)[:-(cls.get_number_genes_for_strategy(len(individual), strategy_parameter_per_gene))])
