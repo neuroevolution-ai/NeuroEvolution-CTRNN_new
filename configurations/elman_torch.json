@@ -13,7 +13,7 @@
     "fix_seed_for_generation": true
   },
   "brain": {
-    "type": "ElmanTorch",
+    "type": "ElmanPyTorch",
     "hidden_size": 5,
     "num_layers": 2,
     "use_bias": true

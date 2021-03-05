@@ -13,7 +13,7 @@
     "fix_seed_for_generation": false
   },
   "brain": {
-    "type": "FeedForward_NumPy",
+    "type": "FeedForward",
     "normalize_input": false,
     "normalize_input_target": 2,
     "use_bias": true,

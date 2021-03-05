@@ -4,7 +4,7 @@ import gym
 import numpy as np
 import torch
 
-from brains.ffnn import FeedForwardPyTorch, FeedForwardNumPy
+from brains import FeedForward, FeedForwardPyTorch
 from tools.configurations import FeedForwardCfg
 
 
@@ -29,7 +29,7 @@ class TestFeedForwardNN:
         with torch.no_grad():
             ffnn_pytorch = FeedForwardPyTorch(input_space, output_space, individual_pytorch, ffnn_config)
 
-        ffnn_numpy = FeedForwardNumPy(input_space, output_space, individual_numpy, ffnn_config)
+        ffnn_numpy = FeedForward(input_space, output_space, individual_numpy, ffnn_config)
 
         with torch.no_grad():
             # Hidden layers are in a stacked list, so unpack first
@@ -146,7 +146,7 @@ class TestFeedForwardNN:
         input_space = gym.spaces.Box(-1, 1, (input_size,))
         output_space = gym.spaces.Box(-1, 1, (output_size,))
 
-        ffnn_config = FeedForwardCfg(type="FeedForward_Numpy",
+        ffnn_config = FeedForwardCfg(type="FeedForward",
                                      use_bias=True,
                                      hidden_layers=[[16, 32, 16, 8]], neuron_activation="relu",
                                      neuron_activation_output="linear")
@@ -154,7 +154,7 @@ class TestFeedForwardNN:
         individual_size = FeedForwardPyTorch.get_individual_size(ffnn_config, input_space, output_space)
         individual = np.random.rand(individual_size).astype(np.float32)
 
-        ffnn_numpy = FeedForwardNumPy(input_space, output_space, individual, ffnn_config)
+        ffnn_numpy = FeedForward(input_space, output_space, individual, ffnn_config)
 
         # Weight Matrizes
         A = ffnn_numpy.weights_hidden_layers[0].copy()

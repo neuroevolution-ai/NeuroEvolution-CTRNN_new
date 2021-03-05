@@ -2,10 +2,9 @@ import pytest
 from attr import s
 import numpy as np
 from gym import Space
-from gym.spaces import Box
 
-from brains.i_layer_based_brain import ILayerBasedBrain, LayerdConfigClass
-from tools.configurations import ILayerBasedBrainCfg
+from brains.recurrent.recurrent_based_brain import RecurrentBasedBrain
+from tools.configurations import RecurrentBasedBrainCfg
 
 
 @s(auto_attribs=True, frozen=True, slots=True)
@@ -17,13 +16,13 @@ class BrainParam:
     weight_ho: np.ndarray
 
 
-class LayerTestCase(ILayerBasedBrain[ILayerBasedBrainCfg]):
+class LayerTestCase(RecurrentBasedBrain[RecurrentBasedBrainCfg]):
 
     @staticmethod
     def get_number_hidden_values():
         return 1
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: RecurrentBasedBrainCfg):
         super().__init__(input_space, output_space, individual, config)
 
     @staticmethod

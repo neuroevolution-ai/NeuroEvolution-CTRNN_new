@@ -37,19 +37,19 @@ def register(name: str, as_key: bool = False):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class IBrainCfg(abc.ABC):
+class BrainCfg(abc.ABC):
     type: str
     use_bias: bool = False
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class IPytorchBrainCfg(IBrainCfg):
+class RecurrentBasedBrainPyTorchCfg(BrainCfg):
     num_layers: int
     hidden_size: int
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class ILayerBasedBrainCfg(IBrainCfg):
+class RecurrentBasedBrainCfg(BrainCfg):
     # The structure of the layers
     # Each list entry translates to the size of one layer
     # The layers are in the given order
@@ -118,22 +118,22 @@ class EpisodeRunnerCfg(abc.ABC):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class ElmanCfg(ILayerBasedBrainCfg):
+class ElmanCfg(RecurrentBasedBrainCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class LstmLayeredCfg(ILayerBasedBrainCfg):
+class LSTMCfg(RecurrentBasedBrainCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class GruCfg(ILayerBasedBrainCfg):
+class GRUCfg(RecurrentBasedBrainCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class ContinuousTimeRNNCfg(IBrainCfg):
+class CTRNNCfg(BrainCfg):
     optimize_initial_neuron_state: bool
     delta_t: float
     optimize_state_boundaries: str
@@ -153,7 +153,7 @@ class ContinuousTimeRNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class ConvolutionalNNCfg(IBrainCfg):
+class CNNCfg(BrainCfg):
     conv_size1: int
     conv_feat1: int
     maxp_size1: int
@@ -167,36 +167,36 @@ class ConvolutionalNNCfg(IBrainCfg):
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class CnnCtrnnCfg(IBrainCfg):
-    cnn_conf: ConvolutionalNNCfg
-    ctrnn_conf: ContinuousTimeRNNCfg
+class CNNCTRNNCfg(BrainCfg):
+    cnn_conf: CNNCfg
+    ctrnn_conf: CTRNNCfg
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class FeedForwardCfg(IBrainCfg):
+class FeedForwardCfg(BrainCfg):
     hidden_layers: List[int]
     neuron_activation: str
     neuron_activation_output: str = 'linear'
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class ElmanTorchCfg(IPytorchBrainCfg):
+class ElmanPyTorchCfg(RecurrentBasedBrainPyTorchCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class GruTorchCfg(IPytorchBrainCfg):
+class GRUPyTorchCfg(RecurrentBasedBrainPyTorchCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True)
-class LstmTorchCfg(IPytorchBrainCfg):
+class LSTMPyTorchCfg(RecurrentBasedBrainPyTorchCfg):
     pass
 
 
 @attr.s(slots=True, auto_attribs=True, frozen=True, kw_only=True)
-class ConcatenatedBrainLSTMCfg(IBrainCfg):
-    lstm: LstmLayeredCfg
+class ConcatenatedLSTMCfg(BrainCfg):
+    lstm: LSTMCfg
     feed_forward_front: FeedForwardCfg = None
     feed_forward_back: FeedForwardCfg = None
 
@@ -237,7 +237,7 @@ class OptimizerCmaEsCfg(IOptimizerCfg):
 class ExperimentCfg:
     environment: str
     number_generations: int
-    brain: IBrainCfg
+    brain: BrainCfg
     episode_runner: EpisodeRunnerCfg
     optimizer: IOptimizerCfg
     random_seed: int = -1

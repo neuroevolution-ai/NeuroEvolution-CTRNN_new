@@ -5,25 +5,25 @@ import numpy as np
 from gym import Space
 from gym.spaces import flatdim
 
-from brains.i_brain import IBrain
-from tools.configurations import ILayerBasedBrainCfg
+from brains.brain import Brain
+from tools.configurations import RecurrentBasedBrainCfg
 
-LayerdConfigClass = TypeVar("LayerdConfigClass", bound=ILayerBasedBrainCfg)
+ConfigClass = TypeVar("ConfigClass", bound=RecurrentBasedBrainCfg)
 
 
-class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
+class RecurrentBasedBrain(Brain, Generic[ConfigClass]):
 
     @abc.abstractmethod
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LayerdConfigClass):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConfigClass):
         super().__init__(input_space, output_space, individual, config)
         input_size = flatdim(input_space)
         output_size = flatdim(output_space)
         hidden_layer_structure: List[int] = config.hidden_layer_structure
 
-        # initialize weights out of individual
-
+        # Initialize weights out of individual
         individual_index = 0  # progress index
-        # initialize emphty
+
+        # Initialize empty
         self.weight_ih = []  # Weights for weighted input values
         self.weight_hh = []  # Weights for weighted stored values
         self.bias_h = []  # Biases
@@ -32,7 +32,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         number_gates = self.get_number_gates()
         number_hidden_values = self.get_number_hidden_values()
 
-        # iterate for all given layers in the structure
+        # Iterate for all given layers in the structure
         for layer in range(len(hidden_layer_structure)):
 
             # Matrices for weighted input values in calculations
@@ -124,7 +124,7 @@ class ILayerBasedBrain(IBrain, Generic[LayerdConfigClass]):
         pass
 
     @classmethod
-    def get_free_parameter_usage(cls, config: ILayerBasedBrainCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: RecurrentBasedBrainCfg, input_space: Space, output_space: Space):
 
         number_gates = cls.get_number_gates()
         input_size = flatdim(input_space)

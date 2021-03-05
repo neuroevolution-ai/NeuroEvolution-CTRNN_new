@@ -1,7 +1,7 @@
 import numpy as np
 from gym import spaces
 
-from brains.ffnn import FeedForwardNumPy, FeedForwardPyTorch
+from brains import FeedForward, FeedForwardPyTorch
 
 
 class TestIBrain:
@@ -19,7 +19,7 @@ class TestIBrain:
 
         # First test the input space
         # Not used but needed to create a Brain
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
+        dummy_individual = np.zeros((FeedForward.get_individual_size(
             ffnn_config, input_space=input_space, output_space=output_space)))
 
         brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
@@ -45,7 +45,7 @@ class TestIBrain:
 
         # First test the input space
         # Not used but needed to create a Brain
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
+        dummy_individual = np.zeros((FeedForward.get_individual_size(
             ffnn_config, input_space=input_space, output_space=output_space)))
 
         brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
@@ -65,7 +65,7 @@ class TestIBrain:
         input_space = spaces.Discrete(n=self.input_n)
         output_space = spaces.Discrete(n=self.output_n)
 
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
+        dummy_individual = np.zeros((FeedForward.get_individual_size(
             ffnn_config, input_space=input_space, output_space=output_space)))
 
         brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,
@@ -100,7 +100,7 @@ class TestIBrain:
         input_space = spaces.Tuple([one_dimensional_box, first_discrete, multi_dimensional_box, second_discrete])
         output_space = spaces.Tuple([second_discrete, multi_dimensional_box, one_dimensional_box, first_discrete])
 
-        dummy_individual = np.zeros((FeedForwardNumPy.get_individual_size(
+        dummy_individual = np.zeros((FeedForward.get_individual_size(
             ffnn_config, input_space=input_space, output_space=output_space)))
 
         brain = FeedForwardPyTorch(input_space=input_space, output_space=output_space, individual=dummy_individual,

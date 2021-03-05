@@ -6,14 +6,14 @@ import torch.nn as nn
 from gym import spaces
 from gym.spaces import flatdim
 
-from tools.configurations import IBrainCfg, register
+from tools.configurations import BrainCfg, register
 
 registered_brains = {}
 
 
-def register_brain(name: str, config_class: Type[IBrainCfg]):
+def register_brain(name: str, config_class: Type[BrainCfg]):
     def _register(type_class: type):
-        assert name not in registered_brains, 'type "' + str(name) + '" was already registered'
+        assert name not in registered_brains, "Brain type {} was already registered".format(name)
         registered_brains[name] = type_class
         register(name)(config_class)  # call to @register-decorator for the config class
         return type_class
@@ -21,10 +21,10 @@ def register_brain(name: str, config_class: Type[IBrainCfg]):
     return _register
 
 
-ConfigClass = TypeVar("ConfigClass", bound=IBrainCfg)
+ConfigClass = TypeVar("ConfigClass", bound=BrainCfg)
 
 
-class IBrain(abc.ABC, Generic[ConfigClass]):
+class Brain(abc.ABC, Generic[ConfigClass]):
 
     @abc.abstractmethod
     def __init__(self, input_space: spaces.Space, output_space: spaces.Space, individual: np.ndarray,

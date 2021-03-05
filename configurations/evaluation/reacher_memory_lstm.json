@@ -13,12 +13,12 @@
     "fix_seed_for_generation": false
   },
   "brain": {
-    "type": "ConcatenatedBrain_LSTM",
+    "type": "ConcatenatedLSTM",
     "normalize_input": false,
     "normalize_input_target": 5,
     "use_bias": true,
     "feed_forward_front": {
-      "type": "FeedForward_NumPy",
+      "type": "FeedForward",
       "normalize_input": false,
       "normalize_input_target": 2,
       "use_bias": true,
@@ -26,13 +26,13 @@
       "neuron_activation": "relu"
     },
     "lstm": {
-      "type": "LSTMLayered",
+      "type": "LSTM",
       "use_bias": true,
       "hidden_layer_structure": [1],
       "optimize_initial_neuron_state": false
     },
     "feed_forward_back": {
-      "type": "FeedForward_NumPy",
+      "type": "FeedForward",
       "normalize_input": false,
       "normalize_input_target": 2,
       "use_bias": true,

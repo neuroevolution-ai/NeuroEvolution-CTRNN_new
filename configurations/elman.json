@@ -13,7 +13,7 @@
     "fix_seed_for_generation": true
   },
   "brain": {
-    "type": "ELMAN",
+    "type": "Elman",
     "hidden_layer_structure": [4,10,2],
     "diagonal_hidden_to_hidden": true,
     "use_bias": true,

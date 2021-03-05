@@ -4,11 +4,11 @@ The goal is to demonstrate, that CTRNN can solve algorithmical problems very eff
 from tools.experiment import Experiment
 from brain_visualizer.brain_visualizer import BrainVisualizerHandler
 
-from tools.configurations import ExperimentCfg, ContinuousTimeRNNCfg, StandardEpisodeRunnerCfg
+from tools.configurations import ExperimentCfg, CTRNNCfg, StandardEpisodeRunnerCfg
 from tools.helper import config_from_file
 import os
 import threading
-from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains import CTRNN
 from attr import s
 import numpy as np
 from tools.helper import transform
@@ -62,8 +62,8 @@ ind = param_to_genom(param)
 
 env = experiment.env_template
 for i in range(1):
-    brain = ContinuousTimeRNN(input_space=experiment.input_space, output_space=experiment.output_space, individual=ind,
-                              config=cfg_exp.brain)
+    brain = CTRNN(input_space=experiment.input_space, output_space=experiment.output_space, individual=ind,
+                  config=cfg_exp.brain)
     ob = env.reset()
     transformed_ob = transform(ob, coming_from_space=experiment.input_space, is_brain_input=True)
     env.unwrapped.input_data = [0, 1, 0, 1, 1]

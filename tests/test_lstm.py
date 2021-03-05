@@ -1,5 +1,5 @@
-from brains.lstm import LSTMPyTorch, LSTMLayered
-from tools.configurations import LstmTorchCfg, LstmLayeredCfg
+from brains import LSTM, LSTMPyTorch
+from tools.configurations import LSTMPyTorchCfg, LSTMCfg
 
 import numpy as np
 import gym
@@ -9,7 +9,7 @@ import time
 
 class TestLSTM:
 
-    def test_lstm_output(self, lstm_torch_config: LstmTorchCfg, lstm_layered_config: LstmLayeredCfg):
+    def test_lstm_output(self, lstm_torch_config: LSTMPyTorchCfg, lstm_layered_config: LSTMCfg):
 
         input_size = 28
         output_size = 8
@@ -28,7 +28,7 @@ class TestLSTM:
         with torch.no_grad():
             lstm_pytorch = LSTMPyTorch(input_space, output_space, individual_pytorch, lstm_torch_config)
 
-        lstm_numpy = LSTMLayered(input_space, output_space, individual_numpy, lstm_layered_config)
+        lstm_numpy = LSTM(input_space, output_space, individual_numpy, lstm_layered_config)
 
         # Also initialize the values for the hidden and cell states the same
         hidden_pytorch = np.random.randn(*lstm_pytorch.hidden[0].size()).astype(np.float32)

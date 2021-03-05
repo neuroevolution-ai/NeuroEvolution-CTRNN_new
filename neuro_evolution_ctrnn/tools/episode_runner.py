@@ -6,7 +6,7 @@ import cv2
 import gym
 import numpy as np
 
-from tools.configurations import EpisodeRunnerCfg, IBrainCfg
+from tools.configurations import EpisodeRunnerCfg, BrainCfg
 from tools.env_handler import EnvHandler
 from tools.helper import set_random_seeds
 
@@ -14,7 +14,7 @@ from tools.helper import set_random_seeds
 class EpisodeRunner:
     _env: Optional[gym.Env] = None
 
-    def __init__(self, config: EpisodeRunnerCfg, brain_config: IBrainCfg, brain_class, input_space, output_space,
+    def __init__(self, config: EpisodeRunnerCfg, brain_config: BrainCfg, brain_class, input_space, output_space,
                  env_id):
         self.config = config
         self.brain_config = brain_config

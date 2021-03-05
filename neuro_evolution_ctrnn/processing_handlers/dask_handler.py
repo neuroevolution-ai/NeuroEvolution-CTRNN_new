@@ -3,14 +3,14 @@ from typing import Optional, Union
 
 from dask.distributed import Client, Worker, WorkerPlugin, LocalCluster
 
-from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains import CTRNN
 from processing_handlers.i_processing_handler import IProcessingHandler
 
 
 class _CreatorPlugin(WorkerPlugin):
     """Initiated global states for every worker."""
 
-    def __init__(self, brain_class: Union[ContinuousTimeRNN]):
+    def __init__(self, brain_class: Union[CTRNN]):
         # Get Class-Variable from main thread to re-initialize them on worker
         self.brain_class = brain_class
         self.brain_class_state = brain_class.get_class_state()

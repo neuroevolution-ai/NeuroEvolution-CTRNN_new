@@ -1,21 +1,23 @@
-import brains.i_brain
-import tools.configurations
 import typing
+
 import gym.spaces.discrete
 import numpy as np
 import pytest
 
+import tools.configurations
+from brains import Brain, register_brain, registered_brains
 
-class BrainCfgClass(tools.configurations.IBrainCfg):
+
+class BrainCfgClass(tools.configurations.BrainCfg):
     pass
 
 
-class BrainCfgClassDuplicate(tools.configurations.IBrainCfg):
+class BrainCfgClassDuplicate(tools.configurations.BrainCfg):
     pass
 
 
-@brains.i_brain.register_brain("TestBrain", BrainCfgClass)
-class BrainClass(brains.i_brain.IBrain[BrainCfgClass]):
+@register_brain("TestBrain", BrainCfgClass)
+class BrainClass(Brain[BrainCfgClass]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
@@ -27,7 +29,7 @@ class BrainClass(brains.i_brain.IBrain[BrainCfgClass]):
         return {"blubb": 1}
 
 
-class BrainClassDupe1(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
+class BrainClassDupe1(Brain[BrainCfgClassDuplicate]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
@@ -39,7 +41,7 @@ class BrainClassDupe1(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
         return {"blubb": 1}
 
 
-class BrainClassDupe2(brains.i_brain.IBrain[BrainCfgClassDuplicate]):
+class BrainClassDupe2(Brain[BrainCfgClassDuplicate]):
     def __init__(self, *nargs, **kwargs):
         super().__init__(*nargs, **kwargs)
 
@@ -58,7 +60,7 @@ class TestBrainLoader:
         output_space = gym.spaces.discrete.Discrete(1)
         config = BrainCfgClass(type='TestBrain')
 
-        brain_class: typing.Type[brains.i_brain.IBrain] = brains.i_brain.registered_brains[config.type]
+        brain_class: typing.Type[Brain] = registered_brains[config.type]
 
         individual = np.zeros(
             brain_class.get_individual_size(input_space=input_space, output_space=output_space, config=config))
@@ -68,11 +70,11 @@ class TestBrainLoader:
         assert 0 == brain.step(input_space.sample())
 
     def test_two_brains_for_one_config(self):
-        brains.i_brain.register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe1)
+        register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe1)
         with pytest.raises(AssertionError, match='TestBrainDupe'):
-            brains.i_brain.register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe2)
+            register_brain("TestBrainDupe", BrainCfgClassDuplicate)(BrainClassDupe2)
 
     def test_unregistered_type(self):
-        config = tools.configurations.IBrainCfg(type='Smooth')
+        config = tools.configurations.BrainCfg(type='Smooth')
         with pytest.raises(KeyError, match='Smooth'):
-            brain_class: typing.Type[brains.i_brain.IBrain] = brains.i_brain.registered_brains[config.type]
+            brain_class: typing.Type[Brain] = registered_brains[config.type]
