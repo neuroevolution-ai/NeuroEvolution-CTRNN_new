@@ -2,18 +2,16 @@
 import os
 from typing import Tuple
 
-import pygame
 import numpy as np
-from gym.spaces import Discrete
+import pygame
 
+from brain_visualizer.color import Colors
+from brain_visualizer.events import Events
+from brain_visualizer.neurons import Neurons
 from brain_visualizer.position import Positions
 from brain_visualizer.weights import Weights
-from brain_visualizer.neurons import Neurons
-from brain_visualizer.events import Events
-from brain_visualizer.color import Colors
-from brains.i_brain import IBrain
-from tools.configurations import IBrainCfg
-from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains import Brain, CTRNN
+from tools.configurations import BrainCfg
 
 
 class BrainVisualizerHandler:
@@ -22,8 +20,8 @@ class BrainVisualizerHandler:
 
     # color_clipping_range for colorClipping Input [0], Graph [1] and Output [2]
     def launch_new_visualization(self,
-                                 brain: IBrain,
-                                 brain_config: IBrainCfg,
+                                 brain: Brain,
+                                 brain_config: BrainCfg,
                                  env_id: str,
                                  initial_observation: np.ndarray,
                                  width: int = 1800,
@@ -44,8 +42,8 @@ class BrainVisualizerHandler:
 class BrainVisualizer:
 
     def __init__(self,
-                 brain: ContinuousTimeRNN,
-                 brain_config: IBrainCfg,
+                 brain: CTRNN,
+                 brain_config: BrainCfg,
                  env_id: str,
                  initial_observation: np.ndarray,
                  width: int,

@@ -6,57 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from gym.spaces import Space, Box
 
-from brains import IBrain, register_brain
-from brains.continuous_time_rnn import ContinuousTimeRNN
-from tools.configurations import CnnCtrnnCfg, ConvolutionalNNCfg
-
-
-# noinspection PyPep8Naming
-@register_brain("CNN_CTRNN", CnnCtrnnCfg)
-class CnnCtrnn(IBrain[CnnCtrnnCfg]):
-    _usage_key_cnn_output = "_cnn_output_space"
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CnnCtrnnCfg):
-        super().__init__(input_space, output_space, individual, config)
-
-        assert len(individual) == self.get_individual_size(config, input_space, output_space)
-        paramter_usage_dict = self.get_free_parameter_usage(config, input_space, output_space)
-        cnn_output_space = paramter_usage_dict[self._usage_key_cnn_output]
-        cnn_size = Cnn.get_individual_size(config.cnn_conf, input_space, cnn_output_space)
-        ctrnn_size = ContinuousTimeRNN.get_individual_size(config.ctrnn_conf, cnn_output_space, output_space)
-        ind_cnn = individual[0:cnn_size]
-        ind_ctrnn = individual[cnn_size:cnn_size + ctrnn_size]
-        self.cnn = Cnn(input_space=input_space, output_space=cnn_output_space,
-                       config=config.cnn_conf, individual=ind_cnn)
-        self.ctrnn = ContinuousTimeRNN(input_space=cnn_output_space, output_space=output_space,
-                                       config=config.ctrnn_conf, individual=ind_ctrnn)
-
-    def brainstep(self, ob: np.ndarray) -> Union[np.ndarray, np.generic]:
-        return self.ctrnn.brainstep(self.cnn.brainstep(ob))
-
-    @classmethod
-    def get_free_parameter_usage(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        cnn_paramter_usage = Cnn.get_free_parameter_usage(config=config.cnn_conf, input_space=input_space,
-                                                          output_space=cnn_output_space)
-        ctrnn_paramter_usage = ContinuousTimeRNN.get_free_parameter_usage(config=config.ctrnn_conf,
-                                                                          input_space=cnn_output_space,
-                                                                          output_space=output_space)
-        return {'CNN': cnn_paramter_usage, 'CTRNN': ctrnn_paramter_usage, cls._usage_key_cnn_output: cnn_output_space}
-
-    @classmethod
-    def generate_and_set_class_state(cls, config: CnnCtrnnCfg, input_space: Space, output_space: Space):
-        cnn_output_space = Cnn.get_output_shape(config=config.cnn_conf, input_space=input_space)
-        ContinuousTimeRNN.generate_and_set_class_state(config.ctrnn_conf, cnn_output_space, output_space)
-
-    @classmethod
-    def get_class_state(cls):
-        return ContinuousTimeRNN.get_class_state()
-
-    @classmethod
-    def set_class_state(cls, v_mask, w_mask, t_mask):
-        return ContinuousTimeRNN.set_class_state(v_mask, w_mask, t_mask)
-
+from brains.brain import Brain, register_brain
+from tools.configurations import CNNCfg
 
 # Since we distribute the work across all processes having more than one thread results in performance degradation
 # logging.debug("Setting number of Torch threads and interop threads to 1.")
@@ -67,13 +18,13 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.deterministic = False
 
 
-@register_brain("CNN", ConvolutionalNNCfg)
-class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
+@register_brain("CNN", CNNCfg)
+class CNN(nn.Module, Brain[CNNCfg]):
     _number_input_channels = 3
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ConvolutionalNNCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CNNCfg):
         nn.Module.__init__(self)
-        IBrain.__init__(self, input_space, output_space, individual, config)
+        Brain.__init__(self, input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
 
         with torch.no_grad():
@@ -106,7 +57,7 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
             return x.numpy().flatten()
 
     @classmethod
-    def _make_convs(cls, config: ConvolutionalNNCfg):
+    def _make_convs(cls, config: CNNCfg):
         # This method exists because DRY and convs are needed before create the individuals
         conv1 = nn.Conv2d(cls._number_input_channels, config.conv_feat1,
                           kernel_size=config.conv_size1,
@@ -117,13 +68,13 @@ class Cnn(nn.Module, IBrain[ConvolutionalNNCfg]):
         return conv1, conv2
 
     @classmethod
-    def get_free_parameter_usage(cls, config: ConvolutionalNNCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: CNNCfg, input_space: Space, output_space: Space):
         assert output_space == cls.get_output_shape(config, input_space), "output space is not what it should be"
         conv1, conv2 = cls._make_convs(config)
         return {'conv1': conv1.weight.size().numel(), 'conv2': conv2.weight.size().numel()}
 
     @classmethod
-    def get_output_shape(cls, config: ConvolutionalNNCfg, input_space: Space) -> Space:
+    def get_output_shape(cls, config: CNNCfg, input_space: Space) -> Space:
         h = input_space.shape[0]
         w = input_space.shape[1]
         d = input_space.shape[2]

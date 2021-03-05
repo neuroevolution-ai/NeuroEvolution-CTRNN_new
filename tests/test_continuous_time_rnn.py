@@ -1,4 +1,4 @@
-from brains.continuous_time_rnn import ContinuousTimeRNN
+from brains import CTRNN
 import numpy as np
 from gym.spaces import Box
 import pytest
@@ -53,11 +53,11 @@ class TestCTRNN:
     def test_individual(self, ctrnn_config, brain_param_simple, box2d):
         ctrnn_config = evolve(ctrnn_config, set_principle_diagonal_elements_of_W_negative=False)
 
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
-                                                       output_space=Box(-1, 1, shape=[2]), )
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
+                                           output_space=Box(-1, 1, shape=[2]), )
         bp = brain_param_simple
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
-                                  config=ctrnn_config)
+        brain = CTRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
+                      config=ctrnn_config)
         assert np.array_equal(bp.V, brain.V.toarray())
         assert np.array_equal(bp.W, brain.W.toarray())
         assert np.array_equal(bp.T, brain.T.toarray())
@@ -67,10 +67,10 @@ class TestCTRNN:
     def test_step(self, ctrnn_config, brain_param_identity, box2d):
         ctrnn_config = evolve(ctrnn_config, set_principle_diagonal_elements_of_W_negative=False)
         bp = brain_param_identity
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
-                                                       output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
-                                  config=ctrnn_config)
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
+                                           output_space=Box(-1, 1, shape=[2]), )
+        brain = CTRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
+                      config=ctrnn_config)
         brain.delta_t = 1.0
         ob = np.array([1, 1])
         assert np.allclose(brain.y, np.zeros([2, 2]))
@@ -84,10 +84,10 @@ class TestCTRNN:
 
     def test_clipping_legacy(self, ctrnn_config, brain_param_identity, box2d):
         bp = brain_param_identity
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
-                                                       output_space=Box(-1, 1, shape=[2]), )
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
-                                  config=ctrnn_config)
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
+                                           output_space=Box(-1, 1, shape=[2]), )
+        brain = CTRNN(input_space=box2d, output_space=box2d, individual=self.param_to_genom(bp),
+                      config=ctrnn_config)
         ob = np.array([1, 1])
         res = brain.step(ob * 1000)
         # due to tanh the maximum output is 1.0
@@ -99,10 +99,10 @@ class TestCTRNN:
         ctrnn_config = evolve(ctrnn_config, optimize_state_boundaries="per_neuron")
         bp = evolve(brain_param_identity, clip_max=np.array([2, 3]), clip_min=np.array([-4, -5]))
 
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
-                                                       output_space=box2d, )
-        brain = ContinuousTimeRNN(input_space=box2d, output_space=box2d,
-                                  individual=self.param_to_genom(bp), config=ctrnn_config)
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
+                                           output_space=box2d, )
+        brain = CTRNN(input_space=box2d, output_space=box2d,
+                      individual=self.param_to_genom(bp), config=ctrnn_config)
         ob = np.array([1, 1])
         brain.step(ob * 100000)
         assert np.allclose(brain.y, bp.clip_max)
@@ -110,38 +110,38 @@ class TestCTRNN:
         assert np.allclose(brain.y, bp.clip_min)
 
     def test_generating_masks_random(self, ctrnn_config, box2d):
-        ContinuousTimeRNN.generate_and_set_class_state(
+        CTRNN.generate_and_set_class_state(
             config=evolve(ctrnn_config, v_mask="random", t_mask="random", w_mask="random", v_mask_param=0.5,
                           w_mask_param=0.5, t_mask_param=0.5), input_space=box2d,
             output_space=box2d, )
 
     def test_generating_masks_dense(self, ctrnn_config, box2d):
-        ContinuousTimeRNN.generate_and_set_class_state(
+        CTRNN.generate_and_set_class_state(
             config=evolve(ctrnn_config, v_mask="dense", t_mask="dense", w_mask="dense"), input_space=box2d,
             output_space=box2d, )
 
     def test_generating_masks_log(self, ctrnn_config, box2d):
-        ContinuousTimeRNN.generate_and_set_class_state(
+        CTRNN.generate_and_set_class_state(
             config=evolve(ctrnn_config, v_mask="logarithmic", w_mask="logarithmic", t_mask="logarithmic",
                           v_mask_param=2.5, w_mask_param=5, t_mask_param=1.1),
             input_space=box2d,
             output_space=box2d, )
 
     def test_wrong_size(self, ctrnn_config, box2d, brain_param_identity):
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
-                                                       output_space=box2d, )
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=box2d,
+                                           output_space=box2d, )
         ind = self.param_to_genom(brain_param_identity)
-        ContinuousTimeRNN(input_space=box2d, output_space=box2d,
-                          individual=np.append(ind[:-1], [1]), config=ctrnn_config)
+        CTRNN(input_space=box2d, output_space=box2d,
+              individual=np.append(ind[:-1], [1]), config=ctrnn_config)
         with pytest.raises(AssertionError):
-            ContinuousTimeRNN(input_space=box2d, output_space=box2d,
-                              individual=ind[:-1], config=ctrnn_config)
+            CTRNN(input_space=box2d, output_space=box2d,
+                  individual=ind[:-1], config=ctrnn_config)
 
     def test_get_individual_size(self, ctrnn_config):
         in_space = Box(-1, 1, shape=[3])
         out_space = Box(-1, 1, shape=[3])
-        ContinuousTimeRNN.generate_and_set_class_state(config=ctrnn_config, input_space=in_space,
-                                                       output_space=out_space, )
-        ind_size = ContinuousTimeRNN.get_individual_size(config=ctrnn_config, input_space=in_space,
-                                                         output_space=out_space, )
+        CTRNN.generate_and_set_class_state(config=ctrnn_config, input_space=in_space,
+                                           output_space=out_space, )
+        ind_size = CTRNN.get_individual_size(config=ctrnn_config, input_space=in_space,
+                                             output_space=out_space, )
         assert ind_size == 22

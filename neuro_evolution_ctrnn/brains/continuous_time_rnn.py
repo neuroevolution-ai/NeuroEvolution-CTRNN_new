@@ -6,14 +6,13 @@ import numpy as np
 from gym.spaces import Space, flatdim
 from scipy import sparse
 
-from brains import register_brain
-from brains.i_brain import IBrain
-from tools.configurations import ContinuousTimeRNNCfg
+from brains.brain import Brain, register_brain
+from tools.configurations import CTRNNCfg
 
 
 # noinspection PyPep8Naming
-@register_brain("CTRNN", ContinuousTimeRNNCfg)
-class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
+@register_brain("CTRNN", CTRNNCfg)
+class CTRNN(Brain[CTRNNCfg]):
     v_mask: np.ndarray
     w_mask: np.ndarray
     t_mask: np.ndarray
@@ -34,7 +33,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         mat[M < p] = 0
         return sparse.csr_matrix(mat, dtype=float)
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ContinuousTimeRNNCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: CTRNNCfg):
         super().__init__(input_space, output_space, individual, config)
         assert len(individual) == self.get_individual_size(config, input_space, output_space)
         optimize_y0 = config.optimize_initial_neuron_state
@@ -141,7 +140,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         return o
 
     @classmethod
-    def get_free_parameter_usage(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: CTRNNCfg, input_space: Space, output_space: Space):
         info_dict = {'V': np.count_nonzero(cls.v_mask),
                      'W': np.count_nonzero(cls.w_mask),
                      'T': np.count_nonzero(cls.t_mask)}
@@ -160,7 +159,7 @@ class ContinuousTimeRNN(IBrain[ContinuousTimeRNNCfg]):
         return info_dict
 
     @classmethod
-    def generate_and_set_class_state(cls, config: ContinuousTimeRNNCfg, input_space: Space, output_space: Space):
+    def generate_and_set_class_state(cls, config: CTRNNCfg, input_space: Space, output_space: Space):
         input_size = flatdim(input_space)
         output_size = flatdim(output_space)
 

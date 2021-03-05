@@ -10,7 +10,7 @@
     "fix_seed_for_generation": false
   },
   "brain": {
-    "type": "FeedForward_NumPy",
+    "type": "FeedForward",
     "use_bias": true,
     "hidden_layers": [[8, 8]],
     "neuron_activation": "relu"

@@ -7,17 +7,18 @@ from gym import Space
 from gym.spaces import flatdim
 from torch import nn
 
-from brains.i_brain import IBrain
-from tools.configurations import IPytorchBrainCfg
+from brains.brain import Brain
+from tools.configurations import RecurrentBasedBrainPyTorchCfg
 
-PytorchBrainConfigClass = TypeVar('PytorchBrainConfigClass', bound=IPytorchBrainCfg)
+ClassType = TypeVar("ClassType", bound=RecurrentBasedBrainPyTorchCfg)
 
 
-class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
+class RecurrentBasedBrainPyTorch(nn.Module, Brain[ClassType], abc.ABC):
 
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IPytorchBrainCfg):
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray,
+                 config: RecurrentBasedBrainPyTorchCfg):
         nn.Module.__init__(self)
-        IBrain.__init__(self, input_space, output_space, individual, config)
+        Brain.__init__(self, input_space, output_space, individual, config)
         self.output_size = flatdim(self.output_space)
         assert len(individual) == self.get_individual_size(
             config=config, input_space=input_space, output_space=output_space)
@@ -76,7 +77,7 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
             self.hidden = self.get_hidden(config)
 
     @classmethod
-    def get_free_parameter_usage(cls, config: IPytorchBrainCfg, input_space: Space, output_space: Space):
+    def get_free_parameter_usage(cls, config: RecurrentBasedBrainPyTorchCfg, input_space: Space, output_space: Space):
         num_layers = config.num_layers
         number_gates = cls.get_number_gates()
         hidden_size = config.hidden_size
@@ -102,16 +103,15 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_brain(self, config: IPytorchBrainCfg, input_size):
+    def get_brain(self, config: RecurrentBasedBrainPyTorchCfg, input_size):
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def get_hidden(config: IPytorchBrainCfg):
+    def get_hidden(config: RecurrentBasedBrainPyTorchCfg):
         pass
 
     def brainstep(self, ob: np.ndarray):
-
         with torch.no_grad():
             # Input requires the form (seq_len, batch, input_size)
             out, self.hidden = self.brain(torch.from_numpy(ob.astype(np.float32)).view(1, 1, -1), self.hidden)

@@ -1,15 +1,16 @@
 import numpy as np
 from gym import Space
-from brains.i_brain import IBrain, register_brain
-from brains.i_pytorch_brain import IPytorchBrain
-from tools.configurations import ElmanCfg, IPytorchBrainCfg, ElmanTorchCfg
-from brains.i_layer_based_brain import ILayerBasedBrain
-import torch
-import torch.nn as nn
+
+from brains.brain import register_brain
+from recurrent.recurrent_based_brain import RecurrentBasedBrain
+from tools.configurations import ElmanCfg
 
 
-@register_brain("ELMAN", ElmanCfg)
-class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
+@register_brain("Elman", ElmanCfg)
+class Elman(RecurrentBasedBrain[ElmanCfg]):
+
+    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanCfg):
+        super().__init__(input_space, output_space, individual, config)
 
     @staticmethod
     def get_number_hidden_values():
@@ -26,9 +27,6 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
             np.dot(weight_hh[0], hidden[0]) +
             bias_h[0])
         return [[result], result]
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanCfg):
-        super().__init__(input_space, output_space, individual, config)
 
     def get_neuron_states(self):
         return np.array([item for sublist in self.hidden for item in sublist])
@@ -67,25 +65,3 @@ class ElmanNetwork(ILayerBasedBrain[ElmanCfg]):
             np.zeros((len(self.weight_ho), len(self.get_neuron_states()) - len(self.weight_ho[0]))),
             self.weight_ho
         )
-
-
-@register_brain("ElmanTorch", ElmanTorchCfg)
-class ElmanPytorch(IPytorchBrain[ElmanTorchCfg]):
-
-    def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: ElmanTorchCfg):
-        IPytorchBrain.__init__(self, input_space, output_space, individual, config)
-
-    def get_brain(self, config: IPytorchBrainCfg, input_size):
-        return nn.RNN(
-            input_size=input_size, hidden_size=config.hidden_size,
-            num_layers=config.num_layers, bias=config.use_bias)
-
-    @staticmethod
-    def get_hidden(config: IPytorchBrainCfg):
-        return (
-            torch.zeros(config.num_layers, 1, config.hidden_size)
-        )
-
-    @staticmethod
-    def get_number_gates():
-        return 1

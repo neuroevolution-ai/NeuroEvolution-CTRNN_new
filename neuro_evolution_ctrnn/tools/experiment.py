@@ -6,18 +6,18 @@ from typing import Type
 import numpy as np
 from deap import tools
 
+from brains import registered_brains
 from optimizer.i_optimizer import IOptimizer
-from tools.episode_runner import EpisodeRunner
-from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
 from optimizer.optimizer_mu_lambda import OptimizerMuPlusLambda
-from tools.helper import set_random_seeds
-from tools.configurations import ExperimentCfg
 from processing_handlers.dask_handler import DaskHandler
 from processing_handlers.mp_handler import MPHandler
 from processing_handlers.sequential_handler import SequentialHandler
+from tools.configurations import ExperimentCfg
 from tools.env_handler import EnvHandler
-from brains import registered_brains
+from tools.episode_runner import EpisodeRunner
+from tools.helper import set_random_seeds
+from tools.result_handler import ResultHandler
 
 
 class Experiment(object):
