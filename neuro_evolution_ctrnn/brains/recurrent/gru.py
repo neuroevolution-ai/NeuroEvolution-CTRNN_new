@@ -2,7 +2,7 @@ import numpy as np
 from gym import Space
 
 from brains.brain import register_brain
-from recurrent.recurrent_based_brain import RecurrentBasedBrain
+from brains.recurrent.recurrent_based_brain import RecurrentBasedBrain
 from tools.configurations import GRUCfg
 
 
