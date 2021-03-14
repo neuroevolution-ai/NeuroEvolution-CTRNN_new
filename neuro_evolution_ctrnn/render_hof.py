@@ -94,6 +94,6 @@ for i, individual in enumerate(individuals):
     else:
         record = None
 
-    experiment.ep_runner.eval_fitness(individual, config.random_seed, render, record, record_force,
+    experiment.ep_runner.eval_fitness(individual, config.random_seed, None, 0, render, record, record_force,
                                       BrainVisualizerHandler(), args.neuron_vis, args.slow_down, args.rounds,
                                       args.neuron_vis_width, args.neuron_vis_height, render_raw_ob=args.render_raw_ob)

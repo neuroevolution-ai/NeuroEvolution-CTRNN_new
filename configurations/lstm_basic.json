@@ -10,7 +10,7 @@
     "hof_size": 5,
     "mu": 25,
     "efficiency_weight": 0.0,
-    "fix_seed_for_generation": false
+    "fix_seed": "false"
   },
   "brain": {
       "type": "LSTMLayered",

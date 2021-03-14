@@ -1,12 +1,11 @@
 import random
+from copy import deepcopy
 from typing import Callable
-
 from deap import tools
 import numpy as np
-
+from deap.algorithms import varOr
 from optimizer.creator_classes import Individual
 from optimizer.i_optimizer import IOptimizer
-from tools import algorithms
 from tools.configurations import OptimizerMuLambdaCfg
 from tools.helper import get_checkpoint
 
@@ -20,21 +19,25 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
 
     def __init__(self, eval_fitness: Callable, individual_size: int, random_seed: int, conf: OptimizerMuLambdaCfg,
                  stats, map_func=map, from_checkpoint=None, reset_hof=False):
-        super(OptimizerMuPlusLambda, self).__init__(eval_fitness, individual_size, random_seed, conf, stats, map_func,
-                                                    from_checkpoint)
-        toolbox = self.toolbox
+        super(OptimizerMuPlusLambda, self).__init__(eval_fitness, random_seed, conf, stats, map_func,
+                                                    from_checkpoint, reset_hof)
 
         if self.conf.strategy_parameter_per_gene:
             individual_size *= 2
         else:
             # add two genes for strategy parameters used in mutate
             individual_size += 2
-        toolbox.register("indices", np.random.uniform,
-                         -self.conf.initial_gene_range,
-                         self.conf.initial_gene_range,
-                         individual_size)
-        toolbox.register("individual", tools.initIterate, Individual, toolbox.indices)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+        def individual():
+            def indices():
+                return np.random.uniform(
+                    -self.conf.initial_gene_range,
+                    self.conf.initial_gene_range,
+                    individual_size)
+
+            return tools.initIterate(Individual, indices)
+
+        self.population = tools.initRepeat(list, individual, self.conf.mu)
 
         mate_list = [
             tools.cxOnePoint,
@@ -65,35 +68,82 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
             indpb = 2 ** (ind1[-2] - 3)
             return tools.mutGaussian(individual=ind1, mu=0, sigma=sigma, indpb=indpb)
 
-        toolbox.register("mate", mate)
+        self.mate = mate
         if self.conf.strategy_parameter_per_gene:
-            toolbox.register("mutate", fct_mutation_learned_per_gene)
+            self.mutate = fct_mutation_learned_per_gene
 
         else:
-            toolbox.register("mutate", fct_mutation_learned)
-        toolbox.register("strip_strategy_from_population", self.strip_strategy_from_population,
-                         mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
-        if self.conf.tournsize:
-            toolbox.register("select", tools.selTournament, tournsize=self.conf.tournsize)
-        else:
-            toolbox.register("select", tools.selBest)
+            self.mutate = fct_mutation_learned
+
+        # TODO no Error?
+        # self.strip_strategy_from_population = self.strip_strategy_from_population(
+        #                  mutation_learned=True, strategy_parameter_per_gene=self.conf.strategy_parameter_per_gene)
+
+        def select(inds, k):
+            if self.conf.tournsize:
+                return tools.selTournament(inds, k, tournsize=self.conf.tournsize)
+            else:
+                return tools.selBest(inds, k)
+
+        self.select = select
 
         if from_checkpoint:
-            cp = get_checkpoint(from_checkpoint)
-            toolbox.initial_generation = cp["generation"] + 1
-            toolbox.initial_seed = cp["last_seed"]
-            toolbox.population = cp["population"]
-            toolbox.logbook = cp["logbook"]
-            toolbox.recorded_individuals = cp["recorded_individuals"]
-
-            if not reset_hof:
-                toolbox.hof = self.hof = cp["halloffame"]
-        else:
-            toolbox.initial_generation = 0
-            toolbox.initial_seed = random_seed
-            toolbox.population = self.toolbox.population(n=self.conf.mu)
-            toolbox.logbook = self.create_logbook(conf)
-            toolbox.recorded_individuals = []
+            # TODO get_checkpoint(from_checkpoint) is already called in super()
+            self.population = get_checkpoint(from_checkpoint)["population"]
+        self.clone = deepcopy
 
     def train(self, number_generations) -> tools.Logbook:
-        return algorithms.eaMuPlusLambda(toolbox=self.toolbox, ngen=number_generations)
+        verbose = __debug__
+        gen = None
+        current_seed = None
+
+        for gen in range(self.initial_generation, number_generations):
+            self.record_individuals(self.population)
+            extra = []
+            if self.hof.items:
+                extra = list(map(self.clone, random.sample(self.population, self.conf.extra_from_hof)))
+            offspring = varOr(self.population + extra, self, self.conf.lambda_, 1 - self.conf.mutpb,
+                              self.conf.mutpb)
+
+            for ind in offspring:
+                # just a little extra for when we later want to analyze the hof manually
+                ind.generation = gen
+
+            for ind in self.population:
+                del ind.fitness.values
+            candidates = self.population + offspring
+
+            nevals, total_steps, current_seed, candidates = self.evaluate_candidates(candidates)
+            if self.hof is not None:
+                self.hof.update(offspring)
+
+            record = self.stats.compile(candidates) if self.stats is not None else {}
+            self.population[:] = self.select(candidates, self.conf.mu)
+
+            validation_fitness, validation_steps = self.validation_runs(self.population)
+            self.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
+                                val_fit=validation_fitness, **record)
+            if verbose:
+                print(self.logbook.stream)
+            self.write_checkpoint(data=dict(generation=gen, halloffame=self.hof, population=self.population,
+                                            logbook=self.logbook, last_seed=current_seed, strategy=None,
+                                            recorded_individuals=self.recorded_individuals))
+        self.final_checkpoint_data = dict(generation=gen, halloffame=self.hof, population=self.population,
+                                          logbook=self.logbook, last_seed=current_seed, strategy=None,
+                                          recorded_individuals=self.recorded_individuals)
+        return self.logbook
+
+    @classmethod
+    def strip_strategy_from_population(cls, population, strategy_parameter_per_gene=False):
+        if len(population) == 0:
+            return population
+        return list(np.array(population)[:,
+                    :-(cls.get_number_genes_for_strategy(len(population[0]), strategy_parameter_per_gene))])
+
+    def get_number_genes_for_strategy(self, individual_size):
+        return individual_size // 2 if self.conf.strategy_parameter_per_gene else 2
+
+    @classmethod
+    def strip_strategy_from_individual(cls, individual, strategy_parameter_per_gene=False):
+        return list(
+            np.array(individual)[:-(cls.get_number_genes_for_strategy(len(individual), strategy_parameter_per_gene))])

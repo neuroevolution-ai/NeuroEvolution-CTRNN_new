@@ -9,6 +9,10 @@ class MPHandler(IProcessingHandler):
         super().__init__(number_of_workers)
 
     def map(self, func, *iterable):
-        with Pool(self.number_of_workers) as pool:
-            result = pool.starmap(func, zip(*iterable))
-        return result
+        return self.pool.starmap(func, zip(*iterable))
+
+    def init_framework(self):
+        self.pool = Pool(self.number_of_workers)
+
+    def cleanup_framework(self):
+        self.pool.close()

@@ -1,5 +1,5 @@
 import abc
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 import numpy as np
 import torch
@@ -13,7 +13,7 @@ from tools.configurations import IPytorchBrainCfg
 PytorchBrainConfigClass = TypeVar('PytorchBrainConfigClass', bound=IPytorchBrainCfg)
 
 
-class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
+class IPytorchBrain(nn.Module, IBrain, abc.ABC, Generic[PytorchBrainConfigClass]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: IPytorchBrainCfg):
         nn.Module.__init__(self)
@@ -80,21 +80,16 @@ class IPytorchBrain(nn.Module, IBrain[PytorchBrainConfigClass], abc.ABC):
         num_layers = config.num_layers
         number_gates = cls.get_number_gates()
         hidden_size = config.hidden_size
-        index = 0
         # size of the learnable input-hidden weights
-
-        index += hidden_size * flatdim(input_space) * number_gates
-        if num_layers > 1:
-            index += hidden_size * hidden_size * (num_layers - 1) * number_gates
-
-        # size of the learnable hidden-hidden weights
-        index += hidden_size * hidden_size * num_layers * number_gates
-
+        individuals = {
+            'input_weight_matrix': hidden_size * flatdim(input_space) * number_gates + (
+                hidden_size * hidden_size * (num_layers - 1) * number_gates if num_layers > 1 else 0),
+            'hidden_weight_matrix': hidden_size * hidden_size * num_layers * number_gates,
+            'output_weight_matrix': flatdim(output_space) * hidden_size
+        }
         if config.use_bias:
-            index += 2 * hidden_size * num_layers * number_gates
-        index += flatdim(output_space) * hidden_size
-        # TODO better usage of the dict
-        return {"all": index}
+            individuals['bias'] = 2 * hidden_size * num_layers * number_gates
+        return individuals
 
     @staticmethod
     @abc.abstractmethod

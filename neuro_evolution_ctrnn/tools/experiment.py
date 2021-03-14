@@ -7,6 +7,7 @@ import numpy as np
 from deap import tools
 
 from optimizer.i_optimizer import IOptimizer
+from processing_handlers.concurrent_handler import ConcurrentHandler
 from tools.episode_runner import EpisodeRunner
 from tools.result_handler import ResultHandler
 from optimizer.optimizer_cma_es import OptimizerCmaEs
@@ -52,7 +53,7 @@ class Experiment(object):
         # note: the environment defined here is only used to initialize other classes, but the
         # actual simulation will happen on freshly created local  environments on the episode runners
         # to avoid concurrency problems that would arise from a shared global state
-        self.env_template = env
+        EpisodeRunner._env = self.env_template = env
         set_random_seeds(self.config.random_seed, env)
         self.input_space = env.observation_space
         self.output_space = env.action_space
@@ -100,6 +101,8 @@ class Experiment(object):
             self.processing_handler = MPHandler(number_of_workers=self.number_of_workers)
         elif self.processing_framework == "sequential":
             self.processing_handler = SequentialHandler(number_of_workers=self.number_of_workers)
+        elif self.processing_framework == "concurrent":
+            self.processing_handler = ConcurrentHandler(number_of_workers=self.number_of_workers)
         else:
             raise RuntimeError(
                 "The processing framework '{}' is not supported.".format(self.processing_framework))
@@ -123,7 +126,7 @@ class Experiment(object):
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         if self.write_final_checkpoint:
-            final_checkpoint_data = self.optimizer.toolbox.final_checkpoint_data
+            final_checkpoint_data = self.optimizer.final_checkpoint_data
         else:
             final_checkpoint_data = None
         self.result_handler.write_result(

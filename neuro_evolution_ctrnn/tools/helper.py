@@ -1,5 +1,3 @@
-import logging
-import os
 import pickle
 import random
 from bz2 import compress
@@ -33,18 +31,6 @@ def sample_from_design_space(node):
         else:
             result[key] = val
     return result
-
-
-def write_checkpoint(base_path, frequency, data):
-    if not frequency:
-        return
-    if data["generation"] % frequency != 0:
-        return
-
-    filename = os.path.join(base_path, "checkpoint_" + str(data["generation"]) + ".pkl")
-    logging.info("Writing checkpoint " + filename)
-    with open(filename, "wb") as cp_file:
-        pickle.dump(data, cp_file, protocol=pickle.HIGHEST_PROTOCOL, fix_imports=False)
 
 
 def get_checkpoint(checkpoint):

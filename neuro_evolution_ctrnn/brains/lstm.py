@@ -13,7 +13,7 @@ from tools.configurations import LstmLayeredCfg, LstmTorchCfg, IPytorchBrainCfg
 class LSTMPyTorch(IPytorchBrain[LstmTorchCfg]):
 
     def __init__(self, input_space: Space, output_space: Space, individual: np.ndarray, config: LstmTorchCfg):
-        IPytorchBrain.__init__(self, input_space, output_space, individual, config)
+        super().__init__(input_space, output_space, individual, config)
 
     def get_brain(self, config: IPytorchBrainCfg, input_size):
         return nn.LSTM(
