@@ -24,11 +24,10 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
             else:
                 mu = conf.population_size // 2 if conf.population_size // 2 > 0 else 1
             self.strategy = cma.Strategy(centroid=[0.0] * individual_size, sigma=conf.sigma,
-                                            lambda_=conf.population_size, mu=mu)
+                                         lambda_=conf.population_size, mu=mu)
 
         self.update = self.strategy.update
         self.clone = deepcopy
-
 
     def train(self, number_generations) -> tools.Logbook:
         verbose = __debug__
@@ -48,15 +47,15 @@ class OptimizerCmaEs(IOptimizer[OptimizerCmaEsCfg]):
 
             validation_fitness, validation_steps = self.validation_runs(population)
             self.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
-                                   val_fit=validation_fitness, **record)
+                                val_fit=validation_fitness, **record)
             if verbose:
                 print(self.logbook.stream)
 
             self.write_checkpoint(data=dict(generation=gen, halloffame=self.hof,
-                                             logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
-                                             recorded_individuals=self.recorded_individuals))
+                                            logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
+                                            recorded_individuals=self.recorded_individuals))
 
         self.final_checkpoint_data = dict(generation=gen, halloffame=self.hof,
-                                             logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
-                                             recorded_individuals=self.recorded_individuals)
+                                          logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
+                                          recorded_individuals=self.recorded_individuals)
         return self.logbook

@@ -1,5 +1,3 @@
-import logging
-import os
 import pickle
 import random
 from bz2 import compress
@@ -33,6 +31,7 @@ def sample_from_design_space(node):
         else:
             result[key] = val
     return result
+
 
 def get_checkpoint(checkpoint):
     with open(checkpoint, "rb") as cp_file:

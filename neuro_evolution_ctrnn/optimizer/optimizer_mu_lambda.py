@@ -84,6 +84,7 @@ class OptimizerMuPlusLambda(IOptimizer[OptimizerMuLambdaCfg]):
                 return tools.selTournament(inds, k, tournsize=self.conf.tournsize)
             else:
                 return tools.selBest(inds, k)
+
         self.select = select
 
         if from_checkpoint:
