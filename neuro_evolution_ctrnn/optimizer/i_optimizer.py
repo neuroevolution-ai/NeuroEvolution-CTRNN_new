@@ -72,36 +72,9 @@ class IOptimizer(abc.ABC, Generic[ConfigClass]):
             self.logbook.columns_len = columns_len
             self.logbook.header = header
 
+    @abc.abstractmethod
     def train(self, number_generations) -> tools.Logbook:
-        verbose = __debug__
-        gen = None
-        current_seed = None
-        for gen in range(self.initial_generation, number_generations):
-            population: Collection = self.generate()
-            for ind in population:
-                # just a little extra for when we later want to analyze the hof manually
-                ind.generation = gen
-            self.record_individuals(population)
-            nevals, total_steps, current_seed, population = self.evaluate_candidates(population)
-            if self.hof is not None:
-                self.hof.update(population)
-            self.update(population)
-
-            record: dict = self.stats.compile(population) if self.stats is not None else {}
-
-            validation_fitness, validation_steps = self.validation_runs(population)
-            self.logbook.record(gen=gen, nevals=nevals, steps=total_steps + validation_steps,
-                                val_fit=validation_fitness, **record)
-            if verbose:
-                print(self.logbook.stream)
-            self.write_checkpoint(data=dict(generation=gen, halloffame=self.hof,
-                                          logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
-                                          recorded_individuals=self.recorded_individuals))
-
-        self.final_checkpoint_data = dict(generation=gen, halloffame=self.hof,
-                                          logbook=self.logbook, last_seed=current_seed, strategy=self.strategy,
-                                          recorded_individuals=self.recorded_individuals)
-        return self.logbook
+        pass
 
     def shape_fitness_multi_objective(self, population):
         for ind in population:
