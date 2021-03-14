@@ -126,11 +126,11 @@ class Experiment(object):
         log = self.optimizer.train(number_generations=self.config.number_generations)
         print("Time elapsed: %s" % (time.time() - start_time))
         if self.write_final_checkpoint:
-            final_checkpoint_data = self.optimizer.toolbox.final_checkpoint_data
+            final_checkpoint_data = self.optimizer.final_checkpoint_data
         else:
             final_checkpoint_data = None
         self.result_handler.write_result(
-            hof=self.optimizer.toolbox.hof,
+            hof=self.optimizer.hof,
             log=log,
             time_elapsed=(time.time() - start_time),
             output_space=self.output_space,
